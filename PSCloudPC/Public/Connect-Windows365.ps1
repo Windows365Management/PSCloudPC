@@ -23,14 +23,11 @@ function Connect-Windows365 {
         [ValidateSet('ServicePrincipal', 'Interactive')]
         [string]$Authtype = 'Interactive',
     
-        [parameter(ParameterSetName = "ServicePrincipal")]
-        [Parameter(mandatory = $true)][string]$ClientSecret,
+        [Parameter(mandatory = $false)][string]$ClientSecret,
 
-        
         [Parameter(mandatory = $true)][string]$TenantID,
 
-        [parameter(ParameterSetName = "ServicePrincipal")]
-        [Parameter(mandatory = $true)][string]$ClientID
+        [Parameter(mandatory = $false)][string]$ClientID
     )
     begin {
         # Set the profile to beta
