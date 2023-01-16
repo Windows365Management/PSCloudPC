@@ -44,7 +44,7 @@ function New-CPCUserSettingsPolicy {
     Process {
 
         $params = @{
-            DisplayName         = $DisplayName
+            DisplayName         = $Name
             LocalAdminEnabled   = $LocalAdminEnabled
             RestorePointSetting = @{
                 UserRestoreEnabled = $UserRestoreEnabled
