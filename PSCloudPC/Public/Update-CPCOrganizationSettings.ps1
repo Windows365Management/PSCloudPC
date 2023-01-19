@@ -38,12 +38,12 @@ function Update-CPCOrganizationSettings {
         $params = @{}
         
         If ($osVersion) {
-            Write-Output "Setting the OS version to $osVersion"
+            Write-Output "OS version set to $osVersion"
             $params.Add("osVersion", "$osVersion")
             Write-Verbose "osVersion: $($osVersion)"
         }
         If ($userAccountType) {
-            Write-Output "Setting the user account type to $userAccountType"
+            Write-Output "User Account type set to $userAccountType"
             if ($userAccountType -eq "administrator") {
                 Write-Warning "The administrator account type is not recommended for production use."
             }
@@ -51,17 +51,17 @@ function Update-CPCOrganizationSettings {
             Write-Verbose "userAccountType: $($userAccountType)"
         }
         If ($psboundparameters.ContainsKey("enableMEMAutoEnroll")) {
-            Write-Output "Setting the Intune enrollment to $enableMEMAutoEnroll"
+            Write-Output "Automatic Intune enrollment set to $enableMEMAutoEnroll"
             $params.Add("enableMEMAutoEnroll", "$enableMEMAutoEnroll")
             Write-Verbose "enableMEMAutoEnroll: $($enableMEMAutoEnroll)"
         }
         If ($PSBoundParameters.ContainsKey("enableSingleSignOn")) {
-            Write-Output "Setting single sign-on to $enableSingleSignOn"
+            Write-Output "Enable Single Sign On set to $enableSingleSignOn"
             $params.Add("enableSingleSignOn", "$enableSingleSignOn")
             Write-Verbose "enableSingleSignOn: $($enableSingleSignOn)"
         }
         If ($windowsSettings) {
-            Write-Output "Setting the windows settings to $windowsSettings"
+            Write-Output "Language settings set to $windowsSettings"
             $params += @{windowsSettings = @{"language" = "$windowsSettings" } }
             Write-Verbose "windowsSettings: $($windowsSettings)"
             
