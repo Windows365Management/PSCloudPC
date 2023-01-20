@@ -52,7 +52,7 @@ function Update-CPCProvisioningPolicy {
             $params.Add("ImageId", "$ImageId")
         }
 
-        If ($Null -ne $EnableSingleSignOn){
+        If ($psboundparameters.ContainsKey("EnableSingleSignOn")){
             $params.Add("EnableSingleSignOn", $EnableSingleSignOn)
         }
 
@@ -64,9 +64,8 @@ function Update-CPCProvisioningPolicy {
 
         try {
             Write-Verbose "Updating User Settings Policy $($Name)"
-            $Result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json"
-
-            $Result | ConvertFrom-Json
+            $Result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
+            $Result
         }
         catch {
             Throw $_.Exception.Message
