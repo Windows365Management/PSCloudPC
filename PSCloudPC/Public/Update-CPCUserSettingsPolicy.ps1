@@ -81,7 +81,7 @@ function Update-CPCUserSettingsPolicy {
         try {
             Write-Verbose "Updating User Settings Policy $($Name)"
             $Result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
-            $Resul
+            $Result
         }
         catch {
             Throw $_.Exception.Message
