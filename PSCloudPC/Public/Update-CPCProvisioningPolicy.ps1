@@ -16,40 +16,57 @@ function Update-CPCProvisioningPolicy {
     param (
         [parameter(Mandatory = $true, ParameterSetName = 'Name')]
         [string]$Name,
+
         [ValidateSet("Custom","Gallery")]
         [parameter(Mandatory = $false)][string]$ImageType,
+
         [parameter(Mandatory = $false)][string]$ImageId,
+
         [parameter(Mandatory = $false)][bool]$EnableSingleSignOn
     )
+
     Begin {
         Get-TokenValidity
+
         $Policy = Get-CPCProvisioningPolicy -name $Name
+
         If ($null -eq $Policy) {
             Throw "No User Settings Policy found with name $Name"
             return
         }
+
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies/$($Policy.id)"
+
         Write-Verbose "Update url: $($url)"
+
     }
+
     Process {
         
         $params = @{
             displayName = $($Policy.displayName)
         }
+
         If ($ImageId){
             $params.Add("ImageType","$imageType")
             $params.Add("ImageId", "$ImageId")
         }
-        If ($psboundparameters.ContainsKey("EnableSingleSignOn")){
+
+        If ($Null -ne $EnableSingleSignOn){
             $params.Add("EnableSingleSignOn", $EnableSingleSignOn)
         }
+
         Write-Verbose "Params: $($params)"
+
         $body = $params | ConvertTo-Json -Depth 10
+
         Write-Verbose "Body: $($body)"
+
         try {
             Write-Verbose "Updating User Settings Policy $($Name)"
-            $Result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
-            $Result
+            $Result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json"
+
+            $Result | ConvertFrom-Json
         }
         catch {
             Throw $_.Exception.Message
