@@ -72,13 +72,8 @@ function Update-CPCOrganizationSettings {
         Write-Verbose "Body: $($body)"
         try {
             Write-Verbose "Updating Organization Settings "
-            $result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json"
-            if ($result.StatusCode -eq 204) {
-                Write-Output "API call was successfull, data received"
-            }
-            else {
-                Write-Output "API returned status code $($result.StatusCode)"
-            }
+            $result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
+            $result
             
         }
         catch {
