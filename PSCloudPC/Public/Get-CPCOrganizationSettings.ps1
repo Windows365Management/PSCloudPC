@@ -7,6 +7,10 @@ function Get-CPCOrganizationSettings {
     .EXAMPLE
     Get-CPCOrganizationSettings
     #>
+    [CmdletBinding()]
+    param (
+    )
+    
     Begin {
         Get-TokenValidity
         Write-Verbose "Setting url to https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/organizationSettings"
@@ -16,7 +20,6 @@ function Get-CPCOrganizationSettings {
     
     Process {
         
-        #$result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
         $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader -SkipHttpErrorCheck
         
         if ($null -eq $result) {

@@ -46,15 +46,15 @@ function Update-CPCUserSettingsPolicy {
             displayName = $($Policy.displayName)
         }
 
-        If ($LocalAdminEnabled){
+        If ($psboundparameters.ContainsKey("EnableSingleSignOn")){
             $params.Add("LocalAdminEnabled", "$LocalAdminEnabled")
         }
 
-        If ($SelfServiceEnabled){
+        If ($psboundparameters.ContainsKey("SelfServiceEnabled")){
             $params.Add("SelfServiceEnabled", $SelfServiceEnabled )
         }
 
-        If ($UserRestoreEnabled){
+        If ($psboundparameters.ContainsKey("UserRestoreEnabled")){
             If ($params.RestorePointSetting){
                 $params.RestorePointSetting += @{"UserRestoreEnabled" = "$UserRestoreEnabled"}
             }
@@ -80,9 +80,8 @@ function Update-CPCUserSettingsPolicy {
 
         try {
             Write-Verbose "Updating User Settings Policy $($Name)"
-            $Result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json"
-
-            $Result | ConvertFrom-Json
+            $Result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
+            $Result
         }
         catch {
             Throw $_.Exception.Message

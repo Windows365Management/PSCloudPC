@@ -20,15 +20,15 @@ function Update-CPCOrganizationSettings {
     param (
         [parameter(Mandatory = $false)]
         [ValidateSet("windows10", "windows11")]
-        [string]$osVersion,
+        [string]$OSVersion,
         [parameter(Mandatory = $false)]
         [ValidateSet("standardUser", "administrator")]
-        [string]$userAccountType,
+        [string]$UserAccountType,
         [parameter(Mandatory = $false)]
-        [bool]$enableMEMAutoEnroll,
+        [bool]$EnableMEMAutoEnroll,
         [parameter(Mandatory = $false)]
-        [bool]$enableSingleSignOn,
-        [parameter(Mandatory = $false)][string]$windowsSettings
+        [bool]$EnableSingleSignOn,
+        [parameter(Mandatory = $false)][string]$WindowsSettings
     )
     Begin {
         Get-TokenValidity
@@ -38,32 +38,27 @@ function Update-CPCOrganizationSettings {
         $params = @{}
         
         If ($osVersion) {
-            Write-Output "OS version set to $osVersion"
-            $params.Add("osVersion", "$osVersion")
-            Write-Verbose "osVersion: $($osVersion)"
+            $params.Add("osVersion", "$OSVersion")
+            Write-Verbose "osVersion: $($OSVersion)"
         }
         If ($userAccountType) {
-            Write-Output "User Account type set to $userAccountType"
             if ($userAccountType -eq "administrator") {
                 Write-Warning "The administrator account type is not recommended for production use."
             }
-            $params.Add("userAccountType", "$userAccountType")
-            Write-Verbose "userAccountType: $($userAccountType)"
+            $params.Add("userAccountType", "$UserAccountType")
+            Write-Verbose "userAccountType: $($UserAccountType)"
         }
         If ($psboundparameters.ContainsKey("enableMEMAutoEnroll")) {
-            Write-Output "Automatic Intune enrollment set to $enableMEMAutoEnroll"
-            $params.Add("enableMEMAutoEnroll", "$enableMEMAutoEnroll")
-            Write-Verbose "enableMEMAutoEnroll: $($enableMEMAutoEnroll)"
+            $params.Add("enableMEMAutoEnroll", "$EnableMEMAutoEnroll")
+            Write-Verbose "enableMEMAutoEnroll: $($EnableMEMAutoEnroll)"
         }
         If ($PSBoundParameters.ContainsKey("enableSingleSignOn")) {
-            Write-Output "Enable Single Sign On set to $enableSingleSignOn"
-            $params.Add("enableSingleSignOn", "$enableSingleSignOn")
-            Write-Verbose "enableSingleSignOn: $($enableSingleSignOn)"
+            $params.Add("enableSingleSignOn", "$EnableSingleSignOn")
+            Write-Verbose "enableSingleSignOn: $($EnableSingleSignOn)"
         }
         If ($windowsSettings) {
-            Write-Output "Language settings set to $windowsSettings"
-            $params += @{windowsSettings = @{"language" = "$windowsSettings" } }
-            Write-Verbose "windowsSettings: $($windowsSettings)"
+            $params += @{windowsSettings = @{"language" = "$WindowsSettings" } }
+            Write-Verbose "windowsSettings: $($WindowsSettings)"
             
         }
     }

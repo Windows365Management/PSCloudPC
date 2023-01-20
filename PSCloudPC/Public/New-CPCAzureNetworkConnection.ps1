@@ -35,16 +35,16 @@ function New-CPCAzureNetworkConnection {
         [string]$DisplayName,
         [parameter(Mandatory, ParameterSetName = "AzureADJoin")]
         [parameter(Mandatory, ParameterSetName = "HybridAzureADJoin")]
-        [string]$resourceGroupId,
+        [string]$ResourceGroupId,
         [parameter(Mandatory, ParameterSetName = "AzureADJoin")]
         [parameter(Mandatory, ParameterSetName = "HybridAzureADJoin")]
         [string]$VirtualNetworkId,
         [parameter(Mandatory, ParameterSetName = "AzureADJoin")]
         [parameter(Mandatory, ParameterSetName = "HybridAzureADJoin")]
-        [string]$subnetId,
+        [string]$SubnetId,
         [parameter(Mandatory, ParameterSetName = "AzureADJoin")]
         [parameter(Mandatory, ParameterSetName = "HybridAzureADJoin")]
-        [string]$subscriptionId,
+        [string]$SubscriptionId,
         [Parameter(Mandatory, ParameterSetName = "HybridAzureADJoin")]
         [string]$AdDomainName,
         [Parameter(Mandatory, ParameterSetName = "HybridAzureADJoin")]
@@ -74,17 +74,17 @@ function New-CPCAzureNetworkConnection {
     }
     Process {
         $params = @{
-            DisplayName        = $displayName
-            SubscriptionId     = $subscriptionId
+            DisplayName        = $DisplayName
+            SubscriptionId     = $SubscriptionId
             Type               = $DomainJoinType
-            SubscriptionName   = $subscriptionName
-            AdDomainName       = $adDomainName
-            AdDomainUsername   = $adDomainUsername
-            AdDomainPassword   = $($adDomainPassword | ConvertFrom-SecureString)
-            OrganizationalUnit = $organizationalUnit
-            ResourceGroupId    = $resourceGroupId
-            VirtualNetworkId   = $virtualNetworkId
-            SubnetId           = $subnetId
+            SubscriptionName   = $SubscriptionName
+            AdDomainName       = $AdDomainName
+            AdDomainUsername   = $AdDomainUsername
+            AdDomainPassword   = $($AdDomainPassword | ConvertFrom-SecureString)
+            OrganizationalUnit = $OrganizationalUnit
+            ResourceGroupId    = $ResourceGroupId
+            VirtualNetworkId   = $VirtualNetworkId
+            SubnetId           = $SubnetId
         }
         Write-verbose $params
         $body = $params | ConvertTo-Json -Depth 20
