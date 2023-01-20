@@ -33,7 +33,7 @@ Describe "$module Global module tests" {
             $moduleContent.ModuleVersion -match "^([0-9]).([0-9]).([0-9])$" | Should -Be $true
         }
         It "$module version should be greater than PSGallery" {
-            $galleryVersion = (Find-Module -Name $module -Repository PSGallery).Version
+            $galleryVersion = (Find-Module -Name PSCloudPC -Repository PSGallery).Version
             [version]$moduleContent.ModuleVersion | Should -BeGreaterThan ([version]$galleryVersion)
         }     
         
