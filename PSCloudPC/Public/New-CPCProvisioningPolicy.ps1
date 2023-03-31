@@ -28,12 +28,16 @@ function New-CPCProvisioningPolicy {
     Enter the On Premises Connection Id (Azure Network Connection) for the Provisioning Policy
     .PARAMETER Language
     Enter the Language for the Provisioning Policy (Default: en-US)
+    .PARAMETER NamingTemplate
+    Apply device name template. Create unique names for your devices. Names must be between 5 and 15 characters, and can contain letters, numbers, hyphens, and underscores. Names cannot include a blank space. Use the %USERNAME:x% macro to add the first x letters of username. Use the %RAND:y% macro to add a random alphanumeric string of length y, y must be 5 or more. Names must contain a randomized string.
     .EXAMPLE
-    New-CPCProvisioningPolicy -Name "Test-AzureADJoin" -Description "Test-AzureADJoin" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365-DomainJoinType "AzureADJoin" -EnableSingleSignOn $true -RegionName "West Europe" -RegionGroup "Europe" -Language "en-US"
+    New-CPCProvisioningPolicy -Name "Test-AzureADJoin" -Description "Test-AzureADJoin" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -DomainJoinType "AzureADJoin" -EnableSingleSignOn $true -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US"
     .EXAMPLE
     New-CPCProvisioningPolicy -Name "Test-HybridADJoin" -Description "Test-HybridADJoin" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -DomainJoinType "hybridAzureADJoin" -EnableSingleSignOn $false -OnPremisesConnectionId "00000000-0fe4-44cf-8ec0-24eebe498f25" -Language "en-US"
     .EXAMPLE
-    New-CPCProvisioningPolicy -Name "Test-Autopatch" -Description "Test-Autopatch" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365 -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "West Europe" -RegionGroup "Europe" -Language "en-US" -EnableSingleSignOn $true 
+    New-CPCProvisioningPolicy -Name "Test-Autopatch" -Description "Test-Autopatch" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true 
+    .EXAMPLE
+    New-CPCProvisioningPolicy -Name "Test-NamingTemplate" -Description "Test-NamingTemplate" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true -NamingTemplate "%USERNAME:5%-%RAND:5%"
     #>
     [CmdletBinding(DefaultParameterSetName = 'AzureADJoin')]
     param (
@@ -68,7 +72,9 @@ function New-CPCProvisioningPolicy {
         [parameter(Mandatory = $true, ParameterSetName = 'AzureNetwork')]
         [string]$OnPremisesConnectionId,
 
-        [parameter(Mandatory = $false)][string]$Language = 'en-US'
+        [parameter(Mandatory = $false)][string]$Language = 'en-US',
+
+        [parameter(Mandatory = $false)][string]$NamingTemplate
         # TODO: Add SupportsShouldProcess 
     )
 
@@ -113,6 +119,7 @@ function New-CPCProvisioningPolicy {
             WindowsSettings = @{
                 Language = $Language
             }
+            CloudPcNamingTemplate = $NamingTemplate
         }
 
         If ($DomainJoinType -eq "AzureADJoin") {

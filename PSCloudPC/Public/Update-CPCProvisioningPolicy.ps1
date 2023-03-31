@@ -22,7 +22,9 @@ function Update-CPCProvisioningPolicy {
 
         [parameter(Mandatory = $false)][string]$ImageId,
 
-        [parameter(Mandatory = $false)][bool]$EnableSingleSignOn
+        [parameter(Mandatory = $false)][bool]$EnableSingleSignOn,
+
+        [parameter(Mandatory = $false)][string]$NamingTemplate
     )
 
     Begin {
@@ -54,6 +56,10 @@ function Update-CPCProvisioningPolicy {
 
         If ($psboundparameters.ContainsKey("EnableSingleSignOn")){
             $params.Add("EnableSingleSignOn", $EnableSingleSignOn)
+        }
+
+        If ($NamingTemplate){
+            $params.Add("CloudPcNamingTemplate","$NamingTemplate")
         }
 
         Write-Verbose "Params: $($params)"
