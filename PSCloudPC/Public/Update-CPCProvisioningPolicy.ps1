@@ -24,7 +24,9 @@ function Update-CPCProvisioningPolicy {
 
         [parameter(Mandatory = $false)][bool]$EnableSingleSignOn,
 
-        [parameter(Mandatory = $false)][string]$NamingTemplate
+        [parameter(Mandatory = $false)][string]$NamingTemplate,
+
+        [parameter(Mandatory = $false)][string]$OnPremisesConnectionId
     )
 
     Begin {
@@ -47,6 +49,9 @@ function Update-CPCProvisioningPolicy {
         
         $params = @{
             displayName = $($Policy.displayName)
+            DomainJoinConfiguration = @{
+                Type = $Policy.domainJoinConfiguration.Type
+            }
         }
 
         If ($ImageId){
@@ -60,6 +65,16 @@ function Update-CPCProvisioningPolicy {
 
         If ($NamingTemplate){
             $params.Add("CloudPcNamingTemplate","$NamingTemplate")
+        }
+
+        If ($OnPremisesConnectionId){
+            if ($Policy.domainJoinConfiguration.OnPremisesConnectionId) {
+                foreach ($item in $Policy.domainJoinConfiguration.OnPremisesConnectionId) {
+                    $params.DomainJoinConfiguration.Add("OnPremisesConnectionId","$item")
+                }
+                <# Action to perform if the condition is true #>
+            }
+            $params.DomainJoinConfiguration.Add("OnPremisesConnectionId","$OnPremisesConnectionId")
         }
 
         Write-Verbose "Params: $($params)"

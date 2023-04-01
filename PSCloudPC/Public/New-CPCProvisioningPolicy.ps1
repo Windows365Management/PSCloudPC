@@ -100,6 +100,13 @@ function New-CPCProvisioningPolicy {
         Else {
             $WindowsAutopatchprofile = $null
         }
+        if ($NamingTemplate) {
+            Write-Verbose "Naming Template: $NamingTemplate"
+        }
+        Else {
+            Write-Verbose "Naming Template not set, setting default CPC-%USERNAME:5%-%RAND:5%"
+            $NamingTemplate = "CPC-%USERNAME:5%-%RAND:5%"
+        }
 
         $params = @{
             DisplayName = $Name
@@ -123,11 +130,18 @@ function New-CPCProvisioningPolicy {
         }
 
         If ($DomainJoinType -eq "AzureADJoin") {
+            If ($OnPremisesConnectionId){
+                foreach ($item in $OnPremisesConnectionId) {
+                    $params.DomainJoinConfiguration.Add("OnPremisesConnectionId", "$item")
+                }
+            }
             $params.DomainJoinConfiguration.Add("RegionName", "$RegionName")
             $params.DomainJoinConfiguration.Add("RegionGroup", "$RegionGroup")
         }
         Else {
-            $params.DomainJoinConfiguration.Add("OnPremisesConnectionId", "$OnPremisesConnectionId")
+            foreach ($item in $OnPremisesConnectionId) {
+                $params.DomainJoinConfiguration.Add("OnPremisesConnectionId", "$item")
+            }
         }
 
         $body = $params | ConvertTo-Json -Depth 10
