@@ -50,7 +50,6 @@ function Update-CPCProvisioningPolicy {
         $params = @{
             displayName = $($Policy.displayName)
             DomainJoinConfiguration = @{
-                Type = $Policy.domainJoinConfiguration.Type
             }
         }
 
@@ -69,12 +68,27 @@ function Update-CPCProvisioningPolicy {
 
         If ($OnPremisesConnectionId){
             if ($Policy.domainJoinConfiguration.OnPremisesConnectionId) {
+                Write-Verbose "OnPremisesConnectionId found, adding new one"
                 foreach ($item in $Policy.domainJoinConfiguration.OnPremisesConnectionId) {
-                    $params.DomainJoinConfiguration.Add("OnPremisesConnectionId","$item")
+                    $params.DomainJoinConfiguration += @{
+                        Type = "AzureADJoin"
+                        OnPremisesConnectionId = "$item"
+                    }
+                }
+                $params.DomainJoinConfiguration += @{
+                    Type = "AzureADJoin"
+                    OnPremisesConnectionId = "$OnPremisesConnectionId"
                 }
                 <# Action to perform if the condition is true #>
             }
-            $params.DomainJoinConfiguration.Add("OnPremisesConnectionId","$OnPremisesConnectionId")
+            else {
+                Write-Verbose "No OnPremisesConnectionId found, adding new one"
+                $params.DomainJoinConfiguration += @{
+                    Type = "AzureADJoin"
+                    OnPremisesConnectionId = "$OnPremisesConnectionId"
+                }
+            }
+            
         }
 
         Write-Verbose "Params: $($params)"

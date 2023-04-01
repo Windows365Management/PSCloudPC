@@ -117,7 +117,6 @@ function New-CPCProvisioningPolicy {
             ImageType = $ImageType
             enableSingleSignOn = $EnableSingleSignOn
             DomainJoinConfiguration = @{
-                Type = $DomainJoinType
             }
             MicrosoftManagedDesktop = @{
                 Type = $WindowsAutopatch
@@ -131,16 +130,23 @@ function New-CPCProvisioningPolicy {
 
         If ($DomainJoinType -eq "AzureADJoin") {
             If ($OnPremisesConnectionId){
+                Write-Verbose "This are the amount of OnPremisesConnectionId: $($OnPremisesConnectionId.count)"
                 foreach ($item in $OnPremisesConnectionId) {
-                    $params.DomainJoinConfiguration.Add("OnPremisesConnectionId", "$item")
+                    $params.DomainJoinConfiguration += @{
+                        Type = "AzureADJoin"
+                        OnPremisesConnectionId = "$item"
+                    }
                 }
             }
-            $params.DomainJoinConfiguration.Add("RegionName", "$RegionName")
-            $params.DomainJoinConfiguration.Add("RegionGroup", "$RegionGroup")
+            else {
+                $params.DomainJoinConfiguration.Add("RegionName", "$RegionName")
+                $params.DomainJoinConfiguration.Add("RegionGroup", "$RegionGroup")
+            }
         }
         Else {
-            foreach ($item in $OnPremisesConnectionId) {
-                $params.DomainJoinConfiguration.Add("OnPremisesConnectionId", "$item")
+            $params.DomainJoinConfiguration += @{
+                Type = "hybridAzureADJoin"
+                OnPremisesConnectionId = "$item"
             }
         }
 
