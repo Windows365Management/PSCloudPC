@@ -46,21 +46,21 @@ function New-CPCProvisioningPolicy {
 
         [Parameter(Mandatory = $false)][string]$Description,
 
-        [Parameter(mandatory = $false)][string]$ProvisioningType  = "dedicated",
+        [Parameter(mandatory = $false)][string]$ProvisioningType = "dedicated",
 
-        [Parameter(mandatory = $false)][string]$ManagedBy  = "Windows365",
+        [Parameter(mandatory = $false)][string]$ManagedBy = "Windows365",
 
-        [Parameter(Mandatory = $false)][ValidateSet("Custom","Gallery")]
+        [Parameter(Mandatory = $false)][ValidateSet("Custom", "Gallery")]
         [string]$ImageType = "Gallery",
 
         [parameter(Mandatory = $true)][string]$ImageId,
 
         [parameter(Mandatory = $false)][bool]$EnableSingleSignOn,
 
-        [Parameter(Mandatory = $false)][ValidateSet('notManaged','starterManaged')]
+        [Parameter(Mandatory = $false)][ValidateSet('notManaged', 'starterManaged')]
         [string]$WindowsAutopatch = "notManaged",
 
-        [parameter(Mandatory = $false)][ValidateSet('AzureADJoin','hybridAzureADJoin')]
+        [parameter(Mandatory = $false)][ValidateSet('AzureADJoin', 'hybridAzureADJoin')]
         [string]$DomainJoinType = 'AzureADJoin',
 
         [parameter(Mandatory = $true, ParameterSetName = 'AzureADJoin')]
@@ -70,7 +70,7 @@ function New-CPCProvisioningPolicy {
         [string]$RegionGroup,
 
         [parameter(Mandatory = $true, ParameterSetName = 'AzureNetwork')]
-        [string]$OnPremisesConnectionId,
+        [string]$OnPremisesConnectionIds,
 
         [parameter(Mandatory = $false)][string]$Language = 'en-US',
 
@@ -108,49 +108,58 @@ function New-CPCProvisioningPolicy {
             $NamingTemplate = "CPC-%USERNAME:5%-%RAND:5%"
         }
 
-        $params = @{
-            DisplayName = $Name
-            Description = $Description
-            ProvisioningType = $ProvisioningType
-            ManagedBy = $ManagedBy
-            ImageId = $ImageId
-            ImageType = $ImageType
-            enableSingleSignOn = $EnableSingleSignOn
-            DomainJoinConfiguration = @{
+
+        $domainJoinConfigurations = @()
+        #$OnPremisesConnectionIds = "9ea13957-5a94-4faf-bdf8-d177ac216886,b3c988b3-9663-4d5b-b4c9-ef837699f965"
+        #split the connection IDs into an array
+        $OnPremisesConnectionId = $OnPremisesConnectionIds.split(",")
+        # Loop through each connection ID and create a domain join configuration hashtable
+
+
+        If ($OnPremisesConnectionId) {
+            foreach ($id in $OnPremisesConnectionId) {
+                # Create a hashtable for the domain join configuration
+                $domainJoinConfig = @{
+                    Type                   = "$DomainJoinType"
+                    OnPremisesConnectionId = $id
+                }
+        
+
             }
-            MicrosoftManagedDesktop = @{
-                Type = $WindowsAutopatch
+        }
+        else {
+            $domainJoinConfig = @{
+                Type        = "$DomainJoinType"
+                RegionName  = $RegionName
+                RegionGroup = $RegionGroup
+            }
+
+        }
+        
+        # Add the domain join configuration hashtable to the array
+        $domainJoinConfigurations += $domainJoinConfig
+
+
+        $params = @{
+            DisplayName              = $Name
+            Description              = $Description
+            ProvisioningType         = $ProvisioningType
+            ManagedBy                = $ManagedBy
+            ImageId                  = $ImageId
+            ImageType                = $ImageType
+            enableSingleSignOn       = $EnableSingleSignOn
+            DomainJoinConfigurations = $domainJoinConfigurations
+            MicrosoftManagedDesktop  = @{
+                Type    = $WindowsAutopatch
                 Profile = $WindowsAutopatchprofile
             }
-            WindowsSettings = @{
+            WindowsSettings          = @{
                 Language = $Language
             }
-            CloudPcNamingTemplate = $NamingTemplate
+            cloudPcNamingTemplate    = $NamingTemplate
         }
-
-        If ($DomainJoinType -eq "AzureADJoin") {
-            If ($OnPremisesConnectionId){
-                Write-Verbose "This are the amount of OnPremisesConnectionId: $($OnPremisesConnectionId.count)"
-                foreach ($item in $OnPremisesConnectionId) {
-                    $params.DomainJoinConfiguration += @{
-                        Type = "AzureADJoin"
-                        OnPremisesConnectionId = "$item"
-                    }
-                }
-            }
-            else {
-                $params.DomainJoinConfiguration.Add("RegionName", "$RegionName")
-                $params.DomainJoinConfiguration.Add("RegionGroup", "$RegionGroup")
-            }
-        }
-        Else {
-            $params.DomainJoinConfiguration += @{
-                Type = "hybridAzureADJoin"
-                OnPremisesConnectionId = "$item"
-            }
-        }
-
         $body = $params | ConvertTo-Json -Depth 10
+
 
         Write-Verbose $body
 
@@ -160,6 +169,7 @@ function New-CPCProvisioningPolicy {
         catch {
             Throw $_.Exception.Message
         }
+        
         
     }
 }
