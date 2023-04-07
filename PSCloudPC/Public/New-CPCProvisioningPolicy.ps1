@@ -110,66 +110,70 @@ function New-CPCProvisioningPolicy {
 
 
         $domainJoinConfigurations = @()
-        #$OnPremisesConnectionIds = "9ea13957-5a94-4faf-bdf8-d177ac216886,b3c988b3-9663-4d5b-b4c9-ef837699f965"
+        $OnPremisesConnectionIds = "9ea13957-5a94-4faf-bdf8-d177ac216886,b3c988b3-9663-4d5b-b4c9-ef837699f965"
         #split the connection IDs into an array
-        $OnPremisesConnectionId = $OnPremisesConnectionIds.split(",")
+        $OnPremisesConnectionId = $OnPremisesConnectionIds -split ','
         # Loop through each connection ID and create a domain join configuration hashtable
 
 
         If ($OnPremisesConnectionId) {
             foreach ($id in $OnPremisesConnectionId) {
+                Write-Verbose "OnPremisesConnectionId: $id"
                 # Create a hashtable for the domain join configuration
                 $domainJoinConfig = @{
                     Type                   = "$DomainJoinType"
                     OnPremisesConnectionId = $id
                 }
-        
-
-            }
-        }
-        else {
-            $domainJoinConfig = @{
-                Type        = "$DomainJoinType"
-                RegionName  = $RegionName
-                RegionGroup = $RegionGroup
+                $domainJoinConfigurations += $domainJoinConfig
             }
 
-        }
-        
-        # Add the domain join configuration hashtable to the array
-        $domainJoinConfigurations += $domainJoinConfig
-
-
-        $params = @{
-            DisplayName              = $Name
-            Description              = $Description
-            ProvisioningType         = $ProvisioningType
-            ManagedBy                = $ManagedBy
-            ImageId                  = $ImageId
-            ImageType                = $ImageType
-            enableSingleSignOn       = $EnableSingleSignOn
-            DomainJoinConfigurations = $domainJoinConfigurations
-            MicrosoftManagedDesktop  = @{
-                Type    = $WindowsAutopatch
-                Profile = $WindowsAutopatchprofile
             }
-            WindowsSettings          = @{
-                Language = $Language
+        
+            else {
+                $domainJoinConfig = @{
+                    Type        = "$DomainJoinType"
+                    RegionName  = $RegionName
+                    RegionGroup = $RegionGroup
+                }
+                $domainJoinConfigurations += $domainJoinConfig
             }
-            cloudPcNamingTemplate    = $NamingTemplate
-        }
-        $body = $params | ConvertTo-Json -Depth 10
-
-
-        Write-Verbose $body
-
-        try {
-            Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body
-        }
-        catch {
-            Throw $_.Exception.Message
-        }
         
         
-    }
-}
+        
+                # Add the domain join configuration hashtable to the array
+                
+
+
+                $params = @{
+                    DisplayName              = $Name
+                    Description              = $Description
+                    ProvisioningType         = $ProvisioningType
+                    ManagedBy                = $ManagedBy
+                    ImageId                  = $ImageId
+                    ImageType                = $ImageType
+                    enableSingleSignOn       = $EnableSingleSignOn
+                    DomainJoinConfigurations = $domainJoinConfigurations
+                    MicrosoftManagedDesktop  = @{
+                        Type    = $WindowsAutopatch
+                        Profile = $WindowsAutopatchprofile
+                    }
+                    WindowsSettings          = @{
+                        Language = $Language
+                    }
+                    #cloudPcNamingTemplate    = $NamingTemplate
+                }
+                $body = $params | ConvertTo-Json -Depth 10
+
+
+                Write-Verbose $body
+
+                try {
+                    Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body
+                }
+                catch {
+                    Throw $_.Exception.Message
+                }
+        
+        
+            }
+        }
