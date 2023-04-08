@@ -110,7 +110,6 @@ function New-CPCProvisioningPolicy {
 
 
         $domainJoinConfigurations = @()
-        $OnPremisesConnectionIds = "9ea13957-5a94-4faf-bdf8-d177ac216886,b3c988b3-9663-4d5b-b4c9-ef837699f965"
         #split the connection IDs into an array
         $OnPremisesConnectionId = $OnPremisesConnectionIds -split ','
         # Loop through each connection ID and create a domain join configuration hashtable
