@@ -41,40 +41,58 @@ function New-CPCProvisioningPolicy {
     #>
     [CmdletBinding(DefaultParameterSetName = 'AzureADJoin')]
     param (
-        
-        [parameter(Mandatory = $true)][string]$Name,
+        # GENERAL
+        [parameter(Mandatory = $true)]
+        [string]$Name,
 
-        [Parameter(Mandatory = $false)][string]$Description,
+        [Parameter(Mandatory = $false)]
+        [string]$Description,
 
-        [Parameter(mandatory = $false)][string]$ProvisioningType = "dedicated",
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('dedicated', 'shared')]
+        [string]$ProvisioningType = "dedicated",
 
-        [Parameter(mandatory = $false)][string]$ManagedBy = "Windows365",
+        [parameter(Mandatory = $false)]
+        [string]$NamingTemplate,
 
-        [Parameter(Mandatory = $false)][ValidateSet("Custom", "Gallery")]
+        # JOIN TYPE DETAILS
+        # JOIN TYPE
+
+        [parameter(Mandatory, ParameterSetName = 'MicrosoftHosted')]
+        [parameter(Mandatory, ParameterSetName = 'AzureNetwork')]
+        [ValidateSet('azureADJoin', 'hybridAzureADJoin')]
+        [string]$DomainJoinType = 'azureADJoin',
+
+        [parameter(Mandatory = $true, ParameterSetName = 'MicrosoftHosted')]
+        [string]$RegionName,
+
+        [parameter(Mandatory = $true, ParameterSetName = 'MicrosoftHosted')]
+        [string]$RegionGroup,
+
+        [parameter(Mandatory = $true, ParameterSetName = 'AzureNetwork')]
+        [object]$OnPremisesConnectionIds,
+
+        [Parameter(mandatory = $false)]
+        [string]$ManagedBy = "Windows365",
+
+        # IMAGE DETAILS
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("Custom", "Gallery")]
         [string]$ImageType = "Gallery",
 
         [parameter(Mandatory = $true)][string]$ImageId,
 
-        [parameter(Mandatory = $false)][bool]$EnableSingleSignOn,
+        [parameter(Mandatory = $true)]
+        [bool]$EnableSingleSignOn,
+
+        # CONFIGURATION DETAILS
 
         [Parameter(Mandatory = $false)][ValidateSet('notManaged', 'starterManaged')]
         [string]$WindowsAutopatch = "notManaged",
 
-        [parameter(Mandatory = $false)][ValidateSet('AzureADJoin', 'hybridAzureADJoin')]
-        [string]$DomainJoinType = 'AzureADJoin',
-
-        [parameter(Mandatory = $true, ParameterSetName = 'AzureADJoin')]
-        [string]$RegionName,
-
-        [parameter(Mandatory = $true, ParameterSetName = 'AzureADJoin')]
-        [string]$RegionGroup,
-
-        [parameter(Mandatory = $true, ParameterSetName = 'AzureNetwork')]
-        [string]$OnPremisesConnectionIds,
-
-        [parameter(Mandatory = $false)][string]$Language = 'en-US',
-
-        [parameter(Mandatory = $false)][string]$NamingTemplate
+        [parameter(Mandatory = $false)]
+        [string]$Language = 'en-US'
         # TODO: Add SupportsShouldProcess 
     )
 
@@ -85,11 +103,18 @@ function New-CPCProvisioningPolicy {
         $Policy = Get-CPCProvisioningPolicy -Name $Name -ErrorAction SilentlyContinue
 
         if ($Policy) {
-            Write-Error "Provisioning Policy $Name already exists"
+            Write-Error "Provisioning Policy with name $Name already exists"
             break
         }
 
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies"
+
+        # Validate if DomainJoinType is azureADJoin, then EnableSingleSignOn can be used, otherwise throw an error.
+        if ($DomainJoinType -ne 'azureADJoin' -and $PSBoundParameters.ContainsKey('EnableSingleSignOn')) {
+            Write-Error "The parameter -EnableSingleSignOn can only be used with -DomainJoinType 'azureADJoin'."
+            break
+        }
+
     }
 
     Process {
@@ -101,78 +126,65 @@ function New-CPCProvisioningPolicy {
             $WindowsAutopatchprofile = $null
         }
         if ($NamingTemplate) {
-            Write-Verbose "Naming Template: $NamingTemplate"
+            Write-Verbose "Naming template: $NamingTemplate"
         }
         Else {
-            Write-Verbose "Naming Template not set, setting default CPC-%USERNAME:5%-%RAND:5%"
+            Write-Verbose "Naming template not set, setting default CPC-%USERNAME:5%-%RAND:5%"
             $NamingTemplate = "CPC-%USERNAME:5%-%RAND:5%"
         }
 
 
         $domainJoinConfigurations = @()
-        #split the connection IDs into an array
-        $OnPremisesConnectionId = $OnPremisesConnectionIds -split ','
-        # Loop through each connection ID and create a domain join configuration hashtable
-
-
-        If ($OnPremisesConnectionId) {
-            foreach ($id in $OnPremisesConnectionId) {
+        If ($OnPremisesConnectionIds) {
+            foreach ($id in $OnPremisesConnectionIds) {
                 Write-Verbose "OnPremisesConnectionId: $id"
-                # Create a hashtable for the domain join configuration
                 $domainJoinConfig = @{
                     Type                   = "$DomainJoinType"
                     OnPremisesConnectionId = $id
                 }
                 $domainJoinConfigurations += $domainJoinConfig
             }
-
-            }
-        
-            else {
-                $domainJoinConfig = @{
-                    Type        = "$DomainJoinType"
-                    RegionName  = $RegionName
-                    RegionGroup = $RegionGroup
-                }
-                $domainJoinConfigurations += $domainJoinConfig
-            }
-        
-        
-        
-                # Add the domain join configuration hashtable to the array
-                
-
-
-                $params = @{
-                    DisplayName              = $Name
-                    Description              = $Description
-                    ProvisioningType         = $ProvisioningType
-                    ManagedBy                = $ManagedBy
-                    ImageId                  = $ImageId
-                    ImageType                = $ImageType
-                    enableSingleSignOn       = $EnableSingleSignOn
-                    DomainJoinConfigurations = $domainJoinConfigurations
-                    MicrosoftManagedDesktop  = @{
-                        Type    = $WindowsAutopatch
-                        Profile = $WindowsAutopatchprofile
-                    }
-                    WindowsSettings          = @{
-                        Language = $Language
-                    }
-                    #cloudPcNamingTemplate    = $NamingTemplate
-                }
-                $body = $params | ConvertTo-Json -Depth 10
-
-
-                Write-Verbose $body
-
-                try {
-                    Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body
-                }
-                catch {
-                    Throw $_.Exception.Message
-                }
-        
-        
-            }
         }
+
+        else {
+            $domainJoinConfig = @{
+                Type        = "$DomainJoinType"
+                RegionName  = $RegionName
+                RegionGroup = $RegionGroup
+            }
+            $domainJoinConfigurations += $domainJoinConfig
+        }
+
+        $params = @{
+            DisplayName              = $Name
+            Description              = $Description
+            ProvisioningType         = $ProvisioningType
+            ManagedBy                = $ManagedBy
+            ImageId                  = $ImageId
+            ImageType                = $ImageType
+            enableSingleSignOn       = $EnableSingleSignOn
+            DomainJoinConfigurations = $domainJoinConfigurations
+            MicrosoftManagedDesktop  = @{
+                Type    = $WindowsAutopatch
+                Profile = $WindowsAutopatchprofile
+            }
+            WindowsSettings          = @{
+                Language = $Language
+            }
+            #cloudPcNamingTemplate    = $NamingTemplate
+        }
+        $body = $params | ConvertTo-Json -Depth 10
+
+
+        Write-Verbose $body
+
+        try {
+            Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body -SkipHttpErrorCheck
+        }
+        catch {
+            Throw $_.Exception.Message
+        }
+        
+        
+    }
+}
