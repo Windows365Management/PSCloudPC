@@ -41,7 +41,6 @@ function New-CPCProvisioningPolicy {
     #>
     [CmdletBinding(DefaultParameterSetName = 'AzureADJoin')]
     param (
-        # GENERAL
         [parameter(Mandatory = $true)]
         [string]$Name,
 
@@ -54,9 +53,6 @@ function New-CPCProvisioningPolicy {
 
         [parameter(Mandatory = $false)]
         [string]$NamingTemplate,
-
-        # JOIN TYPE DETAILS
-        # JOIN TYPE
 
         [parameter(Mandatory, ParameterSetName = 'MicrosoftHosted')]
         [parameter(Mandatory, ParameterSetName = 'AzureNetwork')]
@@ -75,8 +71,6 @@ function New-CPCProvisioningPolicy {
         [Parameter(mandatory = $false)]
         [string]$ManagedBy = "Windows365",
 
-        # IMAGE DETAILS
-
         [Parameter(Mandatory = $false)]
         [ValidateSet("Custom", "Gallery")]
         [string]$ImageType = "Gallery",
@@ -86,16 +80,12 @@ function New-CPCProvisioningPolicy {
         [parameter(Mandatory = $true)]
         [bool]$EnableSingleSignOn,
 
-        # CONFIGURATION DETAILS
-
         [Parameter(Mandatory = $false)][ValidateSet('notManaged', 'starterManaged')]
         [string]$WindowsAutopatch = "notManaged",
 
         [parameter(Mandatory = $false)]
         [string]$Language = 'en-US'
-        # TODO: Add SupportsShouldProcess 
     )
-
     
     begin {
         Get-TokenValidity
@@ -132,7 +122,6 @@ function New-CPCProvisioningPolicy {
             Write-Verbose "Naming template not set, setting default CPC-%USERNAME:5%-%RAND:5%"
             $NamingTemplate = "CPC-%USERNAME:5%-%RAND:5%"
         }
-
 
         $domainJoinConfigurations = @()
         If ($OnPremisesConnectionIds) {

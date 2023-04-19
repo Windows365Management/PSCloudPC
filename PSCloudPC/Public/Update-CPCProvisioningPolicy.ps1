@@ -26,7 +26,10 @@ function Update-CPCProvisioningPolicy {
 
         [parameter(Mandatory = $false)][string]$NamingTemplate,
 
-        [parameter(Mandatory = $false)][string]$OnPremisesConnectionId
+        [string]$OnPremisesConnectionIds,
+
+        [ValidateSet('azureADJoin', 'hybridAzureADJoin')]
+        [string]$DomainJoinType = 'azureADJoin'
     )
 
     Begin {
@@ -49,8 +52,7 @@ function Update-CPCProvisioningPolicy {
         
         $params = @{
             displayName = $($Policy.displayName)
-            DomainJoinConfiguration = @{
-            }
+            
         }
 
         If ($ImageId){
@@ -61,34 +63,23 @@ function Update-CPCProvisioningPolicy {
         If ($psboundparameters.ContainsKey("EnableSingleSignOn")){
             $params.Add("EnableSingleSignOn", $EnableSingleSignOn)
         }
-
+ 
         If ($NamingTemplate){
             $params.Add("CloudPcNamingTemplate","$NamingTemplate")
         }
 
-        If ($OnPremisesConnectionId){
-            if ($Policy.domainJoinConfiguration.OnPremisesConnectionId) {
-                Write-Verbose "OnPremisesConnectionId found, adding new one"
-                foreach ($item in $Policy.domainJoinConfiguration.OnPremisesConnectionId) {
-                    $params.DomainJoinConfiguration += @{
-                        Type = "AzureADJoin"
-                        OnPremisesConnectionId = "$item"
-                    }
+        
+        If ($OnPremisesConnectionIds) {
+            $domainJoinConfigurations = @()
+            foreach ($id in $OnPremisesConnectionIds) {
+                Write-Verbose "OnPremisesConnectionId: $id"
+                $domainJoinConfig = @{
+                    Type                   = "$DomainJoinType"
+                    OnPremisesConnectionId = $id
                 }
-                $params.DomainJoinConfiguration += @{
-                    Type = "AzureADJoin"
-                    OnPremisesConnectionId = "$OnPremisesConnectionId"
-                }
-                <# Action to perform if the condition is true #>
+                $domainJoinConfigurations += $domainJoinConfig
             }
-            else {
-                Write-Verbose "No OnPremisesConnectionId found, adding new one"
-                $params.DomainJoinConfiguration += @{
-                    Type = "AzureADJoin"
-                    OnPremisesConnectionId = "$OnPremisesConnectionId"
-                }
-            }
-            
+            $params.Add("DomainJoinConfigurations", $domainJoinConfigurations)
         }
 
         Write-Verbose "Params: $($params)"
@@ -100,7 +91,7 @@ function Update-CPCProvisioningPolicy {
         try {
             Write-Verbose "Updating User Settings Policy $($Name)"
             $Result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
-            $Result
+            Write-Verbose "Result: $($Result.Content)"
         }
         catch {
             Throw $_.Exception.Message
