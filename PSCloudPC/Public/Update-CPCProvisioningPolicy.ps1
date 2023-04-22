@@ -26,7 +26,7 @@ function Update-CPCProvisioningPolicy {
 
         [parameter(Mandatory = $false)][string]$NamingTemplate,
 
-        [parameter(Mandatory = $false)][object]$OnPremisesConnectionIds,
+        [parameter(Mandatory = $false)][object]$AzureNetworkConnection,
 
         [ValidateSet('azureADJoin', 'hybridAzureADJoin')]
         [string]$DomainJoinType = 'azureADJoin'
@@ -68,20 +68,32 @@ function Update-CPCProvisioningPolicy {
             $params.Add("CloudPcNamingTemplate","$NamingTemplate")
         }
 
-        
-        If ($OnPremisesConnectionIds) {
+        If ($AzureNetworkConnection) {
             $domainJoinConfigurations = @()
-            foreach ($id in $OnPremisesConnectionIds) {
-                Write-Verbose "OnPremisesConnectionId: $id"
+            foreach ($Network in $AzureNetworkConnection) {
+
+                $AzureNetworkInfo = Get-CPCAzureNetworkConnection -Name $Network
+
+                If ($null -eq $AzureNetworkInfo) {
+                    Throw "No Azure Network Connection found with name $Network"
+                    break
+                }
+
+                if ($AzureNetworkInfo.healthCheckStatus -ne "passed") {
+                    Throw "Azure Network Connection $Network is not healthy"
+                    break
+                }
+
+                Write-Verbose "AzureNetworkConnection ID: $($AzureNetworkInfo.Id)"
                 $domainJoinConfig = @{
-                    Type                   = "$DomainJoinType"
-                    OnPremisesConnectionId = $id
+                    Type                   = $AzureNetworkInfo.Type
+                    OnPremisesConnectionId = $AzureNetworkInfo.Id
                 }
                 $domainJoinConfigurations += $domainJoinConfig
             }
             $params.Add("DomainJoinConfigurations", $domainJoinConfigurations)
         }
-
+        
         Write-Verbose "Params: $($params)"
 
         $body = $params | ConvertTo-Json -Depth 10

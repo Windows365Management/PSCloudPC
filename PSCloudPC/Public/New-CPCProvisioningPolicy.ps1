@@ -66,7 +66,7 @@ function New-CPCProvisioningPolicy {
         [string]$RegionGroup,
 
         [parameter(Mandatory = $true, ParameterSetName = 'AzureNetwork')]
-        [object]$OnPremisesConnectionIds,
+        [object]$AzureNetworkConnection,
 
         [Parameter(mandatory = $false)]
         [string]$ManagedBy = "Windows365",
@@ -123,13 +123,26 @@ function New-CPCProvisioningPolicy {
             $NamingTemplate = "CPC-%USERNAME:5%-%RAND:5%"
         }
 
-        $domainJoinConfigurations = @()
-        If ($OnPremisesConnectionIds) {
-            foreach ($id in $OnPremisesConnectionIds) {
-                Write-Verbose "OnPremisesConnectionId: $id"
+        If ($AzureNetworkConnection) {
+            $domainJoinConfigurations = @()
+            foreach ($Network in $AzureNetworkConnection) {
+
+                $AzureNetworkInfo = Get-CPCAzureNetworkConnection -Name $Network
+
+                If ($null -eq $AzureNetworkInfo) {
+                    Throw "No Azure Network Connection found with name $Network"
+                    break
+                }
+
+                if ($AzureNetworkInfo.healthCheckStatus -ne "passed") {
+                    Throw "Azure Network Connection $Network is not healthy"
+                    break
+                }
+
+                Write-Verbose "AzureNetworkConnection ID: $($AzureNetworkInfo.Id)"
                 $domainJoinConfig = @{
-                    Type                   = "$DomainJoinType"
-                    OnPremisesConnectionId = $id
+                    Type                   = $AzureNetworkInfo.Type
+                    OnPremisesConnectionId = $AzureNetworkInfo.Id
                 }
                 $domainJoinConfigurations += $domainJoinConfig
             }
