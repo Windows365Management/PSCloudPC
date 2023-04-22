@@ -26,7 +26,7 @@ function Update-CPCProvisioningPolicy {
 
         [parameter(Mandatory = $false)][string]$NamingTemplate,
 
-        [string]$OnPremisesConnectionIds,
+        [parameter(Mandatory = $false)][object]$OnPremisesConnectionIds,
 
         [ValidateSet('azureADJoin', 'hybridAzureADJoin')]
         [string]$DomainJoinType = 'azureADJoin'
