@@ -24,8 +24,8 @@ function New-CPCProvisioningPolicy {
     Enter the Region Name for the Provisioning Policy
     .PARAMETER RegionGroup
     Enter the Region Group for the Provisioning Policy
-    .PARAMETER OnPremisesConnectionId
-    Enter the On Premises Connection Id (Azure Network Connection) for the Provisioning Policy
+    .PARAMETER AzureNetworkConnection
+    Enter the Azure Network Connection Name for the Provisioning Policy
     .PARAMETER Language
     Enter the Language for the Provisioning Policy (Default: en-US)
     .PARAMETER NamingTemplate
@@ -33,7 +33,7 @@ function New-CPCProvisioningPolicy {
     .EXAMPLE
     New-CPCProvisioningPolicy -Name "Test-AzureADJoin" -Description "Test-AzureADJoin" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -DomainJoinType "AzureADJoin" -EnableSingleSignOn $true -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US"
     .EXAMPLE
-    New-CPCProvisioningPolicy -Name "Test-HybridADJoin" -Description "Test-HybridADJoin" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -DomainJoinType "hybridAzureADJoin" -EnableSingleSignOn $false -OnPremisesConnectionId "00000000-0fe4-44cf-8ec0-24eebe498f25" -Language "en-US"
+    New-CPCProvisioningPolicy -Name "Test-HybridADJoin" -Description "Test-HybridADJoin" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -DomainJoinType "hybridAzureADJoin" -EnableSingleSignOn $false -AzureNetworkConnection "Azure Network Connection" -Language "en-US"
     .EXAMPLE
     New-CPCProvisioningPolicy -Name "Test-Autopatch" -Description "Test-Autopatch" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true 
     .EXAMPLE

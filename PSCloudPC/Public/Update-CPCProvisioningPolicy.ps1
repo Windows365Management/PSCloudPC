@@ -6,6 +6,16 @@ function Update-CPCProvisioningPolicy {
     Update a Cloud PC Provisioning Policy
     .PARAMETER Name
     Name of the Provisioning Policy to update an image for example
+    .PARAMETER ImageType
+    Type of image to use for the Cloud PC. Valid values are Custom or Gallery
+    .PARAMETER ImageId
+    Id of the image to use for the Cloud PC. This is the Id of the image in the gallery or the custom image
+    .PARAMETER EnableSingleSignOn
+    Enable Single Sign On for the Cloud PC
+    .PARAMETER NamingTemplate
+    Naming template for the Cloud PC
+    .PARAMETER AzureNetworkConnection
+    Azure Network Connection to use for the Cloud PC (It will replace current Azure Network Connection)
     .EXAMPLE
     Update-CPCProvisioningPolicy -Name "Test-AzureADJoin" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" 
     .EXAMPLE
@@ -52,7 +62,6 @@ function Update-CPCProvisioningPolicy {
         
         $params = @{
             displayName = $($Policy.displayName)
-            
         }
 
         If ($ImageId){
