@@ -49,8 +49,7 @@ function Get-CPCProvisioningPolicy {
                 imageDisplayName         = $_.imageDisplayName
                 imageType                = $_.imageType
                 enableSingleSignOn       = $_.enableSingleSignOn
-                domainJoinConfiguration  = $_.DomainJoinConfiguration
-                domainJoinConfigurations = @{Name='domainJoinConfigurations';Expression={$_.domainJoinConfigurations}}
+                DomainJoinConfigurations = $domainJoinConfigurations
                 windowsSettings          = $_.windowsSettings
                 CloudPcNamingTemplate    = $_.CloudPcNamingTemplate
 
