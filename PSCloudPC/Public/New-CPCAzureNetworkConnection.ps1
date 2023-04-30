@@ -73,31 +73,47 @@ function New-CPCAzureNetworkConnection {
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/onPremisesConnections"
     }
     Process {
-        $params = @{
-            DisplayName        = $DisplayName
-            SubscriptionId     = $SubscriptionId
-            Type               = $DomainJoinType
-            SubscriptionName   = $SubscriptionName
-            AdDomainName       = $AdDomainName
-            AdDomainUsername   = $AdDomainUsername
-            AdDomainPassword   = $($AdDomainPassword | ConvertFrom-SecureString)
-            OrganizationalUnit = $OrganizationalUnit
-            ResourceGroupId    = $ResourceGroupId
-            VirtualNetworkId   = $VirtualNetworkId
-            SubnetId           = $SubnetId
+
+        Write-Verbose "Parameterset: $($PSCmdlet.ParameterSetName)"
+
+        If ($($PSCmdlet.ParameterSetName) -eq 'HybridAzureADJoin') {
+            Write-Verbose "Creating Hybrid Azure AD Join Azure Network Connection, creating parameters"
+            $params = @{
+                DisplayName        = $DisplayName
+                SubscriptionId     = $SubscriptionId
+                Type               = $DomainJoinType
+                SubscriptionName   = $SubscriptionName
+                AdDomainName       = $AdDomainName
+                AdDomainUsername   = $AdDomainUsername
+                AdDomainPassword   = $($AdDomainPassword | ConvertFrom-SecureString)
+                OrganizationalUnit = $OrganizationalUnit
+                ResourceGroupId    = $ResourceGroupId
+                VirtualNetworkId   = $VirtualNetworkId
+                SubnetId           = $SubnetId
+            }
         }
+        Else {
+            Write-Verbose "Creating Azure AD Join Azure Network Connection, creating parameters"
+            $params = @{
+                DisplayName        = $DisplayName
+                Type               = $DomainJoinType
+                SubscriptionId     = $SubscriptionId
+                ResourceGroupId    = $ResourceGroupId
+                VirtualNetworkId   = $VirtualNetworkId
+                SubnetId           = $SubnetId
+            }
+        }
+
         Write-verbose $params
         $body = $params | ConvertTo-Json -Depth 20
         
         Write-Verbose $body
         try {
-            $result = Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body -SkiphttpErrorCheck
+            $result = Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body
             $result
         }
         catch {
             Throw $_.Exception
-        }
-        
-        
+        }        
     }
 }

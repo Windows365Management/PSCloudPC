@@ -43,14 +43,16 @@ function Get-CPCProvisioningPolicy {
         $resultnew.value | ForEach-Object {
     
             $Info = [PSCustomObject]@{
-                id                      = $_.id
-                displayName             = $_.displayName
-                imageId                 = $_.imageId
-                imageDisplayName        = $_.imageDisplayName
-                imageType               = $_.imageType
-                enableSingleSignOn      = $_.enableSingleSignOn
-                domainJoinConfiguration = $_.domainJoinConfiguration
-                windowsSettings         = $_.windowsSettings
+                id                       = $_.id
+                displayName              = $_.displayName
+                imageId                  = $_.imageId
+                imageDisplayName         = $_.imageDisplayName
+                imageType                = $_.imageType
+                enableSingleSignOn       = $_.enableSingleSignOn
+                DomainJoinConfigurations = $domainJoinConfigurations
+                windowsSettings          = $_.windowsSettings
+                CloudPcNamingTemplate    = $_.CloudPcNamingTemplate
+
             }
             $Info
     
