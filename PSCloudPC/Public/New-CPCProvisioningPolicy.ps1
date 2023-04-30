@@ -173,7 +173,7 @@ function New-CPCProvisioningPolicy {
             WindowsSettings          = @{
                 Language = $Language
             }
-            #cloudPcNamingTemplate    = $NamingTemplate
+            cloudPcNamingTemplate    = $NamingTemplate
         }
         $body = $params | ConvertTo-Json -Depth 10
 
