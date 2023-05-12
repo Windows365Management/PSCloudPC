@@ -145,6 +145,7 @@ function New-CPCProvisioningPolicy {
                     OnPremisesConnectionId = $AzureNetworkInfo.Id
                 }
                 $domainJoinConfigurations += $domainJoinConfig
+                $domainjoinparameter = DomainJoinConfigurations
             }
         }
 
@@ -155,25 +156,26 @@ function New-CPCProvisioningPolicy {
                 RegionGroup = $RegionGroup
             }
             $domainJoinConfigurations += $domainJoinConfig
+            $domainjoinparameter = DomainJoinConfiguration
         }
 
         $params = @{
-            DisplayName              = $Name
-            Description              = $Description
-            ProvisioningType         = $ProvisioningType
-            ManagedBy                = $ManagedBy
-            ImageId                  = $ImageId
-            ImageType                = $ImageType
-            enableSingleSignOn       = $EnableSingleSignOn
-            DomainJoinConfigurations = $domainJoinConfigurations
-            MicrosoftManagedDesktop  = @{
+            DisplayName             = $Name
+            Description             = $Description
+            ProvisioningType        = $ProvisioningType
+            ManagedBy               = $ManagedBy
+            ImageId                 = $ImageId
+            ImageType               = $ImageType
+            enableSingleSignOn      = $EnableSingleSignOn
+            $domainjoinparameter    = $domainJoinConfigurations
+            MicrosoftManagedDesktop = @{
                 Type    = $WindowsAutopatch
                 Profile = $WindowsAutopatchprofile
             }
-            WindowsSettings          = @{
+            WindowsSettings         = @{
                 Language = $Language
             }
-            cloudPcNamingTemplate    = $NamingTemplate
+            cloudPcNamingTemplate   = $NamingTemplate
         }
         $body = $params | ConvertTo-Json -Depth 10
 
