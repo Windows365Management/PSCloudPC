@@ -145,7 +145,7 @@ function New-CPCProvisioningPolicy {
                     OnPremisesConnectionId = $AzureNetworkInfo.Id
                 }
                 $domainJoinConfigurations += $domainJoinConfig
-                $domainjoinparameter = DomainJoinConfigurations
+                $domainjoinparameter = "DomainJoinConfigurations"
             }
         }
 
@@ -156,7 +156,7 @@ function New-CPCProvisioningPolicy {
                 RegionGroup = $RegionGroup
             }
             $domainJoinConfigurations += $domainJoinConfig
-            $domainjoinparameter = DomainJoinConfiguration
+            $domainjoinparameter = "DomainJoinConfiguration"
         }
 
         $params = @{
