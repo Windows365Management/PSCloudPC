@@ -106,11 +106,11 @@ jobs:
         run: |
           ./Compiler/GenerateHelpFiles.ps1
       - name: Commit & Push changes
-        uses: actions-js/push@Github-Updates
+        uses: actions-js/push@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           message: 'Update help files'
           directory: ./Docs
           author_name: ${{ secrets.user }}
           author_email: ${{ secrets.email }}
-          branch: ${{ github.head_ref }}       
+          branch: Github-Updates      
