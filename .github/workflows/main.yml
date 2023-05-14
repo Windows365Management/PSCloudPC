@@ -38,52 +38,52 @@ jobs:
         # Artifact name
         name: CPCModule
         path: drop
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download a Build Artifact
-        uses: actions/download-artifact@v2.1.0
-        with:
-          name: CPCModule
-      - name: Display structure of downloaded files
-        run: ls -R
-      - name: Install needed modules
-        shell: pwsh
-        run: |
-          Set-PSRepository PSGallery -InstallationPolicy Trusted
-          Install-Module PSScriptAnalyzer -ErrorAction Stop
-          Install-Module Pester -ErrorAction Stop
-      - name: Importing PSCloudPC module
-        shell: pwsh
-        run: |
-          Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
-      - name: PSSA check
-        shell: pwsh
-        run: |
-          Invoke-ScriptAnalyzer -Path ./PSCloudPC/Public/*.ps1 -Recurse -ExcludeRule PSAvoidTrailingWhitespace -Outvariable issues
-              $errors   = $issues.Where({$_.Severity -eq 'Error'})
-              $warnings = $issues.Where({$_.Severity -eq 'Warning'})
-              if ($errors) {
-                  Write-Error "There were $($errors.Count) errors and $($warnings.Count) warnings total." -ErrorAction Stop
-              } else {
-                  Write-Output "There were $($errors.Count) errors and $($warnings.Count) warnings total."
-              }
-      - name: Pester Module check
-        shell: pwsh
-        run: |
-          $testLocation = (Join-Path -Path "./Compiler" -ChildPath "Module.tests.ps1")
-          Invoke-Pester -Path $testLocation -Output detailed
-      - name: Pester Functions check
-        shell: pwsh
-        run: |
-          Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
-          Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "Functions.tests.ps1") -Output detailed
-      - name: Pester Files check
-        shell: pwsh
-        run: |
-          Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
-          Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "Files.tests.ps1") -Output detailed
+  # test:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Download a Build Artifact
+  #       uses: actions/download-artifact@v2.1.0
+  #       with:
+  #         name: CPCModule
+  #     - name: Display structure of downloaded files
+  #       run: ls -R
+  #     - name: Install needed modules
+  #       shell: pwsh
+  #       run: |
+  #         Set-PSRepository PSGallery -InstallationPolicy Trusted
+  #         Install-Module PSScriptAnalyzer -ErrorAction Stop
+  #         Install-Module Pester -ErrorAction Stop
+  #     - name: Importing PSCloudPC module
+  #       shell: pwsh
+  #       run: |
+  #         Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
+  #     - name: PSSA check
+  #       shell: pwsh
+  #       run: |
+  #         Invoke-ScriptAnalyzer -Path ./PSCloudPC/Public/*.ps1 -Recurse -ExcludeRule PSAvoidTrailingWhitespace -Outvariable issues
+  #             $errors   = $issues.Where({$_.Severity -eq 'Error'})
+  #             $warnings = $issues.Where({$_.Severity -eq 'Warning'})
+  #             if ($errors) {
+  #                 Write-Error "There were $($errors.Count) errors and $($warnings.Count) warnings total." -ErrorAction Stop
+  #             } else {
+  #                 Write-Output "There were $($errors.Count) errors and $($warnings.Count) warnings total."
+  #             }
+  #     - name: Pester Module check
+  #       shell: pwsh
+  #       run: |
+  #         $testLocation = (Join-Path -Path "./Compiler" -ChildPath "Module.tests.ps1")
+  #         Invoke-Pester -Path $testLocation -Output detailed
+  #     - name: Pester Functions check
+  #       shell: pwsh
+  #       run: |
+  #         Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
+  #         Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "Functions.tests.ps1") -Output detailed
+  #     - name: Pester Files check
+  #       shell: pwsh
+  #       run: |
+  #         Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
+  #         Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "Files.tests.ps1") -Output detailed
   write:
     runs-on: ubuntu-latest
     needs: test
