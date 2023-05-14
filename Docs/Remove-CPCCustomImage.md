@@ -13,7 +13,7 @@ Removes a Cloud PC Custom Image
 ## SYNTAX
 
 ```
-Remove-CPCCustomImage [-name] <String> [<CommonParameters>]
+Remove-CPCCustomImage [-Name] <String> [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -28,7 +28,7 @@ Remove-CPCCustomImage -name "Custom Image 01"
 
 ## PARAMETERS
 
-### -name
+### -Name
 Enter the name of the Cloud PC Custom Image
 
 ```yaml

@@ -13,7 +13,7 @@ Removes a Cloud PC Azure Network Connection
 ## SYNTAX
 
 ```
-Remove-CPCAzureNetworkConnection [-name] <String> [<CommonParameters>]
+Remove-CPCAzureNetworkConnection [-Name] <String> [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -28,7 +28,7 @@ Remove-CPCAzureNetworkConnection -name "Azure Network Connection 01"
 
 ## PARAMETERS
 
-### -name
+### -Name
 Enter the name of the Cloud PC Azure Network Connection
 
 ```yaml

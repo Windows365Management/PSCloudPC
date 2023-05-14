@@ -13,7 +13,7 @@ Returns all CloudPC's or CloudPC's with a specific name
 ## SYNTAX
 
 ```
-Get-CloudPC [-name <String>] [<CommonParameters>]
+Get-CloudPC [-Name <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -28,7 +28,7 @@ Get-CloudPC -name "CloudPC01"
 
 ## PARAMETERS
 
-### -name
+### -Name
 Enter the name of the CloudPC
 
 ```yaml

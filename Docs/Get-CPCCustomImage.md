@@ -13,7 +13,7 @@ Returns all Custom Images or Custom Images with a specific name
 ## SYNTAX
 
 ```
-Get-CPCCustomImage [-name <String>] [<CommonParameters>]
+Get-CPCCustomImage [-Name <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -28,7 +28,7 @@ Get-CPCCustomImage -name "CustomImage01"
 
 ## PARAMETERS
 
-### -name
+### -Name
 Enter the name of the Custom Image
 
 ```yaml
