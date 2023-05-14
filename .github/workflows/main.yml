@@ -36,7 +36,7 @@ jobs:
       uses: actions/upload-artifact@v2.3.1
       with:
         # Artifact name
-        name: azModule
+        name: CPCModule
         path: drop
   test:
     needs: build
@@ -45,7 +45,7 @@ jobs:
       - name: Download a Build Artifact
         uses: actions/download-artifact@v2.1.0
         with:
-          name: azModule
+          name: CPCModule
       - name: Display structure of downloaded files
         run: ls -R
       - name: Install needed modules
@@ -84,4 +84,32 @@ jobs:
         run: |
           Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
           Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "Files.tests.ps1") -Output detailed
-      
+  write:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v2.1.0
+        with:
+          name: CPCModule
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Install PSPlaty module
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module PlatyPS -ErrorAction Stop
+      - name: Generate help files
+        shell: pwsh
+        run: |
+          ./Compiler/GenerateHelpFiles.ps1
+      - name: Commit & Push changes
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          message: 'CommitFromGitAction'
+          directory: ./Docs
+          author_name: ${{ secrets.user }}
+          author_email: ${{ secrets.email }}      
