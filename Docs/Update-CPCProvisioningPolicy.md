@@ -14,7 +14,8 @@ Update a Cloud PC Provisioning Policy
 
 ```
 Update-CPCProvisioningPolicy -Name <String> [-ImageType <String>] [-ImageId <String>]
- [-EnableSingleSignOn <Boolean>] [<CommonParameters>]
+ [-EnableSingleSignOn <Boolean>] [-NamingTemplate <String>] [-AzureNetworkConnection <Object>]
+ [-DomainJoinType <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -50,7 +51,8 @@ Accept wildcard characters: False
 ```
 
 ### -ImageType
-{{ Fill ImageType Description }}
+Type of image to use for the Cloud PC.
+Valid values are Custom or Gallery
 
 ```yaml
 Type: String
@@ -65,7 +67,8 @@ Accept wildcard characters: False
 ```
 
 ### -ImageId
-{{ Fill ImageId Description }}
+Id of the image to use for the Cloud PC.
+This is the Id of the image in the gallery or the custom image
 
 ```yaml
 Type: String
@@ -80,7 +83,7 @@ Accept wildcard characters: False
 ```
 
 ### -EnableSingleSignOn
-{{ Fill EnableSingleSignOn Description }}
+Enable Single Sign On for the Cloud PC
 
 ```yaml
 Type: Boolean
@@ -90,6 +93,51 @@ Aliases:
 Required: False
 Position: Named
 Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -NamingTemplate
+Naming template for the Cloud PC
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -AzureNetworkConnection
+Azure Network Connection to use for the Cloud PC (It will replace current Azure Network Connection)
+
+```yaml
+Type: Object
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -DomainJoinType
+{{ Fill DomainJoinType Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: AzureADJoin
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

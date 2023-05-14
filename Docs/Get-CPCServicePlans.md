@@ -5,36 +5,37 @@ online version:
 schema: 2.0.0
 ---
 
-# Get-CPCGalleryImage
+# Get-CPCServicePlans
 
 ## SYNOPSIS
-Returns all gallery images or gallery images with a specific name
+This function will return all currently available service plans
 
 ## SYNTAX
 
 ```
-Get-CPCGalleryImage [-Name <String>] [<CommonParameters>]
+Get-CPCServicePlans [-ServicePlanType <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-The function will return all gallery images or gallery images with a specific name
+This function will return all currently available service plans
 
 ## EXAMPLES
 
 ### EXAMPLE 1
 ```
-Get-CPCGalleryImage
+Get-CPCServicePlans
 ```
 
 ### EXAMPLE 2
 ```
-Get-CPCGalleryImage -name "Windows 11 Enterprise + OS Optimizations"
+Get-CPCServicePlans -ServicePlanType "enterprise"
 ```
 
 ## PARAMETERS
 
-### -Name
-Enter the name of the gallery image
+### -ServicePlanType
+Enter the type of service plan you want to retrieve.
+Valid values are: "enterprise", "business"
 
 ```yaml
 Type: String

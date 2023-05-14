@@ -13,7 +13,7 @@ Removes a Cloud PC Provisioning Policy
 ## SYNTAX
 
 ```
-Remove-CPCProvisioningPolicy [-name] <String> [<CommonParameters>]
+Remove-CPCProvisioningPolicy [-Name] <String> [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -28,7 +28,7 @@ Remove-CPCProvisioningPolicy -name "Provisioning Policy 01"
 
 ## PARAMETERS
 
-### -name
+### -Name
 Enter the name of the Cloud PC Provisioning Policy
 
 ```yaml

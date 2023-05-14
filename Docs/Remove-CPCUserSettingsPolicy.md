@@ -13,7 +13,7 @@ Removes a Cloud PC User Settings Policy
 ## SYNTAX
 
 ```
-Remove-CPCUserSettingsPolicy [-name] <String> [<CommonParameters>]
+Remove-CPCUserSettingsPolicy [-Name] <String> [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -28,7 +28,7 @@ Remove-CPCUserSettingsPolicy -name "User Settings Policy 01"
 
 ## PARAMETERS
 
-### -name
+### -Name
 Enter the name of the Cloud PC User Settings Policy
 
 ```yaml

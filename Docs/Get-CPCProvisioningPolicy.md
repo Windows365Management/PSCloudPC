@@ -13,7 +13,7 @@ Returns all Provisioning Policy's or Provisioning Policy's with a specific name
 ## SYNTAX
 
 ```
-Get-CPCProvisioningPolicy [-name <String>] [<CommonParameters>]
+Get-CPCProvisioningPolicy [-Name <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -28,7 +28,7 @@ Get-CPCProvisioningPolicy -name "ProvisioningPolicy01"
 
 ## PARAMETERS
 
-### -name
+### -Name
 Enter the name of the Provisioning Policy
 
 ```yaml
