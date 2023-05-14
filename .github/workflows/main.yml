@@ -112,4 +112,5 @@ jobs:
           message: 'CommitFromGitAction'
           directory: ./Docs
           author_name: ${{ secrets.user }}
-          author_email: ${{ secrets.email }}      
+          author_email: ${{ secrets.email }}
+          branch: ${{ github.head_ref }}       
