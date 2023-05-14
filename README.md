@@ -1,6 +1,9 @@
 # Windows 365 Cloud PC Management PowerShell Module
 
-##### PowerShell Gallery information
+##### Module statistics
+<a href="https://github.com/Windows365Management/PSCloudPC" target="_blank"><img src="https://img.shields.io/github/v/release/Windows365Management/PSCloudPC?label=latest&style=flat-square" alt="CurrentVersion"></a> <a href="https://github.com/Windows365Management/PSCloudPC/issues" target="_blank"><img src="https://img.shields.io/github/issues/Windows365Management/PSCloudPC?style=flat-square" alt="Issues"></a> 
+
+##### PowerShell Gallery statistics
 <a href="https://www.powershellgallery.com/packages/PSCloudPC" target="_blank"><img src="https://img.shields.io/powershellgallery/v/PSCloudPC?style=flat-square" alt="Main"></a> <a href="https://www.powershellgallery.com/packages/PSCloudPC" target="_blank"><img src="https://img.shields.io/powershellgallery/dt/PSCloudPC?style=flat-square" alt="Downloads"></a>
 
 ## Description
