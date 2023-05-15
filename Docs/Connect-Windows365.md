@@ -12,16 +12,9 @@ Connect to Windows 365 via Powershell
 
 ## SYNTAX
 
-### Interactive (Default)
 ```
-Connect-Windows365 [-Authtype <String>] -ClientSecret <String> -TenantID <String> -ClientID <String>
- [<CommonParameters>]
-```
-
-### ServicePrincipal
-```
-Connect-Windows365 [-Authtype <String>] [-ClientSecret <String>] -TenantID <String> [-ClientID <String>]
- [<CommonParameters>]
+Connect-Windows365 [[-Authtype] <String>] [[-ClientSecret] <String>] [-TenantID] <String>
+ [[-ClientID] <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -51,7 +44,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: Named
+Position: 1
 Default value: Interactive
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -62,23 +55,11 @@ Client Secret for Service Principal Authentication
 
 ```yaml
 Type: String
-Parameter Sets: Interactive
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-```yaml
-Type: String
-Parameter Sets: ServicePrincipal
+Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: Named
+Position: 2
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -93,7 +74,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: True
-Position: Named
+Position: 3
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -104,23 +85,11 @@ Client ID for Service Principal Authentication
 
 ```yaml
 Type: String
-Parameter Sets: Interactive
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-```yaml
-Type: String
-Parameter Sets: ServicePrincipal
+Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: Named
+Position: 4
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False

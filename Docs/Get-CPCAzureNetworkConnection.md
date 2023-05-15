@@ -5,36 +5,36 @@ online version:
 schema: 2.0.0
 ---
 
-# Get-CPCGalleryImage
+# Get-CPCAzureNetworkConnection
 
 ## SYNOPSIS
-Returns all gallery images or gallery images with a specific name
+Returns all Azure Network Connections or a specific Azure Network Connection
 
 ## SYNTAX
 
 ```
-Get-CPCGalleryImage [-Name <String>] [<CommonParameters>]
+Get-CPCAzureNetworkConnection [-Name <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-The function will return all gallery images or gallery images with a specific name
+Returns all Azure Network Connections or a specific Azure Network Connection
 
 ## EXAMPLES
 
 ### EXAMPLE 1
 ```
-Get-CPCGalleryImage
+Get-CPCAzureNetworkConnection
 ```
 
 ### EXAMPLE 2
 ```
-Get-CPCGalleryImage -name "Windows 11 Enterprise + OS Optimizations"
+Get-CPCAzureNetworkConnection -Name "Your Azure Network Connection"
 ```
 
 ## PARAMETERS
 
 ### -Name
-Enter the name of the gallery image
+Name of the Azure Network Connection to return
 
 ```yaml
 Type: String

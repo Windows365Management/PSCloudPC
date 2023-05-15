@@ -1,5 +1,11 @@
 # Windows 365 Cloud PC Management PowerShell Module
 
+##### Module statistics
+<a href="https://github.com/Windows365Management/PSCloudPC" target="_blank"><img src="https://img.shields.io/github/v/release/Windows365Management/PSCloudPC?label=latest&style=flat-square" alt="CurrentVersion"></a> <a href="https://github.com/Windows365Management/PSCloudPC/issues" target="_blank"><img src="https://img.shields.io/github/issues/Windows365Management/PSCloudPC?style=flat-square" alt="Issues"></a> 
+
+##### PowerShell Gallery statistics
+<a href="https://www.powershellgallery.com/packages/PSCloudPC" target="_blank"><img src="https://img.shields.io/powershellgallery/v/PSCloudPC?style=flat-square" alt="Main"></a> <a href="https://www.powershellgallery.com/packages/PSCloudPC" target="_blank"><img src="https://img.shields.io/powershellgallery/dt/PSCloudPC?style=flat-square" alt="Downloads"></a>
+
 ## Description
 This PowerShell module allows you to manage your Windows 365 environment from the command line. It provides a set of cmdlets that allow you to perform various tasks, such as creating, modifying and deleting policies, managing Cloud PCs, and more.
 
