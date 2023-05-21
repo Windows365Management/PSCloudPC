@@ -63,7 +63,7 @@ jobs:
       - name: Commit & Push changes
         uses: actions-js/push@master
         with:
-          branch: ${{ github.head_ref }}
+          branch: ${{ github.ref }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           message: 'Update help files'
           directory: ./Docs
