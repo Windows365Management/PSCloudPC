@@ -1,11 +1,11 @@
-function Get-CPCOrganizationSettings {
+function Get-CPCOrganizationSetting {
     <#
     .SYNOPSIS
     Returns the Cloud PC Organization Settings 
     .DESCRIPTION
     This function will return all Cloud PC Organization Settings
     .EXAMPLE
-    Get-CPCOrganizationSettings
+    Get-CPCOrganizationSetting
     #>
     [CmdletBinding()]
     param (
