@@ -19,5 +19,5 @@ jobs:
               pip install mkdocs-material
               pip install mkdocs-include-dir-to-nav
           - name: Deploy
-            working-directory: /Docs
+            working-directory: Docs
             run: mkdocs gh-deploy --force
