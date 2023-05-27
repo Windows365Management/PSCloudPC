@@ -1,0 +1,24 @@
+name: Generate Resources & Deploy GitHub Pages
+on:
+  push:
+    branches:
+      - master
+      - Dev
+
+jobs:
+
+    deploy:
+        runs-on: ubuntu-latest
+
+    
+        steps:
+          - uses: actions/checkout@v3
+          - uses: actions/setup-python@v4
+            with:
+              python-version: 3.x
+          - run: |
+              pip install mkdocs-material
+              pip install mkdocs-include-dir-to-nav
+          - name: Deploy
+            working-directory: ./docs
+            run: mkdocs gh-deploy --force
