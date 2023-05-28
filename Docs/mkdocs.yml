@@ -6,7 +6,6 @@ nav:
 
 theme:
   name: 'material'
-  custom_dir: docs/overrides
   favicon: Images/favicon.ico
   icon:
     repo: fontawesome/brands/git-alt
