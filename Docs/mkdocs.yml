@@ -3,11 +3,11 @@ site_url: https://Windows365Management.github.io/PSCloudPC
 nav:
   - Home:
       - 'Introduction': 'index.md'
-
-
   - 'User Guides':
     - Cmdlets:
       - 'Connect-Windows365': 'Connect-Windows365.md'
+      - 'Get-CloudPC': 'Get-CloudPC.md'
+      - 'Get-CPCAzureNetworkConnection': 'Get-CPCAzureNetworkConnection.md'
 plugins:
   - search
   - include_dir_to_nav
@@ -46,11 +46,3 @@ markdown_extensions:
   - def_list
   - attr_list
   - md_in_html
-extra:
-  social:
-    - icon: fontawesome/brands/twitter
-      link: 'https://twitter.com/Microsoft365DSC'
-    - icon: fontawesome/brands/youtube
-      link: 'https://www.youtube.com/channel/UCveScabVT6pxzqYgGRu17iw'
-    - icon: fontawesome/solid/link
-      link: 'https://www.powershellgallery.com/packages/Microsoft365DSC/'
