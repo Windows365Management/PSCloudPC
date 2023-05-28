@@ -3,11 +3,11 @@ site_url: https://Windows365Management.github.io/PSCloudPC
 nav:
   - Home:
       - 'Introduction': 'index.md'
-  - 'User Guides':
+  - 'User Guide':
     - Cmdlets:
-      - 'Connect-Windows365': 'Connect-Windows365.md'
-      - 'Get-CloudPC': 'Get-CloudPC.md'
-      - 'Get-CPCAzureNetworkConnection': 'Get-CPCAzureNetworkConnection.md'
+      - 'Connect-Windows365': 'cmdlets/Connect-Windows365.md'
+      - 'Get-CloudPC': 'cmdlets/Get-CloudPC.md'
+      - 'Get-CPCAzureNetworkConnection': 'cmdlets/Get-CPCAzureNetworkConnection.md'
 plugins:
   - search
   - include_dir_to_nav
