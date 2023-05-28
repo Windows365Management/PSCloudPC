@@ -5,8 +5,8 @@ nav:
       - 'Introduction': 'index.md'
 
 
-
-  - Cmdlets:
+  - 'User Guides'
+    - Cmdlets:
       - 'Connect-Windows365': 'Connect-Windows365.md'
 
 
