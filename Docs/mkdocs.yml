@@ -4,8 +4,15 @@ nav:
   - Home:
       - 'Introduction': 'index.md'
 
+
+
+  - Cmdlets:
+      - 'Connect-Windows365': 'Connect-Windows365.md'
+
+
 theme:
   name: 'material'
+  logo: Images/PSCloudPC_logo.png
   favicon: Images/favicon.ico
   icon:
     repo: fontawesome/brands/git-alt
