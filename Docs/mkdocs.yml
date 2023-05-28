@@ -1,2 +1,5 @@
 site_name: PSCloudPC
 site_url: https://Windows365Management.github.io/PSCloudPC
+nav:
+  - Home:
+      - 'Introduction': 'index.md'
