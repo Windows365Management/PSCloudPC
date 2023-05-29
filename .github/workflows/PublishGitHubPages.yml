@@ -16,9 +16,9 @@ jobs:
             with:
               python-version: 3.x
           - run: |
-              pip install mkdocs-material
+              pip install mkdocs-material mkdocs-material-extensions
               pip install mkdocs-include-dir-to-nav
-              pip install mkdocs-material-extensions
+              pip install pillow cairosvg
           - name: Deploy
             working-directory: Docs
             run: mkdocs gh-deploy --force
