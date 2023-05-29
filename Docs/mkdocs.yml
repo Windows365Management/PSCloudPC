@@ -8,6 +8,7 @@ nav:
       - 'Connect-Windows365': 'cmdlets/Connect-Windows365.md'
       - 'Get-CloudPC': 'cmdlets/Get-CloudPC.md'
       - 'Get-CPCAzureNetworkConnection': 'cmdlets/Get-CPCAzureNetworkConnection.md'
+  - 'Contributing': 'contributing/contribution-guidelines.md'
 plugins:
   - search
   - include_dir_to_nav
@@ -47,5 +48,5 @@ markdown_extensions:
   - attr_list
   - md_in_html
 
-
+repo_url: https://github.com/Windows365Management/PSCloudPC
 copyright: PSCloudPC
