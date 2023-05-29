@@ -1,6 +1,6 @@
 # Windows 365 Cloud PC Management PowerShell Module
 
-![PSCloudPC](https://PSCloudPC.com/Images/PSCloudPC_logo.png){align="right"}
+![PSCloudPC](https://PSCloudPC.com/Images/PSCloudPC_logo.png){align="right" height="250" width="250"}
 
 ## Description
 This PowerShell module allows you to manage your Windows 365 environment from the command line. It provides a set of cmdlets that allow you to perform various tasks, such as creating, modifying and deleting policies, managing Cloud PCs, and more.
