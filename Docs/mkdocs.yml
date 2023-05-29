@@ -12,6 +12,7 @@ nav:
 plugins:
   - search
   - include_dir_to_nav
+  - social
 
 theme:
   name: 'material'
@@ -47,6 +48,11 @@ markdown_extensions:
   - def_list
   - attr_list
   - md_in_html
+
+extra:
+  analytics:
+    provider: google
+    property: G-6HN1ZGL8WJ
 
 repo_url: https://github.com/Windows365Management/PSCloudPC
 copyright: PSCloudPC
