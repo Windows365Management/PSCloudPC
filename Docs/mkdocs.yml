@@ -8,6 +8,12 @@ nav:
       - 'Connect-Windows365': 'cmdlets/Connect-Windows365.md'
       - 'Get-CloudPC': 'cmdlets/Get-CloudPC.md'
       - 'Get-CPCAzureNetworkConnection': 'cmdlets/Get-CPCAzureNetworkConnection.md'
+      - 'Get-CPCCustomImage': 'cmdlets/Get-CPCCustomImage.md'
+      - 'Get-CPCGalleryImage' : 'cmdlets/Get-CPCGalleryImage.md'
+      - 'Get-CPCOrganizationSettings': 'cmdlets/Get-CPCOrganizationSettings.md'
+      - 'Get-CPCProvisioningPolicy': 'cmdlets/Get-CPCProvisioningPolicy.md'
+      - 'Get-CPCRestorePoint': 'cmdlets/Get-CPCRestorePoint.md'
+      - 'Get-CPCServicePlans': 'cmdlets/Get-CPCServicePlans.md'
   - 'Contributing': 'contributing/contribution-guidelines.md'
 plugins:
   - search
