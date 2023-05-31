@@ -36,7 +36,7 @@ nav:
       - 'Update-CPCUserSettingsPolicy': 'cmdlets/Update-CPCUserSettingsPolicy.md'
   - 'Contributing': 'contributing/contribution-guidelines.md'
   - 'About': 'about/about.md'
-  plugins:
+plugins:
   - search
   - include_dir_to_nav
   - social
