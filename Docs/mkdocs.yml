@@ -2,7 +2,7 @@ site_name: PSCloudPC - Windows 365 Management PowerShell Module
 site_url: https://Windows365Management.github.io/PSCloudPC
 nav:
   - Home:
-      - 'About PSCloudPC': 'index.md'
+    - 'About PSCloudPC': 'index.md'
   - 'Getting started'
     - 'Permissions': 'getting-started/permissions.md'
     - 'Authentication': 'getting-started/authentication.md'
