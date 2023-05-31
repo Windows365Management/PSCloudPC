@@ -3,6 +3,9 @@ site_url: https://Windows365Management.github.io/PSCloudPC
 nav:
   - Home:
       - 'About PSCloudPC': 'index.md'
+  - 'Getting started'
+    - 'Permissions': 'getting-started/permissions.md'
+    - 'Authentication': 'getting-started/authentication.md'
   - 'User Guide':
     - Cmdlets:
       - 'Connect-Windows365': 'cmdlets/Connect-Windows365.md'
@@ -32,7 +35,8 @@ nav:
       - 'Update-CPCProvisioningPolicy': 'cmdlets/Update-CPCProvisioningPolicy.md'
       - 'Update-CPCUserSettingsPolicy': 'cmdlets/Update-CPCUserSettingsPolicy.md'
   - 'Contributing': 'contributing/contribution-guidelines.md'
-plugins:
+  - 'About': 'about/about.md'
+  plugins:
   - search
   - include_dir_to_nav
   - social
