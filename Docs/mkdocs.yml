@@ -56,6 +56,7 @@ theme:
         name: Switch to light mode
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.instant
     - search.share
     - navigation.path
@@ -66,7 +67,7 @@ markdown_extensions:
       guess_lang: false
   - toc:
       permalink: true
-      toc_depth: 0
+      #toc_depth: 0
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.snippets
