@@ -6,14 +6,13 @@ name: Documentation
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches:
-      - 'release/**'
+    branches: [ main ]
     paths:
       - PSCloudPC/**
   pull_request:
     branches: [ main ]
     paths:
-      - 'release/**'
+      - PSCloudPC/**
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -63,7 +62,6 @@ jobs:
       - name: Commit & Push changes
         uses: actions-js/push@master
         with:
-          branch: ${{ github.ref }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           message: 'Update help files'
           directory: ./Docs
