@@ -87,10 +87,10 @@ function New-CPCFrontlineProvisioningPolicy {
         [string]$Language = 'en-US',
 
         [parameter(Mandatory = $true)]
-        [string]$Assignment,
+        [string]$GroupName,
 
         [parameter(Mandatory = $true)]
-        [string]$ServicePlanId
+        [string]$ServicePlanName
 
     )
     
@@ -112,6 +112,19 @@ function New-CPCFrontlineProvisioningPolicy {
             break
         }
 
+        Get-AzureADGroupID -GroupName $GroupName
+
+        If ($null -eq $script:GroupID) {
+            Throw "No group found with name $GroupName"
+            return
+        }
+
+        $ServicePlan = Get-CPCServicePlan -ServicePlanName $ServicePlanName
+
+        If ($null -eq $ServicePlan) {
+            Throw "No Service Plan found with name $ServicePlanName"
+            return
+        }
     }
 
     Process {
@@ -190,12 +203,43 @@ function New-CPCFrontlineProvisioningPolicy {
         Write-Verbose $body
 
         try {
-            Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body -SkipHttpErrorCheck
+            $Result = Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body -SkipHttpErrorCheck
         }
         catch {
             Throw $_.Exception.Message
         }
+
+        $PolicyId = ($Result.Content | ConvertFrom-Json).id
         
+        Write-Verbose "Policy ID: $($PolicyId)"
+
+
+        Write-Verbose "Assigning provisioning policy to group $GroupName"
+
+        $assignmentparams = @{
+            assignments = @(
+                @{
+                    target = @{
+                        groupId = $script:GroupID
+                        servicePlanId = $($ServicePlan.Id)
+                    }
+                }
+            )
+        }
+        $assignmentbody = $assignmentparams | ConvertTo-Json -Depth 10
+
+        Write-Verbose $assignmentbody
+
+        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies/$($PolicyId)/assign"
+
+        Write-Verbose $url
+
+        try {
+            $Result = Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $assignmentbody -SkipHttpErrorCheck
+        }
+        catch {
+            Throw $_.Exception.Message
+        }
         
     }
 }
