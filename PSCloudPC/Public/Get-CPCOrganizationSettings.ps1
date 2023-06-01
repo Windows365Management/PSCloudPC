@@ -28,18 +28,19 @@ function Get-CPCOrganizationSettings {
         }
     
         $resultnew = $result.content | ConvertFrom-Json
+        $returnResults = @()
         $resultnew | ForEach-Object {
         
-            $SettingsList = [PSCustomObject]@{
+            $Info = [PSCustomObject]@{
                 osVersion           = $_.osVersion
                 userAccountType     = $_.userAccountType
                 enableMEMAutoEnroll = $_.enableMEMAutoEnroll
                 enableSingleSignOn  = $_.enableSingleSignOn
                 windowsSettings     = $_.windowsSettings
             }
-            $SettingsList
-        
+            $returnResults += $Info
         }
+        return $returnResults
         
     }
     

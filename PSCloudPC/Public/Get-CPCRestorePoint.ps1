@@ -20,7 +20,7 @@ function Get-CPCRestorePoint {
         
         $CloudPC = Get-CloudPC -name $Name
         
-        $URL = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/snapshots?`$filter=cloudPcId+eq+'$($CloudPC.Id)'"
+        $URL = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/snapshots?`$filter=cloudPcId+eq+'$($CloudPC.Id)'"
 
     }
 
@@ -34,6 +34,7 @@ function Get-CPCRestorePoint {
         }
 
         $resultnew = $result.content | ConvertFrom-Json
+        $returnResults = @()
         $resultnew.value | ForEach-Object {
     
             $Info = [PSCustomObject]@{
@@ -44,9 +45,9 @@ function Get-CPCRestorePoint {
                 lastRestoredDateTime = $_.lastRestoredDateTime
                 
             }
-            $Info
-    
+            $returnResults += $Info
         }
+        return $returnResults
     
     }
 }

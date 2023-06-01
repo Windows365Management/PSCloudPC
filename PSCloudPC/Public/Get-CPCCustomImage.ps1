@@ -40,6 +40,7 @@ function Get-CPCCustomImage {
         }
 
         $resultnew = $result.content | ConvertFrom-Json
+        $returnResults = @()
         $resultnew.value | ForEach-Object {
     
             $Info = [PSCustomObject]@{
@@ -53,9 +54,9 @@ function Get-CPCCustomImage {
                 osStatus              = $_.osStatus
                 sourceImageResourceId = $_.sourceImageResourceId
             }
-            $Info
-    
+            $returnResults += $Info
         }
+        return $returnResults
     
     }
     
