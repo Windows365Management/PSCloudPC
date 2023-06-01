@@ -40,6 +40,7 @@ function Get-CPCProvisioningPolicy {
         }
 
         $resultnew = $result.content | ConvertFrom-Json
+        $returnResults = @()
         $resultnew.value | ForEach-Object {
     
             $Info = [PSCustomObject]@{
@@ -54,9 +55,9 @@ function Get-CPCProvisioningPolicy {
                 CloudPcNamingTemplate    = $_.CloudPcNamingTemplate
 
             }
-            $Info
-    
+            $returnResults += $Info
         }
+        return $returnResults
     
     }
     

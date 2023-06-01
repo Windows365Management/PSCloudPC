@@ -68,7 +68,7 @@ function Update-CPCOrganizationSetting {
         try {
             Write-Verbose "Updating Organization Settings "
             $result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
-            $result
+            return $result
             
         }
         catch {

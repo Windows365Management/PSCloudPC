@@ -41,6 +41,7 @@ function Get-CloudPC {
         Write-Verbose "Params: $($params)"
 
         $resultnew = $result.content | ConvertFrom-Json
+        $returnResults = @()
         $resultnew.value | ForEach-Object {
     
             $Info = [PSCustomObject]@{
@@ -57,9 +58,9 @@ function Get-CloudPC {
                 servicePlanName        = $_.servicePlanName
                 
             }
-            $Info
-    
+            $returnResults += $Info
         }
+        return $returnResults
     
     }
     
