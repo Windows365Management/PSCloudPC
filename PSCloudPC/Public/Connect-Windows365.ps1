@@ -147,7 +147,7 @@ function Connect-Windows365 {
                     -Method POST `
                     -Body $body
                 
-                $token = $connection.access_token
+                $Token = $connection.access_token
         
                 $script:Authtime = [System.DateTime]::UtcNow
                 $script:Authtoken = $connection
