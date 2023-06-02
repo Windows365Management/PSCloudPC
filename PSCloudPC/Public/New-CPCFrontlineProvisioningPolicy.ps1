@@ -9,7 +9,7 @@ function New-CPCFrontlineProvisioningPolicy {
     .PARAMETER Description
     Enter the description of the Frontline Provisioning Policy
     .PARAMETER ProvisioningType
-    Enter the Provisioning Type of the Frontline Provisioning Policy (dedicated or shared) (Default: dedicated)
+    Enter the Provisioning Type of the Frontline Provisioning Policy (dedicated or shared) (Default: shared)
     .PARAMETER ManagedBy
     Enter the Managed By of the Frontline Provisioning Policy (Windows365 or Microsoft) (Default: Windows365)
     .PARAMETER imageType
