@@ -21,15 +21,21 @@ function Connect-Windows365 {
     #>
     [CmdletBinding(DefaultParameterSetName = 'Interactive')]
     param (
-        
+        [parameter(ParameterSetName = "Interactive")]
+        [parameter(ParameterSetName = "ServicePrincipal")]
+        [parameter(ParameterSetName = "DeviceCode")]
         [ValidateSet('ServicePrincipal', 'Interactive', 'DeviceCode')]
         [string]$Authtype = 'Interactive',
-    
-        [Parameter(mandatory = $false)][string]$ClientSecret,
 
-        [Parameter(mandatory = $true)][string]$TenantID,
+        [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
+        [string]$ClientSecret,
 
-        [Parameter(mandatory = $false)][string]$ClientID
+        [parameter(Mandatory, ParameterSetName = "DeviceCode")]
+        [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
+        [string]$TenantID,
+
+        [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
+        [string]$ClientID
     )
     begin {
         # Set the profile to beta
