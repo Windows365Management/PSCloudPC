@@ -5,9 +5,7 @@ function Connect-Windows365 {
     .DESCRIPTION
     Connect to Windows 365 via Powershell via Interactive Browser or Service Principal
     .PARAMETER Authtype
-    Type of Authentication to use.  Interactive or ServicePrincipal
-    .PARAMETER PowershellVersion
-    Type of Powershell to use.  Windows or Core
+    Type of Authentication to use Interactive, ServicePrincipal or DeviceCode
     .PARAMETER ClientSecret
     Client Secret for Service Principal Authentication
     .PARAMETER TenantID
@@ -16,6 +14,8 @@ function Connect-Windows365 {
     Client ID for Service Principal Authentication
     .EXAMPLE
     Connect-Windows365 -TenantID contoso.onmicrosoft.com
+    .EXAMPLE
+    Connect-Windows365 -AuthType DeviceCode
     .EXAMPLE
     Connect-Windows365 -Authtype ServicePrincipal -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012   
     #>
@@ -30,7 +30,6 @@ function Connect-Windows365 {
         [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
         [string]$ClientSecret,
 
-        [parameter(Mandatory, ParameterSetName = "DeviceCode")]
         [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
         [string]$TenantID,
 
@@ -98,67 +97,62 @@ function Connect-Windows365 {
                 $script:Authtoken = $connection
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }                   
             }
-                
-        }
-        DeviceCode {
-            Write-Verbose "Using Device Code"
-            $TenantID = "7l4l1k.onmicrosoft.com"
-            $clientId = "1950a258-227b-4e31-a9cf-717495945fc2"
-            $scope = "CloudPC.ReadWrite.All%20DeviceManagementConfiguration.ReadWrite.All%20DeviceManagementManagedDevices.ReadWrite.All%20Directory.Read.All"
+            DeviceCode {
+                Write-Verbose "Using Device Code"
+                # Define the Microsoft Graph endpoint and device code URL
+                # Define the Microsoft Graph endpoint and device code URL
+                $deviceCodeUrl = "https://login.microsoftonline.com/common/oauth2/devicecode"
+                $ClientID = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
+                $Scopes = "CloudPC.ReadWrite.All%20DeviceManagementConfiguration.ReadWrite.All%20DeviceManagementManagedDevices.ReadWrite.All%20Directory.Read.All"
 
-            $clientBody = @{
-                client_id = $ClientId
-                tenant    = $TenantID
-                scope     = $Scope
-            }
-            $requestUrl = Invoke-WebRequest -Method POST -Uri "https://login.microsoftonline.com/$($TenantID)/oauth2/v2.0/devicecode" -Body $clientBody
-            $content = ($requestUrl.Content | ConvertFrom-Json)
-            if ([string]::IsNullOrEmpty($script:Authtoken.access_token)) {
-                Write-Information "`n$($content.message)" -InformationAction Continue
-            }
-            # Get OAuth Token
-            $tokenBody = @{
-                grant_type = "urn:ietf:params:oauth:grant-type:device_code"
-                code       = $content.device_code
-                client_id  = $ClientId
-            }
-            while ([string]::IsNullOrEmpty($script:Authtoken.access_token)) {
-                $script:Authtoken = try {
-                    Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$TenantID/oauth2/token" -Body $tokenBody
+                # Request a device code
+                $response = Invoke-RestMethod -Uri $deviceCodeUrl -Method POST -Body @{
+                    client_id = $ClientID
+                    scope     = $Scopes
                 }
-                catch {
-                    $errorMessage = $_.ErrorDetails.Message | ConvertFrom-Json
-                    # If not waiting for auth, throw error
-                    if ($errorMessage.error -ne "authorization_pending") {
-                        throw "Authorization is pending."
-                    }
+
+                # Display the device code and ask the user to authenticate
+                Write-Host $response.message
+                # Wait for the user to authenticate
+                Write-Host "Waiting for authentication..."
+                # Prompt the user to continue once they have entered the device code
+                Write-Host "Press any key to continue once authentication is complete..."
+                $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+
+                # Request an access token using the device code
+                $connection = Invoke-RestMethod -Uri "https://login.microsoftonline.com/common/oauth2/token" -Method POST -Body @{
+                    client_id  = $ClientID
+                    grant_type = "device_code"
+                    code       = $response.device_code
                 }
+
+                $Token = $connection.access_token
+
+                $script:Authtime = [System.DateTime]::UtcNow
+                $script:Authtoken = $connection
+                $script:Authheader = @{Authorization = "Bearer $($Token)" }
             }
 
-            $script:Authtime = [System.DateTime]::UtcNow
-            $script:Authtoken = $connection
-            $script:Authheader = @{Authorization = "Bearer $($Token)" }
-        }
+            ServicePrincipal {
 
-        ServicePrincipal {
-
-            $body = @{
-                Grant_Type    = "client_credentials"
-                Scope         = "https://graph.microsoft.com/.default"
-                Client_Id     = $ClientID
-                Client_Secret = $ClientSecret
-            }
+                $body = @{
+                    Grant_Type    = "client_credentials"
+                    Scope         = "https://graph.microsoft.com/.default"
+                    Client_Id     = $ClientID
+                    Client_Secret = $ClientSecret
+                }
                 
-            $connection = Invoke-RestMethod `
-                -Uri https://login.microsoftonline.com/$TenantID/oauth2/v2.0/token `
-                -Method POST `
-                -Body $body
+                $connection = Invoke-RestMethod `
+                    -Uri https://login.microsoftonline.com/$TenantID/oauth2/v2.0/token `
+                    -Method POST `
+                    -Body $body
                 
-            $token = $connection.access_token
+                $token = $connection.access_token
         
-            $script:Authtime = [System.DateTime]::UtcNow
-            $script:Authtoken = $connection
-            $script:Authheader = @{Authorization = "Bearer $($Token)" }
+                $script:Authtime = [System.DateTime]::UtcNow
+                $script:Authtoken = $connection
+                $script:Authheader = @{Authorization = "Bearer $($Token)" }
+            }
         }
     }
 }
