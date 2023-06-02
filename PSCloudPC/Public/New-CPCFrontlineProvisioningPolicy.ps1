@@ -49,7 +49,7 @@ function New-CPCFrontlineProvisioningPolicy {
 
         [Parameter(Mandatory = $false)]
         [ValidateSet('dedicated', 'shared')]
-        [string]$ProvisioningType = "dedicated",
+        [string]$ProvisioningType = "shared",
 
         [parameter(Mandatory = $false)]
         [string]$NamingTemplate,
