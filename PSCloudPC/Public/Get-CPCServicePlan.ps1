@@ -36,17 +36,17 @@ function Get-CPCServicePlan {
     Process {
         write-verbose "Retrieving service plans"
         try {
-            $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader -SkipHttpErrorCheck
+            $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
             $regions = $result.content | convertfrom-json
             write-verbose "Regions retrieved"
             $support = $regions.value
             $support | ForEach-Object {
                 $Info = [PSCustomObject]@{
-                    'id' = $_.id
-                    'displayName'  = $_.displayName
-                    'type'  = $_.type
-                    'vCpuCount' = $_.vCpuCount
-                    'ramInGB' = $_.ramInGB
+                    'id'          = $_.id
+                    'displayName' = $_.displayName
+                    'type'        = $_.type
+                    'vCpuCount'   = $_.vCpuCount
+                    'ramInGB'     = $_.ramInGB
                     'storageInGB' = $_.storageInGB
                 }
                 $Info
