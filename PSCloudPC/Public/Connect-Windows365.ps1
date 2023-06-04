@@ -114,7 +114,7 @@ function Connect-Windows365 {
                 $codeRequest = Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/devicecode" -Body $codeBody
 
                 # Print Code to console
-                Write-Host "`n$($codeRequest.message)"
+                Write-Verbose "`n$($codeRequest.message)"
 
                 $tokenBody = @{
                     grant_type = "urn:ietf:params:oauth:grant-type:device_code"
@@ -126,6 +126,7 @@ function Connect-Windows365 {
                 while ([string]::IsNullOrEmpty($connection.access_token)) {
                     $connection = try {
                         Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/token" -Body $tokenBody
+                        Write-Verbose "Completed Authentication"
                     }
                     catch {
                         $errorMessage = $_.ErrorDetails.Message | ConvertFrom-Json
