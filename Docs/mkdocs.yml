@@ -1,0 +1,95 @@
+site_name: PSCloudPC - Windows 365 Management PowerShell Module
+site_url: https://Windows365Management.github.io/PSCloudPC
+nav:
+  - Home:
+    - 'About PSCloudPC': 'index.md'
+  - 'Getting started':
+    - 'Permissions': 'getting-started/permissions.md'
+    - 'Authentication': 'getting-started/authentication.md'
+  - 'User Guide':
+    - Cmdlets:
+      - 'Connect-Windows365': 'cmdlets/Connect-Windows365.md'
+      - 'Get-CloudPC': 'cmdlets/Get-CloudPC.md'
+      - 'Get-CPCAzureNetworkConnection': 'cmdlets/Get-CPCAzureNetworkConnection.md'
+      - 'Get-CPCCustomImage': 'cmdlets/Get-CPCCustomImage.md'
+      - 'Get-CPCGalleryImage' : 'cmdlets/Get-CPCGalleryImage.md'
+      - 'Get-CPCOrganizationSettings': 'cmdlets/Get-CPCOrganizationSettings.md'
+      - 'Get-CPCProvisioningPolicy': 'cmdlets/Get-CPCProvisioningPolicy.md'
+      - 'Get-CPCRestorePoint': 'cmdlets/Get-CPCRestorePoint.md'
+      - 'Get-CPCServicePlans': 'cmdlets/Get-CPCServicePlans.md'
+      - 'Get-CPCSupportedRegion': 'cmdlets/Get-CPCSupportedRegion.md'
+      - 'Get-CPCUserSettingsPolicy': 'cmdlets/Get-CPCUserSettingsPolicy.md'
+      - 'Invoke-CPCEndGracePeriod': 'cmdlets/Invoke-CPCEndGracePeriod.md'
+      - 'Invoke-CPCReprovision': 'cmdlets/Invoke-CPCReprovision.md'
+      - 'Invoke-CPCRestore': 'cmdlets/Invoke-CPCRestore.md'
+      - 'New-CPCAzureNetworkConnection': 'cmdlets/New-CPCAzureNetworkConnection.md'
+      - 'New-CPCCustomImage': 'cmdlets/New-CPCCustomImage.md'
+      - 'New-CPCProvisioningPolicy': 'cmdlets/New-CPCProvisioningPolicy.md'
+      - 'New-CPCUserSettingsPolicy': 'cmdlets/New-CPCUserSettingsPolicy.md'
+      - 'Remove-CPCAzureNetworkConnection': 'cmdlets/Remove-CPCAzureNetworkConnection.md'
+      - 'Remove-CPCCustomImage': 'cmdlets/Remove-CPCCustomImage.md'
+      - 'Remove-CPCUserSettingsPolicy': 'cmdlets/Remove-CPCUserSettingsPolicy.md'
+      - 'Set-CPCProvisioningPolicyAssignment': 'cmdlets/Set-CPCProvisioningPolicyAssignment.md'
+      - 'Set-CPCUserSettingsPolicyAssignment': 'cmdlets/Set-CPCUserSettingsPolicyAssignment.md'
+      - 'Update-CPCOrganizationSettings': 'cmdlets/Update-CPCOrganizationSettings.md'
+      - 'Update-CPCProvisioningPolicy': 'cmdlets/Update-CPCProvisioningPolicy.md'
+      - 'Update-CPCUserSettingsPolicy': 'cmdlets/Update-CPCUserSettingsPolicy.md'
+  - 'Contributing': 'contributing/contribution-guidelines.md'
+  - 'About': 'about/about.md'
+plugins:
+  - search
+  - include_dir_to_nav
+  - social
+
+theme:
+  name: 'material'
+  logo: Images/PSCloudPC_logo.png
+  favicon: Images/favicon.ico
+  icon:
+    repo: fontawesome/brands/git-alt
+  palette:
+    - scheme: default
+      primary: blue
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.instant
+    - search.share
+    - navigation.path
+    - navigation.top
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - toc:
+      permalink: true
+      #toc_depth: 0
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.snippets
+  - def_list
+  - attr_list
+  - md_in_html
+
+extra:
+  analytics:
+    provider: google
+    property: G-6HN1ZGL8WJ
+  generator: false
+  consent:
+    title: Cookie consent
+    description: >- 
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
+repo_url: https://github.com/Windows365Management/PSCloudPC
+copyright: PSCloudPC
