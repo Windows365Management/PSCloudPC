@@ -123,7 +123,7 @@ function Connect-Windows365 {
                 }
 
                 # Get OAuth Token
-                while ([string]::IsNullOrEmpty($tokenRequest.access_token)) {
+                while ([string]::IsNullOrEmpty($connection.access_token)) {
                     $connection = try {
                         Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/token" -Body $tokenBody
                     }
