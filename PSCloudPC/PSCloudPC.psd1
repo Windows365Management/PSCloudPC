@@ -94,7 +94,7 @@
         'Remove-CPCUserSettingsPolicy',
         'Set-CPCProvisioningPolicyAssignment',
         'Set-CPCUserSettingsPolicyAssignment',
-        'Update-CPCOrganizationSettings',
+        'Update-CPCOrganizationSetting',
         'Update-CPCUserSettingsPolicy',
         'Update-CPCProvisioningPolicy'
     )
