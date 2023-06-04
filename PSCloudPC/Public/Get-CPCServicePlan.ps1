@@ -1,4 +1,4 @@
-function Get-CPCServicePlans {
+function Get-CPCServicePlan {
     <#
     .SYNOPSIS
     This function will return all currently available service plans
@@ -14,7 +14,7 @@ function Get-CPCServicePlans {
     [CmdletBinding()]
     param (
         [parameter(ParameterSetName = "Type")]
-        [string]$ServicePlanType
+        [string]$ServicePlanName
         
     )
     
@@ -24,7 +24,7 @@ function Get-CPCServicePlans {
         switch ($PsCmdlet.ParameterSetName) {
             Type {
                 Write-Verbose "Type parameter provided"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/devicemanagement/virtualendpoint/serviceplans?`$filter=type+eq+'$($ServicePlanType)'"
+                $url = "https://graph.microsoft.com/$script:MSGraphVersion/devicemanagement/virtualendpoint/serviceplans?`$filter=displayName+eq+'$($ServicePlanName)'"
                 
             }
             default {
@@ -36,16 +36,17 @@ function Get-CPCServicePlans {
     Process {
         write-verbose "Retrieving service plans"
         try {
-            $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader -SkipHttpErrorCheck
+            $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
             $regions = $result.content | convertfrom-json
             write-verbose "Regions retrieved"
             $support = $regions.value
             $support | ForEach-Object {
                 $Info = [PSCustomObject]@{
-                    'displayName'  = $_.displayName
-                    'type'  = $_.type
-                    'vCpuCount' = $_.vCpuCount
-                    'ramInGB' = $_.ramInGB
+                    'id'          = $_.id
+                    'displayName' = $_.displayName
+                    'type'        = $_.type
+                    'vCpuCount'   = $_.vCpuCount
+                    'ramInGB'     = $_.ramInGB
                     'storageInGB' = $_.storageInGB
                 }
                 $Info
