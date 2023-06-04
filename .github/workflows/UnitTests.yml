@@ -1,5 +1,8 @@
 name: Unit Tests
-on: [push, pull_request, workflow_dispatch]
+on: 
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   # This workflow contains a single job called "build"
