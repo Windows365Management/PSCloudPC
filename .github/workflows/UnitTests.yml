@@ -4,8 +4,8 @@ name: Unit Tests
 # Controls when the workflow will run
 on: [push, pull_request]
 
-# Allows you to run this workflow manually from the Actions tab
-workflow_dispatch:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -26,33 +26,35 @@ jobs:
           Install-Module PSScriptAnalyzer -ErrorAction Stop
           Install-Module Pester -ErrorAction Stop
 
-      - name: Importing PSCloudPC module
-        shell: pwsh
-        run: |
-          Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
-      - name: PSSA check
-        shell: pwsh
-        run: |
-          Invoke-ScriptAnalyzer -Path ./PSCloudPC/Public/*.ps1 -Recurse -ExcludeRule PSAvoidTrailingWhitespace -Outvariable issues
-              $errors   = $issues.Where({$_.Severity -eq 'Error'})
-              $warnings = $issues.Where({$_.Severity -eq 'Warning'})
-              if ($errors) {
-                  Write-Error "There were $($errors.Count) errors and $($warnings.Count) warnings total." -ErrorAction Stop
-              } else {
-                  Write-Output "There were $($errors.Count) errors and $($warnings.Count) warnings total."
-              }
-      - name: Pester Module check
-        shell: pwsh
-        run: |
-          $testLocation = (Join-Path -Path "./Compiler" -ChildPath "Module.tests.ps1")
-          Invoke-Pester -Path $testLocation -Output detailed
-      - name: Pester Functions check
-        shell: pwsh
-        run: |
-          Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
-          Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "Functions.tests.ps1") -Output detailed
-      - name: Pester Files check
-        shell: pwsh
-        run: |
-          Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
-          Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "Files.tests.ps1") -Output detailed
+        - name: Install needed modules
+
+        - name: Importing PSCloudPC module
+          shell: pwsh
+          run: |
+            Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
+        - name: PSSA check
+          shell: pwsh
+          run: |
+            Invoke-ScriptAnalyzer -Path ./PSCloudPC/Public/*.ps1 -Recurse -ExcludeRule PSAvoidTrailingWhitespace -Outvariable issues
+                $errors   = $issues.Where({$_.Severity -eq 'Error'})
+                $warnings = $issues.Where({$_.Severity -eq 'Warning'})
+                if ($errors) {
+                    Write-Error "There were $($errors.Count) errors and $($warnings.Count) warnings total." -ErrorAction Stop
+                } else {
+                    Write-Output "There were $($errors.Count) errors and $($warnings.Count) warnings total."
+                }
+        - name: Pester Module check
+          shell: pwsh
+          run: |
+            $testLocation = (Join-Path -Path "./Compiler" -ChildPath "Module.tests.ps1")
+            Invoke-Pester -Path $testLocation -Output detailed
+        - name: Pester Functions check
+          shell: pwsh
+          run: |
+            Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
+            Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "Functions.tests.ps1") -Output detailed
+        - name: Pester Files check
+          shell: pwsh
+          run: |
+            Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
+            Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "Files.tests.ps1") -Output detailed
