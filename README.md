@@ -57,7 +57,7 @@ CloudPC.ReadWrite.All
 
 - Device Code
 ```powershell
-Connect-Windows365 -Authtype DeviceCode
+Connect-Windows365 -Authtype DeviceCode -TenantID <Example>.onmicrosoft.com
 ```
 You can use the Device Code to connect interactively for Linux or Mac.
 
