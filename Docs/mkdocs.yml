@@ -3,7 +3,7 @@ site_url: https://Windows365Management.github.io/PSCloudPC
 nav:
   - Home:
     - 'About PSCloudPC': 'index.md'
-  - 'Getting started'
+  - 'Getting started':
     - 'Permissions': 'getting-started/permissions.md'
     - 'Authentication': 'getting-started/authentication.md'
   - 'User Guide':
