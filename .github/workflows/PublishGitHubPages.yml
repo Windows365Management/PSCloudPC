@@ -1,8 +1,10 @@
 name: Generate Resources & Deploy GitHub Pages
+
 on:
   push:
     branches:
-        - websitetest
+        - main
+        - develop
 
 jobs:
 
