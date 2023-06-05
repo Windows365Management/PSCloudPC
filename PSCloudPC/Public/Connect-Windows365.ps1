@@ -114,7 +114,7 @@ function Connect-Windows365 {
                 $codeRequest = Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/devicecode" -Body $codeBody
 
                 # Print Code to console
-                Write-Verbose "`n$($codeRequest.message)"
+                Write-Output "`n$($codeRequest.message)"
 
                 $tokenBody = @{
                     grant_type = "urn:ietf:params:oauth:grant-type:device_code"
