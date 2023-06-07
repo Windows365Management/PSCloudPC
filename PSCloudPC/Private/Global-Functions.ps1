@@ -32,7 +32,7 @@ function Get-AzureADGroupID {
         [string]$GroupName
     )
 
-    $url = "https://graph.microsoft.com/v1.0/groups?`$filter=displayName+eq+'$GroupName'"
+    $url = "https://graph.microsoft.com/$script:MSGraphVersion/groups?`$filter=displayName+eq+'$GroupName'"
 
     $result = Invoke-RestMethod -Uri $url -Headers $script:Authheader -Method GET
 

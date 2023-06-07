@@ -1,4 +1,4 @@
-function Update-CPCOrganizationSettings {
+function Update-CPCOrganizationSetting {
     <#
     .SYNOPSIS
     Update the Cloud PC organization settings
@@ -13,7 +13,7 @@ function Update-CPCOrganizationSettings {
     .PARAMETER enableSingleSignOn
     Specifies wether single sign-on is enabled for new Cloud PCs. The default value is false.
     .EXAMPLE
-    Update-CPCOrganizationSettings -osVersion windows10 -userAccountType administrator -enableMEMAutoEnroll $true -enableSingleSignOn $true    
+    Update-CPCOrganizationSetting -osVersion windows10 -userAccountType administrator -enableMEMAutoEnroll $true -enableSingleSignOn $true    
     .NOTES
     #>
     [CmdletBinding()]
@@ -68,7 +68,7 @@ function Update-CPCOrganizationSettings {
         try {
             Write-Verbose "Updating Organization Settings "
             $result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
-            $result
+            return $result
             
         }
         catch {

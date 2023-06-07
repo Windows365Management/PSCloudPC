@@ -5,7 +5,7 @@ function Connect-Windows365 {
     .DESCRIPTION
     Connect to Windows 365 via Powershell via Interactive Browser or Service Principal
     .PARAMETER Authtype
-    Type of Authentication to use.  Interactive or ServicePrincipal
+    Type of Authentication to use Interactive, ServicePrincipal or DeviceCode
     .PARAMETER ClientSecret
     Client Secret for Service Principal Authentication
     .PARAMETER TenantID
@@ -15,19 +15,27 @@ function Connect-Windows365 {
     .EXAMPLE
     Connect-Windows365 -TenantID contoso.onmicrosoft.com
     .EXAMPLE
+    Connect-Windows365 -AuthType DeviceCode -TenantID contoso.onmicrosoft.com
+    .EXAMPLE
     Connect-Windows365 -Authtype ServicePrincipal -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012   
     #>
     [CmdletBinding(DefaultParameterSetName = 'Interactive')]
     param (
-        
-        [ValidateSet('ServicePrincipal', 'Interactive')]
+        [parameter(ParameterSetName = "Interactive")]
+        [parameter(ParameterSetName = "ServicePrincipal")]
+        [parameter(ParameterSetName = "DeviceCode")]
+        [ValidateSet('ServicePrincipal', 'Interactive', 'DeviceCode')]
         [string]$Authtype = 'Interactive',
-    
-        [Parameter(mandatory = $false)][string]$ClientSecret,
 
-        [Parameter(mandatory = $true)][string]$TenantID,
+        [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
+        [string]$ClientSecret,
 
-        [Parameter(mandatory = $false)][string]$ClientID
+        [parameter(Mandatory, ParameterSetName = "DeviceCode")]
+        [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
+        [string]$TenantID,
+
+        [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
+        [string]$ClientID
     )
     begin {
         # Set the profile to beta
@@ -38,6 +46,8 @@ function Connect-Windows365 {
         
         switch ($Authtype) {
             Interactive {
+                Write-Verbose "Use Interactive Authentication"
+                Write-Verbose "Using Windows Powershell"
                 # Add required assemblies
                 $ClientID = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
                 $Scopes = "CloudPC.ReadWrite.All%20DeviceManagementConfiguration.ReadWrite.All%20DeviceManagementManagedDevices.ReadWrite.All%20Directory.Read.All"
@@ -86,6 +96,50 @@ function Connect-Windows365 {
                 $Token = $connection.access_token
                 $script:Authtime = [System.DateTime]::UtcNow
                 $script:Authtoken = $connection
+                $script:Authheader = @{Authorization = "Bearer $($Token)" }                   
+            }
+            DeviceCode {
+                Write-Verbose "Using Device Code"
+                $clientId = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
+                $resource = "https://graph.microsoft.com/"
+                $scope = "CloudPC.ReadWrite.All%20DeviceManagementConfiguration.ReadWrite.All%20DeviceManagementManagedDevices.ReadWrite.All%20Directory.Read.All"
+
+                $codeBody = @{ 
+                    resource  = $resource
+                    client_id = $clientId
+                    scope     = $scope
+                }
+
+                # Get OAuth Code
+                $codeRequest = Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/devicecode" -Body $codeBody
+
+                # Print Code to console
+                Write-Output "`n$($codeRequest.message)"
+
+                $tokenBody = @{
+                    grant_type = "urn:ietf:params:oauth:grant-type:device_code"
+                    code       = $codeRequest.device_code
+                    client_id  = $clientId
+                }
+
+                # Get OAuth Token
+                while ([string]::IsNullOrEmpty($connection.access_token)) {
+                    $connection = try {
+                        Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/token" -Body $tokenBody
+                        Write-Verbose "Completed Authentication"
+                    }
+                    catch {
+                        $errorMessage = $_.ErrorDetails.Message | ConvertFrom-Json
+                        # If not waiting for auth, throw error
+                        if ($errorMessage.error -ne "authorization_pending") {
+                            throw
+                        }
+                    }
+                }
+                $Token = $connection.access_token
+
+                $script:Authtime = [System.DateTime]::UtcNow
+                $script:Authtoken = $connection
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }
             }
 
@@ -103,7 +157,7 @@ function Connect-Windows365 {
                     -Method POST `
                     -Body $body
                 
-                $token = $connection.access_token
+                $Token = $connection.access_token
         
                 $script:Authtime = [System.DateTime]::UtcNow
                 $script:Authtoken = $connection
