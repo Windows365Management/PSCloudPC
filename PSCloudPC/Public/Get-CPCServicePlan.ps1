@@ -6,7 +6,7 @@ function Get-CPCServicePlan {
     This function will return all currently available service plans
     .PARAMETER ServicePlanType
     Enter the type of service plan you want to retrieve. Valid values are: "enterprise", "business"
-        .EXAMPLE
+    .EXAMPLE
     Get-CPCServicePlans
     .EXAMPLE
     Get-CPCServicePlans -ServicePlanType "enterprise"

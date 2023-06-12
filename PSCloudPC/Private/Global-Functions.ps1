@@ -44,3 +44,41 @@ function Get-AzureADGroupID {
     $script:GroupID = $result.value.id
 
 }
+
+function Get-AzureADGroupName {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$id
+    )
+
+    $url = "https://graph.microsoft.com/$script:MSGraphVersion/groups?`$filter=id+eq+'$id'"
+
+    $result = Invoke-RestMethod -Uri $url -Headers $script:Authheader -Method GET
+
+    if ($null -eq $result) {
+        Write-Error "No groups returned"
+        break
+    }
+    
+    $script:GroupName = $result.value.displayName
+
+}
+
+function Get-CPCServicePlanName {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$ServicePlanId
+    )
+
+    $url = "https://graph.microsoft.com/$script:MSGraphVersion/devicemanagement/virtualendpoint/serviceplans?`$filter=id+eq+'$($ServicePlanId)'"
+
+    $result = Invoke-RestMethod -Uri $url -Headers $script:Authheader -Method GET
+
+    if ($null -eq $result) {
+        Write-Error "No groups returned"
+        break
+    }
+    
+    $script:ServicePlanName = $result.value.displayName
+
+}

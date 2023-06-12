@@ -19,7 +19,6 @@ function Set-CPCProvisioningPolicyAssignment {
         [string]$Name,
         [Parameter(mandatory = $false)][string]$GroupName,
         [Parameter(mandatory = $false)][switch]$Force
-        # TODO: Add SupportsShouldProcess 
 
     )
     
