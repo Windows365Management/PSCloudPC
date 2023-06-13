@@ -9,7 +9,7 @@ function Remove-CPCProvisioningPolicyAssignment {
     .PARAMETER GroupName
     Enter the name of the Group to be removed from the Cloud PC Provisioning Policy
     .EXAMPLE
-    Remove-CPCProvisioningPolicy -name "Provisioning Policy 01"
+    Remove-CPCProvisioningPolicyAssignment -name "Provisioning Policy 01" -GroupName "Group 01"
 #>
 
     [CmdletBinding()]
@@ -21,38 +21,25 @@ function Remove-CPCProvisioningPolicyAssignment {
     Begin {
         Get-TokenValidity
 
-        Write-Verbose "Graph URL for Provisioning Policy: $Name"
-        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies?`$filter=contains(displayName,'$Name')"
+        $Assignments = Get-CPCProvisioningPolicyAssignment -Name $Name
 
+        Get-AzureADGroupId -GroupName $GroupName
+
+        Write-Verbose "Graph URL for Provisioning Policy: $Name"
+        $AssigmentURL = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies/$($Assignments.Policyid)/assignments/24aec8b0-c923-42f1-9ccf-da00b8bb98d7_057efbfe-a95d-4263-acb0-12b4a31fed8d"
+    
+        write-verbose "Assignment to delete URL: $AssigmentURL"
     }
     
     Process {
-        write-verbose $url
-        $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
-    
-        if ($null -eq $result)
-        {
-            Write-Error "No Provisioning Policy's returned"
-            return
-        }
-
-        $resultnew = $result.content | ConvertFrom-Json
-
-        Write-Verbose "Object ID of deleted Policy $($resultnew.value.id)"
         
-        $deleteurl = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies/$($resultnew.value.id)"
-
-        Write-Verbose "Delete URL: $deleteurl"
 
         try {
-            Write-Verbose "Deleting Provisioning Policy $($Name)"
-            Invoke-WebRequest -uri $deleteurl -Method DELETE -Headers $script:authHeader
+            Write-Verbose "Deleting Assignment $Groupname from Provisioning Policy $($Name)"
+            Invoke-WebRequest -uri $AssigmentURL -Method DELETE -Headers $script:authHeader
         }
         catch {
             Throw $_.Exception.Message
         }
-        
-
     }
-    
 }

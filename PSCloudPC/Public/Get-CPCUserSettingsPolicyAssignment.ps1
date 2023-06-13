@@ -50,12 +50,17 @@ Function Get-CPCUserSettingsPolicyAssignment {
 
         Write-Verbose "Assignments: $($Convert.assignments)"
 
-        Get-AzureADGroupName -id $Convert.assignments.target.groupId
+        $GroupNames = New-Object System.Collections.Generic.List[System.Object]
+
+        foreach ($assignment in $Convert.assignments) {
+            Get-AzureADGroupName -id $assignment.target.groupId
+            $GroupNames.Add($script:GroupName)
+        }
     
         $Info = [PSCustomObject]@{
             id            = $Convert.id
             displayName   = $Convert.displayName
-            assignments   = $script:GroupName
+            assignments   = $GroupNames
         }
         $Info  
     }

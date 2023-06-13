@@ -50,17 +50,28 @@ Function Get-CPCProvisioningPolicyAssignment {
 
         Write-Verbose "Assignments: $($Convert.assignments)"
 
-        Get-AzureADGroupName -id $Convert.assignments.target.groupId
+        $GroupNames = New-Object System.Collections.Generic.List[System.Object]
+
+        foreach ($assignment in $Convert.assignments) {
+            Get-AzureADGroupName -id $assignment.target.groupId
+            $GroupNames.Add($script:GroupName)
+        }
 
         If ($Null -ne $Convert.assignments.target.ServicePlanId) {
-            Get-CPCServicePlanname -ServicePlanId $Convert.assignments.target.ServicePlanId
+            $Serviceplannames = New-Object System.Collections.Generic.List[System.Object]
+
+            foreach ($serviceplan in $Convert.assignments.target.ServicePlanId) {
+                Get-CPCServicePlanname -ServicePlanId $serviceplan
+                $Serviceplannames.Add($script:ServicePlanName)
+            }
         }
     
         $Info = [PSCustomObject]@{
-            id              = $Convert.id
+            Policyid        = $Convert.id
             displayName     = $Convert.displayName
-            assignments     = $script:GroupName
-            serviceplanName = $script:ServicePlanName
+            assignments     = $GroupNames
+            assignmentsid   = $Convert.assignments.target.groupId
+            serviceplanName = $Serviceplannames
         }
         $Info  
     }
