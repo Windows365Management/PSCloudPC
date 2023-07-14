@@ -12,9 +12,20 @@ Connect to Windows 365 via Powershell
 
 ## SYNTAX
 
+### Interactive (Default)
 ```
-Connect-Windows365 [[-Authtype] <String>] [[-ClientSecret] <String>] [-TenantID] <String>
- [[-ClientID] <String>] [<CommonParameters>]
+Connect-Windows365 [-Authtype <String>] [<CommonParameters>]
+```
+
+### DeviceCode
+```
+Connect-Windows365 [-Authtype <String>] -TenantID <String> [<CommonParameters>]
+```
+
+### ServicePrincipal
+```
+Connect-Windows365 [-Authtype <String>] -ClientSecret <String> -TenantID <String> -ClientID <String>
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -29,14 +40,18 @@ Connect-Windows365 -TenantID contoso.onmicrosoft.com
 
 ### EXAMPLE 2
 ```
+Connect-Windows365 -AuthType DeviceCode -TenantID contoso.onmicrosoft.com
+```
+
+### EXAMPLE 3
+```
 Connect-Windows365 -Authtype ServicePrincipal -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012
 ```
 
 ## PARAMETERS
 
 ### -Authtype
-Type of Authentication to use. 
-Interactive or ServicePrincipal
+Type of Authentication to use Interactive, ServicePrincipal or DeviceCode
 
 ```yaml
 Type: String
@@ -44,7 +59,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 1
+Position: Named
 Default value: Interactive
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -55,11 +70,11 @@ Client Secret for Service Principal Authentication
 
 ```yaml
 Type: String
-Parameter Sets: (All)
+Parameter Sets: ServicePrincipal
 Aliases:
 
-Required: False
-Position: 2
+Required: True
+Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -70,11 +85,11 @@ Tenant ID for all Authentication types
 
 ```yaml
 Type: String
-Parameter Sets: (All)
+Parameter Sets: DeviceCode, ServicePrincipal
 Aliases:
 
 Required: True
-Position: 3
+Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -85,11 +100,11 @@ Client ID for Service Principal Authentication
 
 ```yaml
 Type: String
-Parameter Sets: (All)
+Parameter Sets: ServicePrincipal
 Aliases:
 
-Required: False
-Position: 4
+Required: True
+Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False

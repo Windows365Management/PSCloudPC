@@ -15,10 +15,10 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Connect-Windows365</maml:name>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>Authtype</maml:name>
           <maml:description>
-            <maml:para>Type of Authentication to use.  Interactive or ServicePrincipal</maml:para>
+            <maml:para>Type of Authentication to use Interactive, ServicePrincipal or DeviceCode</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -27,7 +27,7 @@
           </dev:type>
           <dev:defaultValue>Interactive</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>ClientSecret</maml:name>
           <maml:description>
             <maml:para>Client Secret for Service Principal Authentication</maml:para>
@@ -39,7 +39,7 @@
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="3" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>TenantID</maml:name>
           <maml:description>
             <maml:para>Tenant ID for all Authentication types</maml:para>
@@ -51,7 +51,7 @@
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="4" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>ClientID</maml:name>
           <maml:description>
             <maml:para>Client ID for Service Principal Authentication</maml:para>
@@ -64,12 +64,39 @@
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
+      <command:syntaxItem>
+        <maml:name>Connect-Windows365</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Authtype</maml:name>
+          <maml:description>
+            <maml:para>Type of Authentication to use Interactive, ServicePrincipal or DeviceCode</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Interactive</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>TenantID</maml:name>
+          <maml:description>
+            <maml:para>Tenant ID for all Authentication types</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>Authtype</maml:name>
         <maml:description>
-          <maml:para>Type of Authentication to use.  Interactive or ServicePrincipal</maml:para>
+          <maml:para>Type of Authentication to use Interactive, ServicePrincipal or DeviceCode</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -78,7 +105,7 @@
         </dev:type>
         <dev:defaultValue>Interactive</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>ClientSecret</maml:name>
         <maml:description>
           <maml:para>Client Secret for Service Principal Authentication</maml:para>
@@ -90,7 +117,7 @@
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="3" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>TenantID</maml:name>
         <maml:description>
           <maml:para>Tenant ID for all Authentication types</maml:para>
@@ -102,7 +129,7 @@
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="4" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>ClientID</maml:name>
         <maml:description>
           <maml:para>Client ID for Service Principal Authentication</maml:para>
@@ -132,6 +159,13 @@
       </command:example>
       <command:example>
         <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>Connect-Windows365 -AuthType DeviceCode -TenantID contoso.onmicrosoft.com</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 3 --------------------------</maml:title>
         <dev:code>Connect-Windows365 -Authtype ServicePrincipal -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012</dev:code>
         <dev:remarks>
           <maml:para></maml:para>
@@ -400,9 +434,9 @@
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
-      <command:name>Get-CPCOrganizationSettings</command:name>
+      <command:name>Get-CPCOrganizationSetting</command:name>
       <command:verb>Get</command:verb>
-      <command:noun>CPCOrganizationSettings</command:noun>
+      <command:noun>CPCOrganizationSetting</command:noun>
       <maml:description>
         <maml:para>Returns the Cloud PC Organization Settings</maml:para>
       </maml:description>
@@ -412,7 +446,7 @@
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
-        <maml:name>Get-CPCOrganizationSettings</maml:name>
+        <maml:name>Get-CPCOrganizationSetting</maml:name>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters />
@@ -426,7 +460,7 @@
     <command:examples>
       <command:example>
         <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
-        <dev:code>Get-CPCOrganizationSettings</dev:code>
+        <dev:code>Get-CPCOrganizationSetting</dev:code>
         <dev:remarks>
           <maml:para></maml:para>
         </dev:remarks>
@@ -558,9 +592,9 @@
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
-      <command:name>Get-CPCServicePlans</command:name>
+      <command:name>Get-CPCServicePlan</command:name>
       <command:verb>Get</command:verb>
-      <command:noun>CPCServicePlans</command:noun>
+      <command:noun>CPCServicePlan</command:noun>
       <maml:description>
         <maml:para>This function will return all currently available service plans</maml:para>
       </maml:description>
@@ -570,11 +604,11 @@
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
-        <maml:name>Get-CPCServicePlans</maml:name>
+        <maml:name>Get-CPCServicePlan</maml:name>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-          <maml:name>ServicePlanType</maml:name>
+          <maml:name>ServicePlanName</maml:name>
           <maml:description>
-            <maml:para>Enter the type of service plan you want to retrieve. Valid values are: "enterprise", "business"</maml:para>
+            <maml:para>{{ Fill ServicePlanName Description }}</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -587,9 +621,9 @@
     </command:syntax>
     <command:parameters>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-        <maml:name>ServicePlanType</maml:name>
+        <maml:name>ServicePlanName</maml:name>
         <maml:description>
-          <maml:para>Enter the type of service plan you want to retrieve. Valid values are: "enterprise", "business"</maml:para>
+          <maml:para>{{ Fill ServicePlanName Description }}</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1503,7 +1537,7 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>WindowsAutopatch</maml:name>
           <maml:description>
-            <maml:para>{{ Fill WindowsAutopatch Description }}</maml:para>
+            <maml:para>Enter the Windows Autopatch for the Provisioning Policy (notManaged or starterManaged) (Default: notManaged)</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1523,6 +1557,30 @@
             <maml:uri />
           </dev:type>
           <dev:defaultValue>En-US</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>GroupName</maml:name>
+          <maml:description>
+            <maml:para>Enter the Group Name for assigning the Provisioning Policy (mandatory for Frontline)</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>ServicePlanName</maml:name>
+          <maml:description>
+            <maml:para>Enter the Service Plan Name for assigning the Provisioning Policy (mandatory for Frontline)</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
       <command:syntaxItem>
@@ -1662,7 +1720,7 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>WindowsAutopatch</maml:name>
           <maml:description>
-            <maml:para>{{ Fill WindowsAutopatch Description }}</maml:para>
+            <maml:para>Enter the Windows Autopatch for the Provisioning Policy (notManaged or starterManaged) (Default: notManaged)</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1682,6 +1740,30 @@
             <maml:uri />
           </dev:type>
           <dev:defaultValue>En-US</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>GroupName</maml:name>
+          <maml:description>
+            <maml:para>Enter the Group Name for assigning the Provisioning Policy (mandatory for Frontline)</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>ServicePlanName</maml:name>
+          <maml:description>
+            <maml:para>Enter the Service Plan Name for assigning the Provisioning Policy (mandatory for Frontline)</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
     </command:syntax>
@@ -1833,7 +1915,7 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>WindowsAutopatch</maml:name>
         <maml:description>
-          <maml:para>{{ Fill WindowsAutopatch Description }}</maml:para>
+          <maml:para>Enter the Windows Autopatch for the Provisioning Policy (notManaged or starterManaged) (Default: notManaged)</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1853,6 +1935,30 @@
           <maml:uri />
         </dev:type>
         <dev:defaultValue>En-US</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>GroupName</maml:name>
+        <maml:description>
+          <maml:para>Enter the Group Name for assigning the Provisioning Policy (mandatory for Frontline)</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>ServicePlanName</maml:name>
+        <maml:description>
+          <maml:para>Enter the Service Plan Name for assigning the Provisioning Policy (mandatory for Frontline)</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
     </command:parameters>
     <command:inputTypes />
@@ -1887,6 +1993,13 @@
       <command:example>
         <maml:title>-------------------------- EXAMPLE 4 --------------------------</maml:title>
         <dev:code>New-CPCProvisioningPolicy -Name "Test-NamingTemplate" -Description "Test-NamingTemplate" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true -NamingTemplate "%USERNAME:5%-%RAND:5%"</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 5 --------------------------</maml:title>
+        <dev:code>New-CPCProvisioningPolicy -Name "Test-NamingTemplate2" -Description "Test-NamingTemplate" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true -NamingTemplate "%USERNAME:5%-%RAND:5%"  -GroupName "All Users" -ServicePlanName "Cloud PC Frontline 2vCPU/8GB/128GB"</dev:code>
         <dev:remarks>
           <maml:para></maml:para>
         </dev:remarks>
@@ -2503,9 +2616,9 @@
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
-      <command:name>Update-CPCOrganizationSettings</command:name>
+      <command:name>Update-CPCOrganizationSetting</command:name>
       <command:verb>Update</command:verb>
-      <command:noun>CPCOrganizationSettings</command:noun>
+      <command:noun>CPCOrganizationSetting</command:noun>
       <maml:description>
         <maml:para>Update the Cloud PC organization settings</maml:para>
       </maml:description>
@@ -2515,7 +2628,7 @@
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
-        <maml:name>Update-CPCOrganizationSettings</maml:name>
+        <maml:name>Update-CPCOrganizationSetting</maml:name>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
           <maml:name>OSVersion</maml:name>
           <maml:description>
@@ -2650,7 +2763,7 @@
     <command:examples>
       <command:example>
         <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
-        <dev:code>Update-CPCOrganizationSettings -osVersion windows10 -userAccountType administrator -enableMEMAutoEnroll $true -enableSingleSignOn $true</dev:code>
+        <dev:code>Update-CPCOrganizationSetting -osVersion windows10 -userAccountType administrator -enableMEMAutoEnroll $true -enableSingleSignOn $true</dev:code>
         <dev:remarks>
           <maml:para></maml:para>
         </dev:remarks>

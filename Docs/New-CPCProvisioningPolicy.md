@@ -16,7 +16,8 @@ Adds a new Provisioning Policy
 ```
 New-CPCProvisioningPolicy -Name <String> [-Description <String>] [-ProvisioningType <String>]
  [-NamingTemplate <String>] [-ManagedBy <String>] [-ImageType <String>] -ImageId <String>
- -EnableSingleSignOn <Boolean> [-WindowsAutopatch <String>] [-Language <String>] [<CommonParameters>]
+ -EnableSingleSignOn <Boolean> [-WindowsAutopatch <String>] [-Language <String>] [-GroupName <String>]
+ [-ServicePlanName <String>] [<CommonParameters>]
 ```
 
 ### AzureNetwork
@@ -24,7 +25,7 @@ New-CPCProvisioningPolicy -Name <String> [-Description <String>] [-ProvisioningT
 New-CPCProvisioningPolicy -Name <String> [-Description <String>] [-ProvisioningType <String>]
  [-NamingTemplate <String>] -DomainJoinType <String> -AzureNetworkConnection <Object> [-ManagedBy <String>]
  [-ImageType <String>] -ImageId <String> -EnableSingleSignOn <Boolean> [-WindowsAutopatch <String>]
- [-Language <String>] [<CommonParameters>]
+ [-Language <String>] [-GroupName <String>] [-ServicePlanName <String>] [<CommonParameters>]
 ```
 
 ### MicrosoftHosted
@@ -32,7 +33,8 @@ New-CPCProvisioningPolicy -Name <String> [-Description <String>] [-ProvisioningT
 New-CPCProvisioningPolicy -Name <String> [-Description <String>] [-ProvisioningType <String>]
  [-NamingTemplate <String>] -DomainJoinType <String> -RegionName <String> -RegionGroup <String>
  [-ManagedBy <String>] [-ImageType <String>] -ImageId <String> -EnableSingleSignOn <Boolean>
- [-WindowsAutopatch <String>] [-Language <String>] [<CommonParameters>]
+ [-WindowsAutopatch <String>] [-Language <String>] [-GroupName <String>] [-ServicePlanName <String>]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -58,6 +60,11 @@ New-CPCProvisioningPolicy -Name "Test-Autopatch" -Description "Test-Autopatch" -
 ### EXAMPLE 4
 ```
 New-CPCProvisioningPolicy -Name "Test-NamingTemplate" -Description "Test-NamingTemplate" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true -NamingTemplate "%USERNAME:5%-%RAND:5%"
+```
+
+### EXAMPLE 5
+```
+New-CPCProvisioningPolicy -Name "Test-NamingTemplate2" -Description "Test-NamingTemplate" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true -NamingTemplate "%USERNAME:5%-%RAND:5%"  -GroupName "All Users" -ServicePlanName "Cloud PC Frontline 2vCPU/8GB/128GB"
 ```
 
 ## PARAMETERS
@@ -249,7 +256,7 @@ Accept wildcard characters: False
 ```
 
 ### -WindowsAutopatch
-{{ Fill WindowsAutopatch Description }}
+Enter the Windows Autopatch for the Provisioning Policy (notManaged or starterManaged) (Default: notManaged)
 
 ```yaml
 Type: String
@@ -274,6 +281,36 @@ Aliases:
 Required: False
 Position: Named
 Default value: En-US
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -GroupName
+Enter the Group Name for assigning the Provisioning Policy (mandatory for Frontline)
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ServicePlanName
+Enter the Service Plan Name for assigning the Provisioning Policy (mandatory for Frontline)
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

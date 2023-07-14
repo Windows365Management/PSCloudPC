@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# Get-CPCOrganizationSettings
+# Get-CPCOrganizationSetting
 
 ## SYNOPSIS
 Returns the Cloud PC Organization Settings
@@ -13,7 +13,7 @@ Returns the Cloud PC Organization Settings
 ## SYNTAX
 
 ```
-Get-CPCOrganizationSettings [<CommonParameters>]
+Get-CPCOrganizationSetting [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -23,7 +23,7 @@ This function will return all Cloud PC Organization Settings
 
 ### EXAMPLE 1
 ```
-Get-CPCOrganizationSettings
+Get-CPCOrganizationSetting
 ```
 
 ## PARAMETERS
