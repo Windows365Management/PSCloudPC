@@ -225,7 +225,7 @@ function New-CPCProvisioningPolicy {
         Write-Verbose "Policy ID: $($PolicyId)"
 
 
-        If (($Null -ne $GroupName) -and ($Null -ne $ServicePlanName)) {
+        If ($ProvisioningType -eq "shared") {
 
             Write-Verbose "Creating FrontlineAssignment Body"
             Write-Verbose "Assigning provisioning policy to group $GroupName"
