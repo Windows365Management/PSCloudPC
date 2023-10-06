@@ -22,6 +22,13 @@ function Remove-CPCProvisioningPolicy {
         Write-Verbose "Graph URL for Provisioning Policy: $Name"
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies?`$filter=contains(displayName,'$Name')"
 
+        $Assignments = Get-CPCProvisioningPolicyAssignment -Name $Name
+
+        if ($null -ne $Assignments.assignmentsid) {
+            Write-Error "Provisioning Policy $Name is assigned to a Group. Please remove the assignment first"
+            break
+        }
+
     }
     
     Process {
@@ -31,7 +38,7 @@ function Remove-CPCProvisioningPolicy {
         if ($null -eq $result)
         {
             Write-Error "No Provisioning Policy's returned"
-            return
+            break
         }
 
         $resultnew = $result.content | ConvertFrom-Json

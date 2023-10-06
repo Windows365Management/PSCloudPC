@@ -2,7 +2,6 @@ function Get-CPCProvisioningPolicy {
     <#
     .SYNOPSIS
     Returns all Provisioning Policy's or Provisioning Policy's with a specific name
-
     .DESCRIPTION
     The function will return all Provisioning Policy's or Provisioning Policy's with a specific name
     .PARAMETER name
