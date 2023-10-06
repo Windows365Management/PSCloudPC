@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# Get-CPCServicePlans
+# Get-CPCServicePlan
 
 ## SYNOPSIS
 This function will return all currently available service plans
@@ -13,7 +13,7 @@ This function will return all currently available service plans
 ## SYNTAX
 
 ```
-Get-CPCServicePlans [-ServicePlanType <String>] [<CommonParameters>]
+Get-CPCServicePlan [-ServicePlanName <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -33,9 +33,8 @@ Get-CPCServicePlans -ServicePlanType "enterprise"
 
 ## PARAMETERS
 
-### -ServicePlanType
-Enter the type of service plan you want to retrieve.
-Valid values are: "enterprise", "business"
+### -ServicePlanName
+{{ Fill ServicePlanName Description }}
 
 ```yaml
 Type: String

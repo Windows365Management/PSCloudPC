@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# Update-CPCOrganizationSettings
+# Update-CPCOrganizationSetting
 
 ## SYNOPSIS
 Update the Cloud PC organization settings
@@ -13,7 +13,7 @@ Update the Cloud PC organization settings
 ## SYNTAX
 
 ```
-Update-CPCOrganizationSettings [[-OSVersion] <String>] [[-UserAccountType] <String>]
+Update-CPCOrganizationSetting [[-OSVersion] <String>] [[-UserAccountType] <String>]
  [[-EnableMEMAutoEnroll] <Boolean>] [[-EnableSingleSignOn] <Boolean>] [[-WindowsSettings] <String>]
  [<CommonParameters>]
 ```
@@ -26,7 +26,7 @@ A tenant has only one cloudPcOrganizationSettings object.
 
 ### EXAMPLE 1
 ```
-Update-CPCOrganizationSettings -osVersion windows10 -userAccountType administrator -enableMEMAutoEnroll $true -enableSingleSignOn $true
+Update-CPCOrganizationSetting -osVersion windows10 -userAccountType administrator -enableMEMAutoEnroll $true -enableSingleSignOn $true
 ```
 
 ## PARAMETERS

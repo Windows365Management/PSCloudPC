@@ -119,19 +119,22 @@ function New-CPCProvisioningPolicy {
             Write-Error "The parameter -EnableSingleSignOn can only be used with -DomainJoinType 'azureADJoin'."
             break
         }
-
-        Get-AzureADGroupID -GroupName $GroupName
-
-        If ($null -eq $script:GroupID) {
-            Throw "No group found with name $GroupName"
-            return
+        If ($GroupName){
+            Get-AzureADGroupID -GroupName $GroupName
+    
+            If ($null -eq $script:GroupID) {
+                Throw "No group found with name $GroupName"
+                return
+            }
         }
 
-        $ServicePlan = Get-CPCServicePlan -ServicePlanName $ServicePlanName
-
-        If ($null -eq $ServicePlan) {
-            Throw "No Service Plan found with name $ServicePlanName"
-            return
+        If ($ServicePlanName){
+            $ServicePlan = Get-CPCServicePlan -ServicePlanName $ServicePlanName
+    
+            If ($null -eq $ServicePlan) {
+                Throw "No Service Plan found with name $ServicePlanName"
+                return
+            }
         }
     }
 
@@ -222,7 +225,7 @@ function New-CPCProvisioningPolicy {
         Write-Verbose "Policy ID: $($PolicyId)"
 
 
-        If (($Null -ne $GroupName) -and ($Null -ne $ServicePlanName)) {
+        If ($ProvisioningType -eq "shared") {
 
             Write-Verbose "Creating FrontlineAssignment Body"
             Write-Verbose "Assigning provisioning policy to group $GroupName"
