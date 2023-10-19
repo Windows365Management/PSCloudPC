@@ -35,7 +35,11 @@ function Connect-Windows365 {
         [string]$TenantID,
 
         [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
-        [string]$ClientID
+        [string]$ClientID,
+
+        [Parameter(Mandatory = $false,  HelpMessage = "Supply the output format required, default is ScriptEnv")]
+        [ValidateSet('CompressedJson', 'PSObject', 'DevOpsPipelineVariable', 'ScriptEnv')]
+        [string]$OutputFormat = 'ScriptEnv'
     )
     begin {
         # Set the profile to beta
@@ -92,11 +96,7 @@ function Connect-Windows365 {
                     -Method Post -ContentType "application/x-www-form-urlencoded" `
                     -Body $body `
                     -ErrorAction STOP
-                # Access Token
-                $Token = $connection.access_token
-                $script:Authtime = [System.DateTime]::UtcNow
-                $script:Authtoken = $connection
-                $script:Authheader = @{Authorization = "Bearer $($Token)" }                   
+                
             }
             DeviceCode {
                 Write-Verbose "Using Device Code"
@@ -136,13 +136,7 @@ function Connect-Windows365 {
                         }
                     }
                 }
-                $Token = $connection.access_token
-
-                $script:Authtime = [System.DateTime]::UtcNow
-                $script:Authtoken = $connection
-                $script:Authheader = @{Authorization = "Bearer $($Token)" }
             }
-
             ServicePrincipal {
 
                 $body = @{
@@ -156,12 +150,41 @@ function Connect-Windows365 {
                     -Uri https://login.microsoftonline.com/$TenantID/oauth2/v2.0/token `
                     -Method POST `
                     -Body $body
-                
+            }
+        }
+        switch ($OutputFormat) {
+            'CompressedJson' {
+                Write-Verbose "Returning a compressed json string"
+                $result = New-Object -TypeName PSObject -Property @{
+                    expireDate = (Get-Date).AddSeconds($connection.expires_in)
+                    token      = $connection.access_token
+                    scope      = $connection.scope
+                    tokenType  = $connection.token_type
+                }
+                return ($result | ConvertTo-Json -depth 3 -Compress)
+            }
+            'PSObject' {
+                Write-Verbose "Returning a PSObject"
+                $result = New-Object -TypeName PSObject -Property @{
+                    expireDate = (Get-Date).AddSeconds($connection.expires_in)
+                    token      = $connection.access_token
+                    scope      = $connection.scope
+                    tokenType  = $connection.token_type
+                }
+                return $result
+            }
+            'DevOpsPipelineVariable' {
+                Write-Verbose "Writing token to a secure pipeline variable"
+                Write-Output "##vso[task.setvariable variable=graphToken;issecret=true]$($result.token)"
+                return 0
+            }
+            'ScriptEnv' {
+                Write-Verbose "Writing token to a the `$script: vars"
                 $Token = $connection.access_token
-        
                 $script:Authtime = [System.DateTime]::UtcNow
                 $script:Authtoken = $connection
-                $script:Authheader = @{Authorization = "Bearer $($Token)" }
+                $script:Authheader = @{Authorization = "Bearer $($Token)" }  
+                return 0
             }
         }
     }
