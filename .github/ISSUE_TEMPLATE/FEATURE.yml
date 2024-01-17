@@ -1,0 +1,45 @@
+name: Feature Request
+description: Suggest an idea or new feature for PSCloudPC
+title: "🚀 [Feature Request]: "
+labels: [feature]
+assignees:
+  - 
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a new feature. Please provide the following details:
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. email@example.com
+    validations:
+      required: true
+  - type: input
+    id: feature
+    attributes:
+      label: Feature
+      description: What feature would you like to suggest?
+      placeholder: Enter the feature name
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature_description
+    attributes:
+      label: Feature Description
+      description: Can you describe the feature in more detail?
+      placeholder: Enter your feature description here...
+    validations:
+      required: true
+  - type: textarea
+    id: feature_outcome
+    attributes:
+      label: Feature Output
+      description: What is the expected output for the feature?
+      placeholder: Enter your description here...
+    validations:
+      required: true
