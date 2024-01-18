@@ -1,0 +1,105 @@
+name: Build and Release Binaries
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+      - name: Get previous tag version
+        id: get_previous_version
+        run: echo ::set-output name=PREVIOUSVERSION::git describe --tags $(git rev-list --tags --max-count=1)
+      - name: Print the version
+        run: |
+            echo "Tag previous tag name is ${{ steps.get_version.outputs.VERSION }}"
+            echo "Tag name is ${{ steps.get_previous_version.outputs.PREVIOUSVERSION }}"
+      - name: "Build release changelog"
+        id: build_release_changelog
+        uses: mikepenz/release-changelog-builder-action@develop
+        with:
+            fromTag: ${{ steps.get_version.outputs.PREVIOUSVERSION }}
+            toTag: ${{ steps.get_version.outputs.VERSION }}
+            configurationJson: |
+                {
+                "template": "#{{CHANGELOG}}\n\n<details>\n<summary>Uncategorized</summary>\n\n#{{UNCATEGORIZED}}\n</details>",
+                "categories": [
+                    {
+                        "title": "## ❗️ Breaking!!!",
+                        "labels": ["breaking"]
+                    },
+                    {
+                        "title": "## 🚀 Features",
+                        "labels": ["feature"]
+                    },
+                    {
+                        "title": "## 🐛 Fixes",
+                        "labels": ["bug"]
+                    },
+                    {
+                        "title": "## 📝 Refactor",
+                        "labels": ["refactor"]
+                    },
+                    {
+                        "title": "## 📄 Documentation",
+                        "labels": ["documentation"]
+                    },
+                    {
+                        "title": "## 🧪 Tests",
+                        "labels": ["test"]
+                    },
+                    {
+                        "title": "## 💬 Other",
+                        "labels": ["other"]
+                    },
+                    {
+                        "title": "## 📦 Dependencies",
+                        "labels": ["dependencies"]
+                    }
+                ]
+                }
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+          body: ${{ steps.without_checkout.outputs.changelog }}
+  publish:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          repository: ''
+          path: 'drop'
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: PSCloudPC
+          path: drop
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v2.1.0
+        with:
+          name: PSCloudPC
+      - name: Publishing module
+        shell: pwsh
+        run: |
+          ./Compiler/PublishPSgallery.ps1 -PS_GALLERY_KEY ${{ secrets.PS_GALLERY_KEY }}
