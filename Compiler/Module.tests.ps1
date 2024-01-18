@@ -30,7 +30,7 @@ Describe "$module Global module tests" {
         } 
 
         It "$module should have a semver version" {
-            $moduleContent.ModuleVersion -match "^([0-9]).([0-9]).([0-9])$" | Should -Be $true
+            $moduleContent.ModuleVersion -match "^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+))?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+))?$" | Should -Be $true
         }
 #        It "$module version should be greater than PSGallery" {
 #            $galleryVersion = (Find-Module -Name PSCloudPC -Repository PSGallery).Version
