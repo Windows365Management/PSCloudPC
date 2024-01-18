@@ -40,7 +40,7 @@ body:
     attributes:
       label: Feature Output
       description: What is the expected output for the feature?
-      placeholder: Enter your description here...
+      placeholder: Enter your expected output here...
     validations:
       required: true
   - type: textarea
