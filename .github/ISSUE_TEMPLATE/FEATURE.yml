@@ -1,5 +1,7 @@
 name: Feature Request
-description: Suggest an idea or new feature for PSCloudPC
+
+description: Use this template for submitting feature requests for the PSCloudPC module
+
 title: "🚀 [Feature Request]: "
 labels: [feature]
 assignees:
@@ -22,8 +24,8 @@ body:
     id: feature
     attributes:
       label: Feature
-      description: What feature would you like to suggest?
-      placeholder: Enter the feature name
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: A clear and concise description of what the problem is.
     validations:
       required: true
 
@@ -31,15 +33,23 @@ body:
     id: feature_description
     attributes:
       label: Feature Description
-      description: Can you describe the feature in more detail?
-      placeholder: Enter your feature description here...
+      description: Can you describe the feature in detail?
+      placeholder: A clear and concise description of what you want to happen.
     validations:
-      required: true
+      required: false
   - type: textarea
     id: feature_outcome
     attributes:
       label: Feature Output
       description: What is the expected output for the feature?
-      placeholder: Enter your description here...
+      placeholder: Enter your expected output here...
     validations:
       required: true
+  - type: textarea
+    id: feature_implementation
+    attributes:
+      label: Possible implementation
+      description: What is the expected output for the feature?
+      placeholder: Not obligatory, but suggest an idea for implementing the addition or change.
+    validations:
+      required: false
