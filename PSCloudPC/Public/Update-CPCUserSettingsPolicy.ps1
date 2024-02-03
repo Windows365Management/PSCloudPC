@@ -8,6 +8,8 @@ function Update-CPCUserSettingsPolicy {
     Name of the User Settings Policy to update
     .PARAMETER LocalAdminEnabled
     Enable or disable local admin
+    .PARAMETER ResetEnabled
+    Allow targeted users to reprovision their Cloud PC from within the Windows 365 app and web app
     .PARAMETER UserRestoreEnabled
     Enable or disable user restore
     .PARAMETER UserRestoreFrequency
