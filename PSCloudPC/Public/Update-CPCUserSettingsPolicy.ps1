@@ -20,6 +20,7 @@ function Update-CPCUserSettingsPolicy {
         [parameter(Mandatory = $true, ParameterSetName = 'Name')]
         [string]$Name,
         [Parameter(mandatory = $false)][bool]$LocalAdminEnabled,
+        [Parameter(mandatory = $false)][bool]$ResetEnabled,
         [Parameter(mandatory = $false)][bool]$UserRestoreEnabled,
         [ValidateSet('4', '6', '12', '16', '24')]$UserRestoreFrequency
     )
@@ -52,6 +53,10 @@ function Update-CPCUserSettingsPolicy {
 
         If ($psboundparameters.ContainsKey("SelfServiceEnabled")){
             $params.Add("SelfServiceEnabled", $SelfServiceEnabled )
+        }
+
+        If ($psboundparameters.ContainsKey("ResetEnabled")){
+            $params.Add("resetEnabled", $resetEnabled )
         }
 
         If ($psboundparameters.ContainsKey("UserRestoreEnabled")){
