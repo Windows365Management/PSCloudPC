@@ -5,7 +5,9 @@ Function Import-CPCProvisioningPolicy {
     .DESCRIPTION
     The function will import a Provisioning Policy from a JSON File
     .PARAMETER Inputfile
-        Enter the path to the JSON File
+    Enter the path to the JSON File
+    .EXAMPLE
+    Import-CPCProvisioningPolicy -Inputfile "C:\Temp\AzureADJoinPolicy.json"
     #>
     [CmdletBinding()]
     param (
@@ -20,6 +22,13 @@ Function Import-CPCProvisioningPolicy {
             Write-Error "File not found"
             break
         }
+        #Get the JSON File and convert it to a PSObject
+        $Content = Get-Content -Path $Inputfile | ConvertFrom-Json
+    
+        if ($null -eq $Content) {
+            Write-Error "InputFile is not a valid JSON File"
+        }
+                
 
     }
     
@@ -29,22 +38,29 @@ Function Import-CPCProvisioningPolicy {
 
         write-verbose $url
 
-        #Inserting New Version into JSON File
-        $Content = Get-Content -Path $Inputfile #| ConvertFrom-Json
-        # Remove properties that are not available for creating a new configuration
-        $JSON_Convert = $Content | ConvertFrom-Json
-        $JSON_Output = $JSON_Convert | Select-Object -Property * -ExcludeProperty id, scopeIds | ConvertTo-Json -Depth 100
+        if (($Content.domainJoinConfigurations.type -eq 'azureADJoin') -and ($null -eq $Content.domainJoinConfigurations.onPremisesConnectionId)) {
 
-        Write-Verbose "JSON: $JSON_Output"
-
-        try {
-            Invoke-WebRequest -uri $url -Method POST -Headers $script:authHeader -Body $JSON_Output -ContentType "application/json"
+            write-verbose "Importing AzureADJoin policy without onPremisesConnectionId"
+            
+            New-CPCProvisioningPolicy -Name $Content.displayName -Description $Content.description -DomainJoinType $Content.domainJoinConfigurations.Type -ImageType $Content.imageType -ImageId $Content.imageId -EnableSingleSignOn $Content.enableSingleSignOn -RegionGroup $Content.domainJoinConfigurations.RegionGroup -RegionName $Content.domainJoinConfigurations.RegionName -Language $Content.windowsSettings.language -NamingTemplate $Content.cloudPcNamingTemplate -ProvisioningType $Content.provisioningType
         }
-        catch {
-            Throw $_.Exception.Message
+        if (($Content.domainJoinConfigurations.type -eq 'azureADJoin') -and ($null -ne $Content.domainJoinConfigurations.onPremisesConnectionId)) {
+
+            Write-Verbose "Importing AzureADJoin policy with onPremisesConnectionId"
+
+            $AzureNetworkConnection = Get-CPCAzureNetworkConnection | Where-Object id -eq $Content.domainJoinConfigurations.onPremisesConnectionId
+            
+            New-CPCProvisioningPolicy -Name $Content.displayName -Description $Content.description -DomainJoinType $Content.domainJoinConfigurations.Type -ImageType $Content.imageType -ImageId $Content.imageId -EnableSingleSignOn $Content.enableSingleSignOn -AzureNetworkConnection $AzureNetworkConnection.displayName -Language $Content.windowsSettings.language -NamingTemplate $Content.cloudPcNamingTemplate -ProvisioningType $Content.provisioningType
+        }
+        if ($Content.domainJoinConfigurations.type -eq 'hybridAzureADJoin') {
+
+            Write-Verbose "Importing HybridAzureADJoin Policy"
+
+            $AzureNetworkConnection = Get-CPCAzureNetworkConnection | Where-Object id -eq $Content.domainJoinConfigurations.onPremisesConnectionId
+
+            New-CPCProvisioningPolicy -Name $Content.displayName -Description $Content.description -imageType $Content.imageType -ImageId $Content.imageId -DomainJoinType $Content.domainJoinConfigurations.type -EnableSingleSignOn $Content.enableSingleSignOn -AzureNetworkConnection $AzureNetworkConnection.displayName -Language $Content.windowsSettings.language -NamingTemplate $Content.cloudPcNamingTemplate -ProvisioningType $Content.provisioningType
         }
         
-
     }
     
 }
