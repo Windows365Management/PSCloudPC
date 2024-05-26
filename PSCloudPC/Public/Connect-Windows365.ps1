@@ -46,6 +46,17 @@ function Connect-Windows365 {
         
         switch ($Authtype) {
             Interactive {
+
+                $environment = Get-ChildItem -Path C:\Windows -ErrorAction SilentlyContinue
+
+                If ($null -eq $environment) {
+                    Write-Error "Using Powershell Core on Mac or Linux, please use the DeviceCode or ServicePrincipal Authentication"
+                    Break
+                }
+                else {
+                    Write-Verbose "Using Windows Powershell Core, continue with the script"
+                }
+
                 Write-Verbose "Use Interactive Authentication"
                 Write-Verbose "Using Windows Powershell"
                 # Add required assemblies
