@@ -49,6 +49,7 @@ function Get-CPCUserSettingsPolicy {
                 displayName          = $_.displayName
                 selfServiceEnabled   = $_.selfServiceEnabled
                 localAdminEnabled    = $_.localAdminEnabled
+                resetEnabled         = $_.resetEnabled
                 createdDateTime      = $_.createdDateTime
                 lastModifiedDateTime = $_.lastModifiedDateTime
                 restorePointSetting  = $_.restorePointSetting
