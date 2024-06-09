@@ -119,7 +119,7 @@ function New-CPCProvisioningPolicy {
             Write-Error "The parameter -EnableSingleSignOn can only be used with -DomainJoinType 'azureADJoin'."
             break
         }
-        If ($GroupName){
+        If ($GroupName) {
             Get-AzureADGroupID -GroupName $GroupName
     
             If ($null -eq $script:GroupID) {
@@ -128,7 +128,7 @@ function New-CPCProvisioningPolicy {
             }
         }
 
-        If ($ServicePlanName){
+        If ($ServicePlanName) {
             $ServicePlan = Get-CPCServicePlan -ServicePlanName $ServicePlanName
     
             If ($null -eq $ServicePlan) {
@@ -171,23 +171,25 @@ function New-CPCProvisioningPolicy {
                 }
 
                 Write-Verbose "AzureNetworkConnection ID: $($AzureNetworkInfo.Id)"
-                $domainJoinConfig = @{
-                    Type                   = $AzureNetworkInfo.Type
-                    OnPremisesConnectionId = $AzureNetworkInfo.Id
-                }
+                $domainJoinConfig = @(
+                    @{
+                        Type                   = $AzureNetworkInfo.Type
+                        OnPremisesConnectionId = $AzureNetworkInfo.Id
+                    }
+                )
                 $domainJoinConfigurations += $domainJoinConfig
-                $domainjoinparameter = "DomainJoinConfigurations"
             }
         }
 
         else {
-            $domainJoinConfig = @{
-                Type        = "$DomainJoinType"
-                RegionName  = $RegionName
-                RegionGroup = $RegionGroup
-            }
+            $domainJoinConfig = @(
+                @{
+                    Type        = "$DomainJoinType"
+                    RegionName  = $RegionName
+                    RegionGroup = $RegionGroup
+                }
+            )
             $domainJoinConfigurations += $domainJoinConfig
-            $domainjoinparameter = "DomainJoinConfiguration"
         }
 
         $params = @{
@@ -198,7 +200,7 @@ function New-CPCProvisioningPolicy {
             ImageId                 = $ImageId
             ImageType               = $ImageType
             enableSingleSignOn      = $EnableSingleSignOn
-            $domainjoinparameter    = $domainJoinConfigurations
+            DomainJoinConfigurations   = $domainJoinConfigurations
             MicrosoftManagedDesktop = @{
                 Type    = $WindowsAutopatch
                 Profile = $WindowsAutopatchprofile
@@ -254,7 +256,7 @@ function New-CPCProvisioningPolicy {
                 assignments = @(
                     @{
                         target = @{
-                            groupId       = $script:GroupID
+                            groupId = $script:GroupID
                         }
                     }
                 )
@@ -263,7 +265,7 @@ function New-CPCProvisioningPolicy {
             Write-Verbose $assignmentbody
         }
 
-        If ($Null -ne $assignmentbody){
+        If ($Null -ne $assignmentbody) {
 
             Write-Verbose "Assigning provisioning policy to group $GroupName"
 
