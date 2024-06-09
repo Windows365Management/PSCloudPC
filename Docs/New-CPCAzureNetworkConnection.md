@@ -15,14 +15,15 @@ Adds a new Provisioning Policy
 ### AzureADJoin (Default)
 ```
 New-CPCAzureNetworkConnection -DisplayName <String> -ResourceGroupId <String> -VirtualNetworkId <String>
- -SubnetId <String> -SubscriptionId <String> [<CommonParameters>]
+ -SubnetId <String> -SubscriptionId <String> [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ### HybridAzureADJoin
 ```
 New-CPCAzureNetworkConnection -DisplayName <String> -ResourceGroupId <String> -VirtualNetworkId <String>
  -SubnetId <String> -SubscriptionId <String> -AdDomainName <String> -AdDomainUserName <String>
- -AdDomainPassword <SecureString> -OrganizationalUnit <String> [<CommonParameters>]
+ -AdDomainPassword <SecureString> -OrganizationalUnit <String> [-ProgressAction <ActionPreference>]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -176,6 +177,21 @@ Parameter Sets: HybridAzureADJoin
 Aliases:
 
 Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
 Position: Named
 Default value: None
 Accept pipeline input: False

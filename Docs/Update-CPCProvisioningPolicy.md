@@ -15,7 +15,7 @@ Update a Cloud PC Provisioning Policy
 ```
 Update-CPCProvisioningPolicy -Name <String> [-ImageType <String>] [-ImageId <String>]
  [-EnableSingleSignOn <Boolean>] [-NamingTemplate <String>] [-AzureNetworkConnection <Object>]
- [-DomainJoinType <String>] [<CommonParameters>]
+ [-DomainJoinType <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -138,6 +138,21 @@ Aliases:
 Required: False
 Position: Named
 Default value: AzureADJoin
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

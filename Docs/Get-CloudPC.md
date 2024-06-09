@@ -13,7 +13,7 @@ Returns all CloudPC's or CloudPC's with a specific name
 ## SYNTAX
 
 ```
-Get-CloudPC [-Name <String>] [<CommonParameters>]
+Get-CloudPC [-Name <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -35,6 +35,21 @@ Enter the name of the CloudPC
 Type: String
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
 
 Required: False
 Position: Named

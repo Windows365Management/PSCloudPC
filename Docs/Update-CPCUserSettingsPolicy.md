@@ -13,8 +13,9 @@ Updates a User Settings Policy in the Intune Cloud PC Service
 ## SYNTAX
 
 ```
-Update-CPCUserSettingsPolicy -Name <String> [-LocalAdminEnabled <Boolean>] [-UserRestoreEnabled <Boolean>]
- [-UserRestoreFrequency <Object>] [<CommonParameters>]
+Update-CPCUserSettingsPolicy -Name <String> [-LocalAdminEnabled <Boolean>] [-ResetEnabled <Boolean>]
+ [-UserRestoreEnabled <Boolean>] [-UserRestoreFrequency <Object>] [-ProgressAction <ActionPreference>]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -59,6 +60,21 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -ResetEnabled
+Allow targeted users to reprovision their Cloud PC from within the Windows 365 app and web app
+
+```yaml
+Type: Boolean
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -UserRestoreEnabled
 Enable or disable user restore
 
@@ -81,6 +97,21 @@ Frequency of user restore points (4, 6, 12, 16, 24 hours)
 Type: Object
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
 
 Required: False
 Position: Named

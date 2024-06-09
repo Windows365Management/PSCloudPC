@@ -13,7 +13,7 @@ Returns all Azure Network Connections or a specific Azure Network Connection
 ## SYNTAX
 
 ```
-Get-CPCAzureNetworkConnection [-Name <String>] [<CommonParameters>]
+Get-CPCAzureNetworkConnection [-Name <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -40,6 +40,21 @@ Name of the Azure Network Connection to return
 Type: String
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
 
 Required: False
 Position: Named
