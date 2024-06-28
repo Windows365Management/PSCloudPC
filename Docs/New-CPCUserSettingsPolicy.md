@@ -13,8 +13,9 @@ Creates new Cloud PC User Settings Policy
 ## SYNTAX
 
 ```
-New-CPCUserSettingsPolicy -Name <String> [-LocalAdminEnabled <String>] [-UserRestoreEnabled <String>]
- [-FrequencyInHours <Object>] [<CommonParameters>]
+New-CPCUserSettingsPolicy -Name <String> [-LocalAdminEnabled <Boolean>] [-ResetEnabled <Boolean>]
+ [-UserRestoreEnabled <Boolean>] [-FrequencyInHours <Object>] [-ProgressAction <ActionPreference>] [-WhatIf]
+ [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -24,7 +25,7 @@ The function will create a new Cloud PC User Settings Policy
 
 ### EXAMPLE 1
 ```
-New-CPCUserSettingsPolicy -Name "Cloud PC User Settings Policy" -LocalAdminEnabled $true -UserRestoreEnabled $true -FrequencyInHours 6
+New-CPCUserSettingsPolicy -Name "Cloud PC User Settings Policy" -LocalAdminEnabled $true -ResetEnabled $true -UserRestoreEnabled $true -FrequencyInHours 6
 ```
 
 ## PARAMETERS
@@ -48,7 +49,22 @@ Accept wildcard characters: False
 Enable or disable local admin permissions
 
 ```yaml
-Type: String
+Type: Boolean
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ResetEnabled
+Allow targeted users to reprovision their Cloud PC from within the Windows 365 app and web app
+
+```yaml
+Type: Boolean
 Parameter Sets: (All)
 Aliases:
 
@@ -63,13 +79,13 @@ Accept wildcard characters: False
 Enable or disable user restore
 
 ```yaml
-Type: String
+Type: Boolean
 Parameter Sets: (All)
 Aliases:
 
 Required: False
 Position: Named
-Default value: True
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -85,6 +101,52 @@ Aliases:
 Required: False
 Position: Named
 Default value: 6
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Confirm
+Prompts you for confirmation before running the cmdlet.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

@@ -13,7 +13,7 @@ This function will return all currently available service plans
 ## SYNTAX
 
 ```
-Get-CPCServicePlan [-ServicePlanName <String>] [<CommonParameters>]
+Get-CPCServicePlan [-ServicePlanName <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -40,6 +40,21 @@ Get-CPCServicePlans -ServicePlanType "enterprise"
 Type: String
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
 
 Required: False
 Position: Named

@@ -13,7 +13,7 @@ Returns all gallery images or gallery images with a specific name
 ## SYNTAX
 
 ```
-Get-CPCGalleryImage [-Name <String>] [<CommonParameters>]
+Get-CPCGalleryImage [-Name <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -40,6 +40,21 @@ Enter the name of the gallery image
 Type: String
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
 
 Required: False
 Position: Named

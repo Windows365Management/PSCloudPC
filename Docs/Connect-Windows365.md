@@ -14,18 +14,19 @@ Connect to Windows 365 via Powershell
 
 ### Interactive (Default)
 ```
-Connect-Windows365 [-Authtype <String>] [<CommonParameters>]
+Connect-Windows365 [-Authtype <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ### DeviceCode
 ```
-Connect-Windows365 [-Authtype <String>] -TenantID <String> [<CommonParameters>]
+Connect-Windows365 [-Authtype <String>] -TenantID <String> [-ProgressAction <ActionPreference>]
+ [<CommonParameters>]
 ```
 
 ### ServicePrincipal
 ```
 Connect-Windows365 [-Authtype <String>] -ClientSecret <String> -TenantID <String> -ClientID <String>
- [<CommonParameters>]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -104,6 +105,21 @@ Parameter Sets: ServicePrincipal
 Aliases:
 
 Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
 Position: Named
 Default value: None
 Accept pipeline input: False

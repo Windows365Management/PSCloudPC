@@ -17,7 +17,7 @@ Adds a new Provisioning Policy
 New-CPCProvisioningPolicy -Name <String> [-Description <String>] [-ProvisioningType <String>]
  [-NamingTemplate <String>] [-ManagedBy <String>] [-ImageType <String>] -ImageId <String>
  -EnableSingleSignOn <Boolean> [-WindowsAutopatch <String>] [-Language <String>] [-GroupName <String>]
- [-ServicePlanName <String>] [<CommonParameters>]
+ [-ServicePlanName <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ### AzureNetwork
@@ -25,7 +25,8 @@ New-CPCProvisioningPolicy -Name <String> [-Description <String>] [-ProvisioningT
 New-CPCProvisioningPolicy -Name <String> [-Description <String>] [-ProvisioningType <String>]
  [-NamingTemplate <String>] -DomainJoinType <String> -AzureNetworkConnection <Object> [-ManagedBy <String>]
  [-ImageType <String>] -ImageId <String> -EnableSingleSignOn <Boolean> [-WindowsAutopatch <String>]
- [-Language <String>] [-GroupName <String>] [-ServicePlanName <String>] [<CommonParameters>]
+ [-Language <String>] [-GroupName <String>] [-ServicePlanName <String>] [-ProgressAction <ActionPreference>]
+ [<CommonParameters>]
 ```
 
 ### MicrosoftHosted
@@ -34,7 +35,7 @@ New-CPCProvisioningPolicy -Name <String> [-Description <String>] [-ProvisioningT
  [-NamingTemplate <String>] -DomainJoinType <String> -RegionName <String> -RegionGroup <String>
  [-ManagedBy <String>] [-ImageType <String>] -ImageId <String> -EnableSingleSignOn <Boolean>
  [-WindowsAutopatch <String>] [-Language <String>] [-GroupName <String>] [-ServicePlanName <String>]
- [<CommonParameters>]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -307,6 +308,21 @@ Enter the Service Plan Name for assigning the Provisioning Policy (mandatory for
 Type: String
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
 
 Required: False
 Position: Named

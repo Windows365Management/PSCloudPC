@@ -22,7 +22,7 @@ Function Import-CPCProvisioningPolicy {
             Write-Error "File not found"
             break
         }
-        #Get the JSON File and convert it to a PSObject
+        # Get the JSON File and convert it to a PSObject
         $Content = Get-Content -Path $Inputfile | ConvertFrom-Json
     
         if ($null -eq $Content) {

@@ -13,7 +13,8 @@ Adds a new Custom Image
 ## SYNTAX
 
 ```
-New-CPCCustomImage [-Name <String>] -Version <String> -SourceImageResourceId <String> [<CommonParameters>]
+New-CPCCustomImage [-Name <String>] -Version <String> -SourceImageResourceId <String>
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -67,6 +68,21 @@ Parameter Sets: (All)
 Aliases:
 
 Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
 Position: Named
 Default value: None
 Accept pipeline input: False

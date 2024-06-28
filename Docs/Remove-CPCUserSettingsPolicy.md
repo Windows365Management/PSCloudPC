@@ -13,7 +13,7 @@ Removes a Cloud PC User Settings Policy
 ## SYNTAX
 
 ```
-Remove-CPCUserSettingsPolicy [-Name] <String> [<CommonParameters>]
+Remove-CPCUserSettingsPolicy [-Name] <String> [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -38,6 +38,21 @@ Aliases:
 
 Required: True
 Position: 1
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False

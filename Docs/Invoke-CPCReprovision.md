@@ -13,7 +13,7 @@ Restore a Cloud PC to a certain point in time with
 ## SYNTAX
 
 ```
-Invoke-CPCReprovision [-Name <String>] [<CommonParameters>]
+Invoke-CPCReprovision [-Name <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -35,6 +35,21 @@ Enter the Cloud PC display name
 Type: String
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
 
 Required: False
 Position: Named

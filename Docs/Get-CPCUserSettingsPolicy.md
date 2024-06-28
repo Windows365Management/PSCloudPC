@@ -13,7 +13,7 @@ Returns all User Setting Policy's or User Setting Policy's with a specific name
 ## SYNTAX
 
 ```
-Get-CPCUserSettingsPolicy [-Name <String>] [<CommonParameters>]
+Get-CPCUserSettingsPolicy [-Name <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -35,6 +35,21 @@ Enter the name of the User Setting Policy
 Type: String
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
 
 Required: False
 Position: Named
