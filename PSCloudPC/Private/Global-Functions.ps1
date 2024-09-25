@@ -69,7 +69,9 @@ function Invoke-APIRequest {
         Write-Error "No results returned exiting function"
         break
     }
-    $AllPages = $result.value
+
+    $resultconvert = $result.content | ConvertFrom-Json
+    $AllPages = $resultconvert.value
 
     #Loop through the API pages if there is a next link
     $NextLink = $result."@odata.nextLink"
