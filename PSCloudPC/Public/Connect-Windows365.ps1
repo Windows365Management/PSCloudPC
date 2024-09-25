@@ -31,6 +31,7 @@ function Connect-Windows365 {
         [parameter(Mandatory, ParameterSetName = "ClientCertificate")]
         [string]$TenantID,
 
+        [parameter(Mandatory, ParameterSetName = "ClientCertificate")]
         [parameter(Mandatory, ParameterSetName = "ClientSecret")]
         [string]$ClientID,
 
