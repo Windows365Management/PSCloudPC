@@ -42,9 +42,13 @@ Connect-Windows365 -TenantID <EXAMPLE>.onmicrosoft.com
 ```
 Note: This is, for now, only available for a Windows Machine because it uses the .NET version for Windows. If you use Linux or Mac and want to connect interactively use the Device Code option.
 
-- Service Principal
+- Client Secret
  ```powershell
 Connect-Windows365 -Authtype ServicePrincipal -ClientID <CLIENTID> -ClientSecret <CLIENTSECRET> -TenantID <Example>.onmicrosoft.com
+```
+- Client Certificate
+ ```powershell
+Connect-Windows365 -Authtype ServicePrincipal -ClientID <CLIENTID> -ClientCertificate <CERTIFICATETHUMBPRINT> -TenantID <Example>.onmicrosoft.com
 ```
 You can use a Service Principal to connect with PowerShell to the Microsoft Graph API. The Service Principal needs the following RestAPI permissions to perform the functions.
 ```
@@ -64,6 +68,7 @@ You can use the Device Code to connect interactively for Linux or Mac.
 ## Cmdlets
 This module provides the following cmdlets:
 - Connect-Windows365
+- Export-CPCProvisioningPolicy
 - Get-CloudPC
 - Get-CPCAzureNetworkConnection
 - Get-CPCCustomImage
@@ -74,7 +79,9 @@ This module provides the following cmdlets:
 - Get-CPCServicePlans
 - Get-CPCSupportedRegion
 - Get-CPCUserSettingsPolicy
+- Import-CPCProvisioningPolicy
 - Invoke-CPCEndGracePeriod
+- Invoke-CPCReboot
 - Invoke-CPCReprovision
 - Invoke-CPCRestore
 - New-CPCAzureNetworkConnection
