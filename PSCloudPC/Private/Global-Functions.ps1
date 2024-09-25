@@ -60,6 +60,8 @@ function Invoke-APIRequest {
         Headers = $Headers
     }
 
+    write-verbose "Params: $($params)"
+
     $result = Invoke-WebRequest @params
 
     #Check if the result is null
