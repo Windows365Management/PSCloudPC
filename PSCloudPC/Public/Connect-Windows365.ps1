@@ -17,7 +17,7 @@ function Connect-Windows365 {
     .EXAMPLE
     Connect-Windows365 -TenantID contoso.onmicrosoft.com
     .EXAMPLE
-    Connect-Windows365 -TenantID contoso.onmicrosoft.com
+    Connect-Windows365 -TenantID contoso.onmicrosoft.com -DeviceCode:$true
     .EXAMPLE
     Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012   
     .EXAMPLE
