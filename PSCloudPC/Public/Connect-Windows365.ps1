@@ -28,7 +28,7 @@ function Connect-Windows365 {
         [parameter(ParameterSetName = "Interactive")]
         [parameter(ParameterSetName = "ServicePrincipal")]
         [parameter(ParameterSetName = "DeviceCode")]
-        [ValidateSet('ServicePrincipal', 'Interactive', 'DeviceCode')]
+        [ValidateSet('ClientSecret', 'ClientCertificate', 'Interactive', 'DeviceCode')]
         [string]$Authtype = 'Interactive',
 
         [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
