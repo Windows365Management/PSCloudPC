@@ -25,11 +25,6 @@ function Connect-Windows365 {
     #>
     [CmdletBinding(DefaultParameterSetName = 'Interactive')]
     param (
-        [parameter(ParameterSetName = "Interactive")]
-        [parameter(ParameterSetName = "ClientSecret")]
-        [parameter(ParameterSetName = "ClientCertificate")]
-        [parameter(ParameterSetName = "DeviceCode")]
-
         [parameter(Mandatory, ParameterSetName = "Interactive")]
         [parameter(Mandatory, ParameterSetName = "DeviceCode")]
         [parameter(Mandatory, ParameterSetName = "ClientSecret")]
