@@ -17,31 +17,32 @@ function Connect-Windows365 {
     .EXAMPLE
     Connect-Windows365 -TenantID contoso.onmicrosoft.com
     .EXAMPLE
-    Connect-Windows365 -AuthType DeviceCode -TenantID contoso.onmicrosoft.com
+    Connect-Windows365 -TenantID contoso.onmicrosoft.com
     .EXAMPLE
-    Connect-Windows365 -Authtype ClientSecret -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012   
+    Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012   
     .EXAMPLE
-    Connect-Windows365 -Authtype ClientCertificate -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientCertificate "THUMBPRINT"
+    Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientCertificate "THUMBPRINT"
     #>
     [CmdletBinding(DefaultParameterSetName = 'Interactive')]
     param (
         [parameter(ParameterSetName = "Interactive")]
-        [parameter(ParameterSetName = "ServicePrincipal")]
+        [parameter(ParameterSetName = "ClientSecret")]
+        [parameter(ParameterSetName = "ClientCertificate")]
         [parameter(ParameterSetName = "DeviceCode")]
-        [ValidateSet('ClientSecret', 'ClientCertificate', 'Interactive', 'DeviceCode')]
-        [string]$Authtype = 'Interactive',
 
-        [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
-        [string]$ClientSecret,
-
+        [parameter(Mandatory, ParameterSetName = "Interactive")]
         [parameter(Mandatory, ParameterSetName = "DeviceCode")]
-        [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
+        [parameter(Mandatory, ParameterSetName = "ClientSecret")]
+        [parameter(Mandatory, ParameterSetName = "ClientCertificate")]
         [string]$TenantID,
 
-        [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
+        [parameter(Mandatory, ParameterSetName = "ClientSecret")]
         [string]$ClientID,
+
+        [parameter(Mandatory, ParameterSetName = "ClientSecret")]
+        [string]$ClientSecret,
         
-        [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
+        [parameter(Mandatory, ParameterSetName = "ClientCertificate")]
         [string]$ClientCertificate
     )
     begin {
@@ -50,8 +51,10 @@ function Connect-Windows365 {
     }
     
     process {
+
+        Write-Verbose "Using Authentication Type: $($PsCmdlet.ParameterSetName)"
         
-        switch ($Authtype) {
+        switch ($PsCmdlet.ParameterSetName) {
             Interactive {
 
                 $environment = Get-ChildItem -Path C:\Windows -ErrorAction SilentlyContinue
