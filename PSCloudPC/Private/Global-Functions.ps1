@@ -48,11 +48,11 @@ function Get-AzureADGroupID {
 function Invoke-APIRequest {
     param (
         [Parameter()][string]$uri,
-        [Parameter()][string]$Headers,
+        [Parameter()][string]$Token,
         [Parameter()][string]$Method = 'Get'
     )
     #Perform initial Graph Request
-    #$Headers = @{Authorization = "Bearer $($Token)" }
+    $Headers = @{Authorization = "Bearer $($Token)" }
 
     $params = @{
         uri     = $uri
