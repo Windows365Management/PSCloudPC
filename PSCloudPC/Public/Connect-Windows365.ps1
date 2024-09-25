@@ -195,7 +195,7 @@ function Connect-Windows365 {
                 }
                 else {
                     Write-Verbose "Using Windows Powershell (Core), continue with the script"
-                    $Certificate = Get-Item Cert:\LocalMachine\My\$ClientCertificate #thumbprint of the cert
+                    $Certificate = Get-Item Cert:\LocalMachine\My\$ClientCertificate
                 }
 
                 Write-Verbose "Using Client Certificate Authentication"
