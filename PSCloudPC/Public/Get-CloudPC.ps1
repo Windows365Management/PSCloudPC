@@ -33,7 +33,7 @@ function Get-CloudPC {
         write-verbose $url
         #$result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
 
-        $Result = Invoke-APIRequest -uri $url -Headers $script:Authtoken -Method GET
+        $Result = Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET
     
         if ($null -eq $result) {
             Write-Error "No CloudPC's returned"
