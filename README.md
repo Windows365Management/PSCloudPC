@@ -44,11 +44,11 @@ Note: This is, for now, only available for a Windows Machine because it uses the
 
 - Client Secret
  ```powershell
-Connect-Windows365 -Authtype ServicePrincipal -ClientID <CLIENTID> -ClientSecret <CLIENTSECRET> -TenantID <Example>.onmicrosoft.com
+Connect-Windows365 -ClientID <CLIENTID> -ClientSecret <CLIENTSECRET> -TenantID <Example>.onmicrosoft.com
 ```
 - Client Certificate
  ```powershell
-Connect-Windows365 -Authtype ServicePrincipal -ClientID <CLIENTID> -ClientCertificate <CERTIFICATETHUMBPRINT> -TenantID <Example>.onmicrosoft.com
+Connect-Windows365 -ClientID <CLIENTID> -ClientCertificate <CERTIFICATETHUMBPRINT> -TenantID <Example>.onmicrosoft.com
 ```
 You can use a Service Principal to connect with PowerShell to the Microsoft Graph API. The Service Principal needs the following RestAPI permissions to perform the functions.
 ```
@@ -61,7 +61,7 @@ CloudPC.ReadWrite.All
 
 - Device Code
 ```powershell
-Connect-Windows365 -Authtype DeviceCode -TenantID <Example>.onmicrosoft.com
+Connect-Windows365 -DeviceCode:$true -TenantID <Example>.onmicrosoft.com
 ```
 You can use the Device Code to connect interactively for Linux or Mac.
 
