@@ -12,30 +12,37 @@ function Connect-Windows365 {
     Tenant ID for all Authentication types
     .PARAMETER ClientID
     Client ID for Service Principal Authentication
+    .PARAMETER ClientCertificate
+    Client Certificate for Service Principal Authentication (THUMBPRINT)
     .EXAMPLE
     Connect-Windows365 -TenantID contoso.onmicrosoft.com
     .EXAMPLE
-    Connect-Windows365 -AuthType DeviceCode -TenantID contoso.onmicrosoft.com
+    Connect-Windows365 -TenantID contoso.onmicrosoft.com -DeviceCode:$true
     .EXAMPLE
-    Connect-Windows365 -Authtype ServicePrincipal -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012   
+    Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012   
+    .EXAMPLE
+    Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientCertificate "THUMBPRINT"
     #>
     [CmdletBinding(DefaultParameterSetName = 'Interactive')]
     param (
-        [parameter(ParameterSetName = "Interactive")]
-        [parameter(ParameterSetName = "ServicePrincipal")]
-        [parameter(ParameterSetName = "DeviceCode")]
-        [ValidateSet('ServicePrincipal', 'Interactive', 'DeviceCode')]
-        [string]$Authtype = 'Interactive',
-
-        [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
-        [string]$ClientSecret,
-
+        [parameter(Mandatory, ParameterSetName = "Interactive")]
         [parameter(Mandatory, ParameterSetName = "DeviceCode")]
-        [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
+        [parameter(Mandatory, ParameterSetName = "ClientSecret")]
+        [parameter(Mandatory, ParameterSetName = "ClientCertificate")]
         [string]$TenantID,
 
-        [parameter(Mandatory, ParameterSetName = "ServicePrincipal")]
-        [string]$ClientID
+        [parameter(Mandatory, ParameterSetName = "ClientCertificate")]
+        [parameter(Mandatory, ParameterSetName = "ClientSecret")]
+        [string]$ClientID,
+
+        [parameter(Mandatory, ParameterSetName = "ClientSecret")]
+        [string]$ClientSecret,
+        
+        [parameter(Mandatory, ParameterSetName = "ClientCertificate")]
+        [string]$ClientCertificate,
+
+        [parameter()]
+        [bool]$DeviceCode
     )
     begin {
         # Set the profile to beta
@@ -43,14 +50,61 @@ function Connect-Windows365 {
     }
     
     process {
+
+        If ($DeviceCode -eq $true){
+            Write-Verbose "Using Device Code"
+            $clientId = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
+            $resource = "https://graph.microsoft.com/"
+            $scope = "CloudPC.ReadWrite.All%20DeviceManagementConfiguration.ReadWrite.All%20DeviceManagementManagedDevices.ReadWrite.All%20Directory.Read.All"
+
+            $codeBody = @{ 
+                resource  = $resource
+                client_id = $clientId
+                scope     = $scope
+            }
+
+            # Get OAuth Code
+            $codeRequest = Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/devicecode" -Body $codeBody
+
+            # Print Code to console
+            Write-Output "`n$($codeRequest.message)"
+
+            $tokenBody = @{
+                grant_type = "urn:ietf:params:oauth:grant-type:device_code"
+                code       = $codeRequest.device_code
+                client_id  = $clientId
+            }
+
+            # Get OAuth Token
+            while ([string]::IsNullOrEmpty($connection.access_token)) {
+                $connection = try {
+                    Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/token" -Body $tokenBody
+                    Write-Verbose "Completed Authentication"
+                }
+                catch {
+                    $errorMessage = $_.ErrorDetails.Message | ConvertFrom-Json
+                    # If not waiting for auth, throw error
+                    if ($errorMessage.error -ne "authorization_pending") {
+                        throw
+                    }
+                }
+            }
+            $Token = $connection.access_token
+
+            $script:Authtime = [System.DateTime]::UtcNow
+            $script:Authtoken = $Token
+            $script:Authheader = @{Authorization = "Bearer $($Token)" }
+        }
+
+        Write-Verbose "Using Authentication Type: $($PsCmdlet.ParameterSetName)"
         
-        switch ($Authtype) {
+        switch ($PsCmdlet.ParameterSetName) {
             Interactive {
 
                 $environment = Get-ChildItem -Path C:\Windows -ErrorAction SilentlyContinue
 
                 If ($null -eq $environment) {
-                    Write-Error "Using Powershell Core on Mac or Linux, please use the DeviceCode or ServicePrincipal Authentication"
+                    Write-Error "Using Powershell Core on Mac or Linux, please use the DeviceCode or ClientSecret Authentication"
                     Break
                 }
                 else {
@@ -109,52 +163,9 @@ function Connect-Windows365 {
                 $script:Authtoken = $Token
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }                   
             }
-            DeviceCode {
-                Write-Verbose "Using Device Code"
-                $clientId = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
-                $resource = "https://graph.microsoft.com/"
-                $scope = "CloudPC.ReadWrite.All%20DeviceManagementConfiguration.ReadWrite.All%20DeviceManagementManagedDevices.ReadWrite.All%20Directory.Read.All"
 
-                $codeBody = @{ 
-                    resource  = $resource
-                    client_id = $clientId
-                    scope     = $scope
-                }
-
-                # Get OAuth Code
-                $codeRequest = Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/devicecode" -Body $codeBody
-
-                # Print Code to console
-                Write-Output "`n$($codeRequest.message)"
-
-                $tokenBody = @{
-                    grant_type = "urn:ietf:params:oauth:grant-type:device_code"
-                    code       = $codeRequest.device_code
-                    client_id  = $clientId
-                }
-
-                # Get OAuth Token
-                while ([string]::IsNullOrEmpty($connection.access_token)) {
-                    $connection = try {
-                        Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/token" -Body $tokenBody
-                        Write-Verbose "Completed Authentication"
-                    }
-                    catch {
-                        $errorMessage = $_.ErrorDetails.Message | ConvertFrom-Json
-                        # If not waiting for auth, throw error
-                        if ($errorMessage.error -ne "authorization_pending") {
-                            throw
-                        }
-                    }
-                }
-                $Token = $connection.access_token
-
-                $script:Authtime = [System.DateTime]::UtcNow
-                $script:Authtoken = $Token
-                $script:Authheader = @{Authorization = "Bearer $($Token)" }
-            }
-
-            ServicePrincipal {
+            ClientSecret {
+                Write-Verbose "Using Client Secret Authentication"
 
                 $body = @{
                     Grant_Type    = "client_credentials"
@@ -174,6 +185,119 @@ function Connect-Windows365 {
                 $script:Authtoken = $Token
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }
             }
+
+            ClientCertificate {
+                $environment = Get-Item Cert:\LocalMachine\My -ErrorAction SilentlyContinue
+
+                If ($null -eq $environment) {
+                    Write-Error "Using Powershell Core on Mac or Linux, please use the DeviceCode or ClientSecret Authentication"
+                    Break
+                }
+                else {
+                    Write-Verbose "Using Windows Powershell (Core), continue with the script"
+                    $Certificate = Get-Item Cert:\LocalMachine\My\$ClientCertificate
+                }
+
+                Write-Verbose "Using Client Certificate Authentication"
+                $TenantName = $TenantID
+                $AppId = $ClientID
+                $Scope = "https://graph.microsoft.com/.default"
+
+                # Create base64 hash of certificate
+                $CertificateBase64Hash = [System.Convert]::ToBase64String($Certificate.GetCertHash())
+
+                # Create JWT timestamp for expiration
+                $StartDate = (Get-Date "1970-01-01T00:00:00Z" ).ToUniversalTime()
+                $JWTExpirationTimeSpan = (New-TimeSpan -Start $StartDate -End (Get-Date).ToUniversalTime().AddMinutes(2)).TotalSeconds
+                $JWTExpiration = [math]::Round($JWTExpirationTimeSpan, 0)
+
+                # Create JWT validity start timestamp
+                $NotBeforeExpirationTimeSpan = (New-TimeSpan -Start $StartDate -End ((Get-Date).ToUniversalTime())).TotalSeconds
+                $NotBefore = [math]::Round($NotBeforeExpirationTimeSpan, 0)
+
+                # Create JWT header
+                $JWTHeader = @{
+                    alg = "RS256"
+                    typ = "JWT"
+                    # Use the CertificateBase64Hash and replace/strip to match web encoding of base64
+                    x5t = $CertificateBase64Hash -replace '\+', '-' -replace '/', '_' -replace '='
+                }
+
+                # Create JWT payload
+                $JWTPayLoad = @{
+                    # What endpoint is allowed to use this JWT
+                    aud = "https://login.microsoftonline.com/$TenantName/oauth2/token"
+                    # Expiration timestamp
+                    exp = $JWTExpiration
+                    # Issuer = your application
+                    iss = $AppId
+                    # JWT ID: random guid
+                    jti = [guid]::NewGuid()
+                    # Not to be used before
+                    nbf = $NotBefore
+                    # JWT Subject
+                    sub = $AppId
+                }
+
+                # Convert header and payload to base64
+                $JWTHeaderToByte = [System.Text.Encoding]::UTF8.GetBytes(($JWTHeader | ConvertTo-Json))
+                $EncodedHeader = [System.Convert]::ToBase64String($JWTHeaderToByte)
+
+                $JWTPayLoadToByte = [System.Text.Encoding]::UTF8.GetBytes(($JWTPayload | ConvertTo-Json))
+                $EncodedPayload = [System.Convert]::ToBase64String($JWTPayLoadToByte)
+
+                # Join header and Payload with "." to create a valid (unsigned) JWT
+                $JWT = $EncodedHeader + "." + $EncodedPayload
+
+                # Get the private key object of your certificate
+                # $PrivateKey = $Certificate.PrivateKey
+                $PrivateKey = ([System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($Certificate))
+
+                # Define RSA signature and hashing algorithm
+                $RSAPadding = [Security.Cryptography.RSASignaturePadding]::Pkcs1
+                $HashAlgorithm = [Security.Cryptography.HashAlgorithmName]::SHA256
+
+                # Create a signature of the JWT
+                $Signature = [Convert]::ToBase64String(
+                    $PrivateKey.SignData([System.Text.Encoding]::UTF8.GetBytes($JWT), $HashAlgorithm, $RSAPadding)
+                ) -replace '\+', '-' -replace '/', '_' -replace '='
+
+                # Join the signature to the JWT with "."
+                $JWT = $JWT + "." + $Signature
+
+                # Create a hash with body parameters
+                $Body = @{
+                    client_id             = $AppId
+                    client_assertion      = $JWT
+                    client_assertion_type = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+                    scope                 = $Scope
+                    grant_type            = "client_credentials"
+                }
+
+                $Url = "https://login.microsoftonline.com/$TenantName/oauth2/v2.0/token"
+
+                # Use the self-generated JWT as Authorization
+                $Header = @{
+                    Authorization = "Bearer $JWT"
+                }
+
+                # Splat the parameters for Invoke-Restmethod for cleaner code
+                $PostSplat = @{
+                    ContentType = 'application/x-www-form-urlencoded'
+                    Method      = 'POST'
+                    Body        = $Body
+                    Uri         = $Url
+                    Headers     = $Header
+                }
+
+                $Request = Invoke-RestMethod @PostSplat
+
+                $script:Authtime = [System.DateTime]::UtcNow
+                $script:Authtoken = $Token
+                $script:Authheader = @{Authorization = "Bearer $($Request.access_token)" }
+
+            }
         }
+
     }
 }
