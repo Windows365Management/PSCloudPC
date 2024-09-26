@@ -106,7 +106,7 @@ function Connect-Windows365 {
                 # Access Token
                 $Token = $connection.access_token
                 $script:Authtime = [System.DateTime]::UtcNow
-                $script:Authtoken = $connection
+                $script:Authtoken = $Token
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }                   
             }
             DeviceCode {
@@ -150,7 +150,7 @@ function Connect-Windows365 {
                 $Token = $connection.access_token
 
                 $script:Authtime = [System.DateTime]::UtcNow
-                $script:Authtoken = $connection
+                $script:Authtoken = $Token
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }
             }
 
@@ -171,7 +171,7 @@ function Connect-Windows365 {
                 $Token = $connection.access_token
         
                 $script:Authtime = [System.DateTime]::UtcNow
-                $script:Authtoken = $connection
+                $script:Authtoken = $Token
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }
             }
         }
