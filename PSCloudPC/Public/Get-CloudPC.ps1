@@ -31,18 +31,16 @@ function Get-CloudPC {
     }
     Process {
         write-verbose $url
-        $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
+
+        $Result = Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET
     
         if ($null -eq $result) {
             Write-Error "No CloudPC's returned"
             break
         }
 
-        Write-Verbose "Params: $($params)"
-
-        $resultnew = $result.content | ConvertFrom-Json
-        $returnResults = @()
-        $resultnew.value | ForEach-Object {
+        $PSObjectResults = @()
+        $Result | ForEach-Object {
     
             $Info = [PSCustomObject]@{
                 id                     = $_.id
@@ -58,9 +56,9 @@ function Get-CloudPC {
                 servicePlanName        = $_.servicePlanName
                 
             }
-            $returnResults += $Info
+            $PSObjectResults += $Info
         }
-        return $returnResults
+        return $PSObjectResults
     
     }
     

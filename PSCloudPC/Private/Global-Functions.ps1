@@ -44,3 +44,44 @@ function Get-AzureADGroupID {
     $script:GroupID = $result.value.id
 
 }
+
+function Invoke-APIRequest {
+    param (
+        [Parameter()][string]$uri,
+        [Parameter()][string]$Token,
+        [Parameter()][string]$Method = 'Get'
+    )
+    #Perform initial Graph Request
+    $Headers = @{Authorization = "Bearer $($Token)" }
+
+    $params = @{
+        uri     = $uri
+        Method  = $Method
+        Headers = $Headers
+    }
+
+    write-verbose "Params: $($params)"
+
+    $result = Invoke-WebRequest @params
+
+    #Check if the result is null
+    if ($null -eq $result) {
+        Write-Error "No results returned exiting function"
+        break
+    }
+
+    $resultconvert = $result.content | ConvertFrom-Json
+    $AllPages = $resultconvert.value
+
+    #Loop through the API pages if there is a next link
+    $NextLink = $result."@odata.nextLink"
+
+    while ($null -ne $NextLink) {
+
+        $result = (Invoke-WebRequest -Uri $NextLink -Headers $Headers -Method Get)
+        $NextLink = $result."@odata.nextLink"
+        $AllPages += $result.value
+    }
+
+    return $AllPages
+}

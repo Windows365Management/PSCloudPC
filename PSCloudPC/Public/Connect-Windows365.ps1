@@ -163,8 +163,8 @@ function Connect-Windows365 {
                 $script:Authtoken = $Token
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }                   
             }
-            ClientSecret {
 
+            ClientSecret {
                 Write-Verbose "Using Client Secret Authentication"
 
                 $body = @{
