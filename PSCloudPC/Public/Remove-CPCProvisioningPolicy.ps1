@@ -20,7 +20,7 @@ function Remove-CPCProvisioningPolicy {
         Get-TokenValidity
 
         Write-Verbose "Graph URL for Provisioning Policy: $Name"
-        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies?`$filter=contains(displayName,'$Name')"
+        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies?`$filter=displayName eq '$Name'"
 
     }
     
