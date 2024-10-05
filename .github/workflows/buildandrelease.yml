@@ -91,12 +91,12 @@ jobs:
           repository: ''
           path: 'drop'
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v2.3.1
+        uses: actions/upload-artifact@v4
         with:
           name: PSCloudPC
           path: drop
       - name: Download a Build Artifact
-        uses: actions/download-artifact@v2.1.0
+        uses: actions/download-artifact@v4
         with:
           name: PSCloudPC
       - name: Publishing module
