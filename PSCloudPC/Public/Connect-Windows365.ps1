@@ -41,7 +41,7 @@ function Connect-Windows365 {
         [parameter(Mandatory, ParameterSetName = "ClientCertificate")]
         [string]$ClientCertificate,
 
-        [parameter()]
+        [parameter(Mandatory, ParameterSetName = "DeviceCode")]
         [bool]$DeviceCode
     )
     begin {
@@ -50,52 +50,6 @@ function Connect-Windows365 {
     }
     
     process {
-
-        If ($DeviceCode -eq $true){
-            Write-Verbose "Using Device Code"
-            $clientId = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
-            $resource = "https://graph.microsoft.com/"
-            $scope = "CloudPC.ReadWrite.All%20DeviceManagementConfiguration.ReadWrite.All%20DeviceManagementManagedDevices.ReadWrite.All%20Directory.Read.All"
-
-            $codeBody = @{ 
-                resource  = $resource
-                client_id = $clientId
-                scope     = $scope
-            }
-
-            # Get OAuth Code
-            $codeRequest = Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/devicecode" -Body $codeBody
-
-            # Print Code to console
-            Write-Output "`n$($codeRequest.message)"
-
-            $tokenBody = @{
-                grant_type = "urn:ietf:params:oauth:grant-type:device_code"
-                code       = $codeRequest.device_code
-                client_id  = $clientId
-            }
-
-            # Get OAuth Token
-            while ([string]::IsNullOrEmpty($connection.access_token)) {
-                $connection = try {
-                    Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/token" -Body $tokenBody
-                    Write-Verbose "Completed Authentication"
-                }
-                catch {
-                    $errorMessage = $_.ErrorDetails.Message | ConvertFrom-Json
-                    # If not waiting for auth, throw error
-                    if ($errorMessage.error -ne "authorization_pending") {
-                        throw
-                    }
-                }
-            }
-            $Token = $connection.access_token
-
-            $script:Authtime = [System.DateTime]::UtcNow
-            $script:Authtoken = $Token
-            $script:Authheader = @{Authorization = "Bearer $($Token)" }
-        }
-
         Write-Verbose "Using Authentication Type: $($PsCmdlet.ParameterSetName)"
         
         switch ($PsCmdlet.ParameterSetName) {
@@ -297,7 +251,49 @@ function Connect-Windows365 {
                 $script:Authheader = @{Authorization = "Bearer $($Request.access_token)" }
 
             }
+            DeviceCode {
+                Write-Verbose "Using Device Code"
+                $clientId = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
+                $resource = "https://graph.microsoft.com/"
+                $scope = "CloudPC.ReadWrite.All%20DeviceManagementConfiguration.ReadWrite.All%20DeviceManagementManagedDevices.ReadWrite.All%20Directory.Read.All"
+    
+                $codeBody = @{ 
+                    resource  = $resource
+                    client_id = $clientId
+                    scope     = $scope
+                }
+    
+                # Get OAuth Code
+                $codeRequest = Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/devicecode" -Body $codeBody
+    
+                # Print Code to console
+                Write-Output "`n$($codeRequest.message)"
+    
+                $tokenBody = @{
+                    grant_type = "urn:ietf:params:oauth:grant-type:device_code"
+                    code       = $codeRequest.device_code
+                    client_id  = $clientId
+                }
+    
+                # Get OAuth Token
+                while ([string]::IsNullOrEmpty($connection.access_token)) {
+                    $connection = try {
+                        Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$tenantId/oauth2/token" -Body $tokenBody
+                        Write-Verbose "Completed Authentication"
+                    }
+                    catch {
+                        $errorMessage = $_.ErrorDetails.Message | ConvertFrom-Json
+                        # If not waiting for auth, throw error
+                        if ($errorMessage.error -ne "authorization_pending") {
+                            throw
+                        }
+                    }
+                }
+                $Token = $connection.access_token
+                $script:Authtime = [System.DateTime]::UtcNow
+                $script:Authtoken = $Token
+                $script:Authheader = @{Authorization = "Bearer $($Token)" }
+            }
         }
-
     }
 }
