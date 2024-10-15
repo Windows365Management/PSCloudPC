@@ -47,19 +47,20 @@ function Connect-Windows365v2 {
     }
     
     process {
+
+        $scopes = @(
+            "https://graph.microsoft.com/CloudPC.ReadWrite.All",
+            "https://graph.microsoft.com/DeviceManagementConfiguration.ReadWrite.All",
+            "https://graph.microsoft.com/DeviceManagementManagedDevices.ReadWrite.All",
+            "https://graph.microsoft.com/Directory.Read.All"
+        )
+
         Write-Verbose "Using Authentication Type: $($PsCmdlet.ParameterSetName)"
         
         switch ($PsCmdlet.ParameterSetName) {
             Interactive {
 
                 Write-Verbose "Using Interactive Authentication"
-
-                $scopes = @(
-                    "https://graph.microsoft.com/CloudPC.ReadWrite.All",
-                    "https://graph.microsoft.com/DeviceManagementConfiguration.ReadWrite.All",
-                    "https://graph.microsoft.com/DeviceManagementManagedDevices.ReadWrite.All",
-                    "https://graph.microsoft.com/Directory.Read.All"
-                )
 
                 $response = Get-MsalToken -ClientId '14d82eec-204b-4c2f-b7e8-296a70dab67e' -Scopes $scopes
 
@@ -94,13 +95,6 @@ function Connect-Windows365v2 {
 
             ClientCertificate {
 
-                $scopes = @(
-                    "https://graph.microsoft.com/CloudPC.ReadWrite.All",
-                    "https://graph.microsoft.com/DeviceManagementConfiguration.ReadWrite.All",
-                    "https://graph.microsoft.com/DeviceManagementManagedDevices.ReadWrite.All",
-                    "https://graph.microsoft.com/Directory.Read.All"
-                )
-                
                 $response = Get-MsalToken -ClientId $clientId -TenantId $tenantId -Scopes $scopes -Certificate $ClientCertificate
 
                 $Token = $response.AccessToken
@@ -112,13 +106,6 @@ function Connect-Windows365v2 {
             DeviceCode {
 
                 Write-Verbose "Using Device Code Authentication"
-
-                $scopes = @(
-                    "https://graph.microsoft.com/CloudPC.ReadWrite.All",
-                    "https://graph.microsoft.com/DeviceManagementConfiguration.ReadWrite.All",
-                    "https://graph.microsoft.com/DeviceManagementManagedDevices.ReadWrite.All",
-                    "https://graph.microsoft.com/Directory.Read.All"
-                )
 
                 $response = Get-MsalToken -ClientId '14d82eec-204b-4c2f-b7e8-296a70dab67e' -Scopes $scopes -DeviceCode
                 
