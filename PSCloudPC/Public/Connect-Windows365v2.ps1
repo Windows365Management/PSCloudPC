@@ -36,7 +36,7 @@ function Connect-Windows365v2 {
         [string]$ClientSecret,
         
         [parameter(Mandatory, ParameterSetName = "ClientCertificate")]
-        [string]$ClientCertificate,
+        [System.Security.Cryptography.X509Certificates.X509Certificate2]$ClientCertificate,
 
         [parameter(Mandatory, ParameterSetName = "DeviceCode")]
         [bool]$DeviceCode
