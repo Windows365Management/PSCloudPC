@@ -100,6 +100,8 @@ function Connect-Windows365 {
 
             ClientCertificate {
 
+                Write-Verbose "Using Client Certificate Authentication"
+
                 $response = Get-MsalToken -ClientId $clientId -TenantId $tenantId -ClientCertificate $ClientCertificate
 
                 $Token = $response.AccessToken
