@@ -42,6 +42,9 @@ function Connect-Windows365v2 {
         [bool]$DeviceCode
     )
     begin {
+        #Clear the current token
+        Clear-MsalTokenCache
+
         # Set the profile to beta
         Set-GraphVersion
     }
