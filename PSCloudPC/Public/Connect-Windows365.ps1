@@ -13,6 +13,8 @@ function Connect-Windows365 {
     Client ID for Service Principal Authentication
     .PARAMETER ClientCertificate
     Client Certificate for Service Principal Authentication, this must be the actual certificate not only the thumbprint
+    .PARAMETER DeviceCode
+    Use Device Code Authentication (Boolean)
     .EXAMPLE
     Connect-Windows365
     .EXAMPLE
