@@ -1,4 +1,3 @@
-
 function Connect-Windows365 {
     <#
     .SYNOPSIS
