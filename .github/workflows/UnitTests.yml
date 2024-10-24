@@ -31,6 +31,7 @@ jobs:
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module PSScriptAnalyzer -ErrorAction Stop
           Install-Module Pester -ErrorAction Stop
+          Install-Module MSAL.PS -ErrorAction Stop
       - name: Importing PSCloudPC module
         shell: pwsh
         run: |
