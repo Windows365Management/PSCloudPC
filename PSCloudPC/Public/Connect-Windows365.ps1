@@ -1,4 +1,3 @@
-
 function Connect-Windows365 {
     <#
     .SYNOPSIS
@@ -44,7 +43,7 @@ function Connect-Windows365 {
         [bool]$DeviceCode
     )
     begin {
-        #Clear the current token
+        # Clear the current token
         Clear-MsalTokenCache
 
         # Set the profile to beta
