@@ -39,7 +39,7 @@ nav:
 plugins:
   - search
   - include_dir_to_nav
-  - social
+  # - social # TODO: Check for issue: https://github.com/squidfunk/mkdocs-material/issues/6817
 
 theme:
   name: 'material'
