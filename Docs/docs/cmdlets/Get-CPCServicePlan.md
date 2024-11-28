@@ -6,21 +6,21 @@ Locale: en-NL
 Module Name: PSCloudPC
 ms.date: 11/27/2024
 PlatyPS schema version: 2024-05-01
-title: Get-CPCCustomImage
+title: Get-CPCServicePlan
 ---
 
-# Get-CPCCustomImage
+# Get-CPCServicePlan
 
 ## SYNOPSIS
 
-Returns all Custom Images or Custom Images with a specific name
+This function will return all currently available service plans
 
 ## SYNTAX
 
-### Name
+### Type
 
 ```
-Get-CPCCustomImage [-Name <string>] [<CommonParameters>]
+Get-CPCServicePlan [-ServicePlanName <string>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -30,19 +30,23 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-The function will return all Custom Images or Custom Images with a specific name
+This function will return all currently available service plans
 
 ## EXAMPLES
 
 ### EXAMPLE 1
 
-Get-CPCCustomImage -name "CustomImage01"
+Get-CPCServicePlans
+
+### EXAMPLE 2
+
+Get-CPCServicePlans -ServicePlanType "enterprise"
 
 ## PARAMETERS
 
-### -Name
+### -ServicePlanName
 
-Enter the name of the Custom Image
+{{ Fill ServicePlanName Description }}
 
 ```yaml
 Type: System.String
@@ -51,7 +55,7 @@ SupportsWildcards: false
 ParameterValue: []
 Aliases: []
 ParameterSets:
-- Name: Name
+- Name: Type
   Position: Named
   IsRequired: false
   ValueFromPipeline: false

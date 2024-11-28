@@ -6,21 +6,21 @@ Locale: en-NL
 Module Name: PSCloudPC
 ms.date: 11/27/2024
 PlatyPS schema version: 2024-05-01
-title: Get-CPCCustomImage
+title: Get-CPCOrganizationSetting
 ---
 
-# Get-CPCCustomImage
+# Get-CPCOrganizationSetting
 
 ## SYNOPSIS
 
-Returns all Custom Images or Custom Images with a specific name
+Returns the Cloud PC Organization Settings
 
 ## SYNTAX
 
-### Name
+### __AllParameterSets
 
 ```
-Get-CPCCustomImage [-Name <string>] [<CommonParameters>]
+Get-CPCOrganizationSetting [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -30,37 +30,15 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-The function will return all Custom Images or Custom Images with a specific name
+This function will return all Cloud PC Organization Settings
 
 ## EXAMPLES
 
 ### EXAMPLE 1
 
-Get-CPCCustomImage -name "CustomImage01"
+Get-CPCOrganizationSetting
 
 ## PARAMETERS
-
-### -Name
-
-Enter the name of the Custom Image
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-ParameterValue: []
-Aliases: []
-ParameterSets:
-- Name: Name
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
 
 ### CommonParameters
 

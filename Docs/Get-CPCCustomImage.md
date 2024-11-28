@@ -1,65 +1,73 @@
 ---
-external help file: PSCloudPC-help.xml
+document type: cmdlet
+external help file: PSCloudPC-Help.xml
+HelpUri: ''
+Locale: en-NL
 Module Name: PSCloudPC
-online version:
-schema: 2.0.0
+ms.date: 11/27/2024
+PlatyPS schema version: 2024-05-01
+title: Get-CPCCustomImage
 ---
 
 # Get-CPCCustomImage
 
 ## SYNOPSIS
+
 Returns all Custom Images or Custom Images with a specific name
 
 ## SYNTAX
 
+### Name
+
 ```
-Get-CPCCustomImage [-Name <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-CPCCustomImage [-Name <string>] [<CommonParameters>]
 ```
 
+## ALIASES
+
+This cmdlet has the following aliases,
+  {{Insert list of aliases}}
+
 ## DESCRIPTION
+
 The function will return all Custom Images or Custom Images with a specific name
 
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
 Get-CPCCustomImage -name "CustomImage01"
-```
 
 ## PARAMETERS
 
 ### -Name
+
 Enter the name of the Custom Image
 
 ```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+ParameterValue: []
+Aliases: []
+ParameterSets:
+- Name: Name
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
+-InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
+-ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
+[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
@@ -68,3 +76,6 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 
 ## RELATED LINKS
+
+{{ Fill in the related links here }}
+

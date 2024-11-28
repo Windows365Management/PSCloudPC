@@ -1,160 +1,204 @@
 ---
-external help file: PSCloudPC-help.xml
+document type: cmdlet
+external help file: PSCloudPC-Help.xml
+HelpUri: ''
+Locale: en-NL
 Module Name: PSCloudPC
-online version:
-schema: 2.0.0
+ms.date: 11/27/2024
+PlatyPS schema version: 2024-05-01
+title: Connect-Windows365
 ---
 
 # Connect-Windows365
 
 ## SYNOPSIS
+
 Connect to Windows 365 via Powershell
 
 ## SYNTAX
 
 ### Interactive (Default)
+
 ```
-Connect-Windows365 -TenantID <String> [-DeviceCode <Boolean>] [-ProgressAction <ActionPreference>]
- [<CommonParameters>]
+Connect-Windows365 [<CommonParameters>]
 ```
 
 ### ClientCertificate
-```
-Connect-Windows365 -TenantID <String> -ClientID <String> -ClientCertificate <String> [-DeviceCode <Boolean>]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
-```
 
-### ClientSecret
 ```
-Connect-Windows365 -TenantID <String> -ClientID <String> -ClientSecret <String> [-DeviceCode <Boolean>]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
-```
-
-### DeviceCode
-```
-Connect-Windows365 -TenantID <String> [-DeviceCode <Boolean>] [-ProgressAction <ActionPreference>]
+Connect-Windows365 -TenantID <string> -ClientID <string> -ClientCertificate <X509Certificate2>
  [<CommonParameters>]
 ```
 
+### ClientSecret
+
+```
+Connect-Windows365 -TenantID <string> -ClientID <string> -ClientSecret <string> [<CommonParameters>]
+```
+
+### DeviceCode
+
+```
+Connect-Windows365 -DeviceCode <bool> [<CommonParameters>]
+```
+
+## ALIASES
+
+This cmdlet has the following aliases,
+  {{Insert list of aliases}}
+
 ## DESCRIPTION
-Connect to Windows 365 via Powershell via Interactive Browser or Service Principal
+
+Connect to Windows 365 via Powershell via Interactive Browser, Device Code or Service Principal
 
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
-Connect-Windows365 -TenantID contoso.onmicrosoft.com
-```
+
+Connect-Windows365
 
 ### EXAMPLE 2
-```
-Connect-Windows365 -TenantID contoso.onmicrosoft.com -DeviceCode:$true
-```
+
+Connect-Windows365 -DeviceCode:$true
 
 ### EXAMPLE 3
-```
+
 Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012
-```
 
 ### EXAMPLE 4
-```
-Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientCertificate "THUMBPRINT"
-```
+
+Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientCertificate "Certificate"
 
 ## PARAMETERS
 
-### -TenantID
-Tenant ID for all Authentication types
+### -ClientCertificate
+
+Client Certificate for Service Principal Authentication, this must be the actual certificate not only the thumbprint
 
 ```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
+Type: System.Security.Cryptography.X509Certificates.X509Certificate2
+DefaultValue: ''
+SupportsWildcards: false
+ParameterValue: []
+Aliases: []
+ParameterSets:
+- Name: ClientCertificate
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### -ClientID
+
 Client ID for Service Principal Authentication
 
 ```yaml
-Type: String
-Parameter Sets: ClientCertificate, ClientSecret
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+ParameterValue: []
+Aliases: []
+ParameterSets:
+- Name: ClientSecret
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: ClientCertificate
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### -ClientSecret
+
 Client Secret for Service Principal Authentication
 
 ```yaml
-Type: String
-Parameter Sets: ClientSecret
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ClientCertificate
-Client Certificate for Service Principal Authentication (THUMBPRINT)
-
-```yaml
-Type: String
-Parameter Sets: ClientCertificate
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+ParameterValue: []
+Aliases: []
+ParameterSets:
+- Name: ClientSecret
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### -DeviceCode
-{{ Fill DeviceCode Description }}
+
+Use Device Code Authentication (Boolean)
 
 ```yaml
-Type: Boolean
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
+Type: System.Boolean
+DefaultValue: False
+SupportsWildcards: false
+ParameterValue: []
+Aliases: []
+ParameterSets:
+- Name: DeviceCode
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
-### -ProgressAction
-{{ Fill ProgressAction Description }}
+### -TenantID
+
+Tenant ID for all Authentication types
 
 ```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+ParameterValue: []
+Aliases: []
+ParameterSets:
+- Name: ClientCertificate
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: ClientSecret
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
+-InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
+-ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
+[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
@@ -163,3 +207,6 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 
 ## RELATED LINKS
+
+{{ Fill in the related links here }}
+
