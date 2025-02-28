@@ -41,7 +41,7 @@ function Connect-Windows365 {
         [System.Security.Cryptography.X509Certificates.X509Certificate2]$ClientCertificate,
 
         [parameter(Mandatory, ParameterSetName = "DeviceCode")]
-        [bool]$DeviceCode
+        [switch]$DeviceCode
     )
     begin {
         # Clear the current token
