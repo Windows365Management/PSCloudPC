@@ -27,7 +27,6 @@ function Connect-Windows365 {
     param (
         [parameter(Mandatory, ParameterSetName = "ClientSecret")]
         [parameter(Mandatory, ParameterSetName = "ClientCertificate")]
-        [parameter(Mandatory, ParameterSetName = "Interactive")]
         [string]$TenantID,
 
         [parameter(Mandatory, ParameterSetName = "ClientCertificate")]
@@ -41,7 +40,7 @@ function Connect-Windows365 {
         [System.Security.Cryptography.X509Certificates.X509Certificate2]$ClientCertificate,
 
         [parameter(Mandatory, ParameterSetName = "DeviceCode")]
-        [switch]$DeviceCode
+        [Bool]$DeviceCode
     )
     begin {
         # Clear the current token
@@ -67,7 +66,7 @@ function Connect-Windows365 {
 
                 Write-Verbose "Using Interactive Authentication"
 
-                $response = Connect-MgGraph -TenantId $TenantID -Scopes $scopes -NoWelcome
+                $response = Connect-MgGraph -Scopes $scopes -NoWelcome
 
                 # Get the Access Token
                 $Parameters = @{                                                                                                                     
@@ -123,7 +122,7 @@ function Connect-Windows365 {
 
                 Write-Verbose "Using Device Code Authentication"
 
-                $response = Connect-MgGraph -ClientId '14d82eec-204b-4c2f-b7e8-296a70dab67e' -Scopes $scopes -UseDeviceCode
+                $response = Connect-MgGraph -UseDeviceCode
                 
                 # Get the Access Token
                 $Parameters = @{                                                                                                                     
