@@ -1,4 +1,12 @@
 Function Disconnect-Windows365 {
+    <#
+    .SYNOPSIS
+    Disconnects from Windows 365 and clears the token cache.
+    .DESCRIPTION
+    Disconnects from Windows 365 and clears the token cache.
+    .EXAMPLE
+    Disconnect-Windows365
+    #>
 
     begin {
 
