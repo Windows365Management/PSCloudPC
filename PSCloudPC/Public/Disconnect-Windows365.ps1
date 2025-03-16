@@ -19,15 +19,28 @@ Function Disconnect-Windows365 {
 
         If ($Context) {
             
-            Write-Verbose "Connected using Disconnecting from Windows 365"
-            Disconnect-MgGraph
+            Write-Verbose "Disconnecting from Windows 365"
 
+            try {
+                Disconnect-MgGraph
+                Write-Verbose "Disconnected from Windows 365"
+            }
+            catch {
+                Write-Error "Failed to disconnect from Windows 365, Error: $($_.Exception.Message)"
+            }
         }
         
-        Write-Verbose "Clear token cache"
-        $script:Authtime = $null
-        $script:Authtoken = $null
-        $script:Authheader = $null
+        try {
+            
+            $script:Authtime = $null
+            $script:Authtoken = $null
+            $script:Authheader = $null
+            Write-Verbose "Cleared token cache"
+        }
+        catch {
+            Write-Error "Failed to clear token cache, Error: $($_.Exception.Message)"
+        }
+
     }
     
 }
