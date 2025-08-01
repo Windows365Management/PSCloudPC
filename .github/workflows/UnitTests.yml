@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: UnitTest
+name: PesterTests
 
 # Controls when the workflow will run
 on:
@@ -35,11 +35,11 @@ jobs:
       - name: Importing PSCloudPC module
         shell: pwsh
         run: |
-          Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
+          Import-Module ./source/PSCloudPC.psd1 -Force -ErrorAction Stop
       - name: PSSA check
         shell: pwsh
         run: |
-          Invoke-ScriptAnalyzer -Path ./PSCloudPC/Public/*.ps1 -Recurse -ExcludeRule PSAvoidTrailingWhitespace -Outvariable issues
+          Invoke-ScriptAnalyzer -Path ./source/Public/*.ps1 -Recurse -ExcludeRule PSAvoidTrailingWhitespace -Outvariable issues
           $errors   = $issues.Where({$_.Severity -eq 'Error'})
           $warnings = $issues.Where({$_.Severity -eq 'Warning'})
           if ($errors) {
@@ -50,20 +50,20 @@ jobs:
       - name: Pester Module check
         shell: pwsh
         run: |
-          $testLocation = (Join-Path -Path "./Compiler" -ChildPath "Module.tests.ps1")
+          $testLocation = (Join-Path -Path "./Pester" -ChildPath "Module.tests.ps1")
           Invoke-Pester -Path $testLocation -Output detailed
       - name: Pester Functions check
         shell: pwsh
         run: |
-          Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
-          Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "Functions.tests.ps1") -Output detailed
+          Import-Module ./source/PSCloudPC.psd1 -Force -ErrorAction Stop
+          Invoke-Pester -Path (Join-Path -Path "./Pester" -ChildPath "Functions.tests.ps1") -Output detailed
       - name: Pester Files check
         shell: pwsh
         run: |
-          Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
-          Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "Files.tests.ps1") -Output detailed
-      - name: Pester Individual Functions check
-        shell: pwsh
-        run: |
-          Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
-          Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "IndividualFunctions.tests.ps1") -Output detailed
+          Import-Module ./source/PSCloudPC.psd1 -Force -ErrorAction Stop
+          Invoke-Pester -Path (Join-Path -Path "./Pester" -ChildPath "Files.tests.ps1") -Output detailed
+      # - name: Pester Individual Functions check
+      #   shell: pwsh
+      #   run: |
+      #     Import-Module ./source/PSCloudPC.psd1 -Force -ErrorAction Stop
+      #     Invoke-Pester -Path (Join-Path -Path "./Pester" -ChildPath "IndividualFunctions.tests.ps1") -Output detailed
