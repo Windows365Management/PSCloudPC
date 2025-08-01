@@ -19,7 +19,7 @@ function Connect-Windows365 {
     .EXAMPLE
     Connect-Windows365 -DeviceCode:$true
     .EXAMPLE
-    Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012   
+    Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012
     .EXAMPLE
     Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientCertificate "Certificate"
     #>
@@ -35,7 +35,7 @@ function Connect-Windows365 {
 
         [parameter(Mandatory, ParameterSetName = "ClientSecret")]
         [string]$ClientSecret,
-        
+
         [parameter(Mandatory, ParameterSetName = "ClientCertificate")]
         [System.Security.Cryptography.X509Certificates.X509Certificate2]$ClientCertificate,
 
@@ -43,13 +43,15 @@ function Connect-Windows365 {
         [Bool]$DeviceCode
     )
     begin {
-        # Clear the current token
-        Clear-MsalTokenCache
+        # Clear the token cache
+        $script:Authtime = $null
+        $script:Authtoken = $null
+        $script:Authheader = $null
 
         # Set the profile to beta
         Set-GraphVersion
     }
-    
+
     process {
 
         $scopes = @(
@@ -60,7 +62,7 @@ function Connect-Windows365 {
         )
 
         Write-Verbose "Using Authentication Type: $($PsCmdlet.ParameterSetName)"
-        
+
         switch ($PsCmdlet.ParameterSetName) {
             Interactive {
 
@@ -69,7 +71,7 @@ function Connect-Windows365 {
                 $response = Connect-MgGraph -Scopes $scopes -NoWelcome
 
                 # Get the Access Token
-                $Parameters = @{                                                                                                                     
+                $Parameters = @{
                     Method     = "GET"
                     URI        = "/v1.0/me"
                     OutputType = "HttpResponseMessage"
@@ -81,7 +83,7 @@ function Connect-Windows365 {
 
                 $script:Authtime = [System.DateTime]::UtcNow
                 $script:Authtoken = $Token
-                $script:Authheader = @{Authorization = "Bearer $($Token)" }                   
+                $script:Authheader = @{Authorization = "Bearer $($Token)" }
             }
 
             ClientSecret {
@@ -93,14 +95,14 @@ function Connect-Windows365 {
                     Client_Id     = $ClientID
                     Client_Secret = $ClientSecret
                 }
-                
+
                 $connection = Invoke-RestMethod `
                     -Uri https://login.microsoftonline.com/$TenantID/oauth2/v2.0/token `
                     -Method POST `
                     -Body $body
-                
+
                 $Token = $connection.access_token
-        
+
                 $script:Authtime = [System.DateTime]::UtcNow
                 $script:Authtoken = $Token
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }
@@ -123,14 +125,14 @@ function Connect-Windows365 {
                 Write-Verbose "Using Device Code Authentication"
 
                 $response = Connect-MgGraph -UseDeviceCode
-                
+
                 # Get the Access Token
-                $Parameters = @{                                                                                                                     
+                $Parameters = @{
                     Method     = "GET"
                     URI        = "/v1.0/me"
                     OutputType = "HttpResponseMessage"
                 }
-                
+
                 $Response = Invoke-MgGraphRequest @Parameters
                 $Headers = $Response.RequestMessage.Headers
                 $Token = $Headers.Authorization.Parameter
