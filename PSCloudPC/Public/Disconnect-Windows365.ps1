@@ -1,7 +1,4 @@
 Function Disconnect-Windows365 {
-    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
-    param()
-
     <#
     .SYNOPSIS
     Disconnects from Windows 365 and clears the token cache.
@@ -10,6 +7,8 @@ Function Disconnect-Windows365 {
     .EXAMPLE
     Disconnect-Windows365
     #>
+    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
+    param()
 
     begin {
         $Context = Get-MGContext
