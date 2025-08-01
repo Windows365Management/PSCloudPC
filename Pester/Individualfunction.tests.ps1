@@ -1,5 +1,5 @@
 
-$individualfunctionslocation = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "Source/tests"
+$individualfunctionslocation = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "Src/Tests"
 
 foreach ($file in Get-ChildItem $individualfunctionslocation) {
 
