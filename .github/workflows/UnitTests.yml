@@ -62,3 +62,8 @@ jobs:
         run: |
           Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
           Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "Files.tests.ps1") -Output detailed
+      - name: Pester Individual Functions check
+        shell: pwsh
+        run: |
+          Import-Module ./PSCloudPC/PSCloudPC.psd1 -Force -ErrorAction Stop
+          Invoke-Pester -Path (Join-Path -Path "./Compiler" -ChildPath "IndividualFunctions.tests.ps1") -Output detailed

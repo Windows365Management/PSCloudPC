@@ -40,7 +40,7 @@ function Connect-Windows365 {
         [System.Security.Cryptography.X509Certificates.X509Certificate2]$ClientCertificate,
 
         [parameter(Mandatory, ParameterSetName = "DeviceCode")]
-        [bool]$DeviceCode
+        [Bool]$DeviceCode
     )
     begin {
         # Clear the current token
@@ -66,10 +66,19 @@ function Connect-Windows365 {
 
                 Write-Verbose "Using Interactive Authentication"
 
-                $response = Get-MsalToken -ClientId '14d82eec-204b-4c2f-b7e8-296a70dab67e' -Scopes $scopes
+                $response = Connect-MgGraph -Scopes $scopes -NoWelcome
 
-                # Access Token
-                $Token = $response.AccessToken
+                # Get the Access Token
+                $Parameters = @{                                                                                                                     
+                    Method     = "GET"
+                    URI        = "/v1.0/me"
+                    OutputType = "HttpResponseMessage"
+                }
+
+                $Response = Invoke-MgGraphRequest @Parameters
+                $Headers = $Response.RequestMessage.Headers
+                $Token = $Headers.Authorization.Parameter
+
                 $script:Authtime = [System.DateTime]::UtcNow
                 $script:Authtoken = $Token
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }                   
@@ -101,7 +110,7 @@ function Connect-Windows365 {
 
                 Write-Verbose "Using Client Certificate Authentication"
 
-                $response = Get-MsalToken -ClientId $clientId -TenantId $tenantId -ClientCertificate $ClientCertificate
+                $response = Connect-MGGraph -ClientId $clientId -TenantId $tenantId -Certificate $ClientCertificate
 
                 $Token = $response.AccessToken
                 $script:Authtime = [System.DateTime]::UtcNow
@@ -113,9 +122,19 @@ function Connect-Windows365 {
 
                 Write-Verbose "Using Device Code Authentication"
 
-                $response = Get-MsalToken -ClientId '14d82eec-204b-4c2f-b7e8-296a70dab67e' -Scopes $scopes -DeviceCode
+                $response = Connect-MgGraph -UseDeviceCode
                 
-                $Token = $response.AccessToken
+                # Get the Access Token
+                $Parameters = @{                                                                                                                     
+                    Method     = "GET"
+                    URI        = "/v1.0/me"
+                    OutputType = "HttpResponseMessage"
+                }
+                
+                $Response = Invoke-MgGraphRequest @Parameters
+                $Headers = $Response.RequestMessage.Headers
+                $Token = $Headers.Authorization.Parameter
+
                 $script:Authtime = [System.DateTime]::UtcNow
                 $script:Authtoken = $Token
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }

@@ -41,14 +41,14 @@ Describe "Analyze code" -ForEach @(
     It "<example> should start with <filebase> or contain | <filebase>" -TestCases @(
         foreach ($example in $helpInfo.examples.example) {
             @{
-                example = [string]$example.title.Replace("-",$null)
-                code =  [string]$example.code
+                example = [string]$example.title.Replace("-", $null)
+                code    = [string]$example.code
             }
         }
     ) {
         (($code.StartsWith($fileBase)) -or ($code.Contains("| {0}" -f $fileBase) )) | Should -Be $true -Because "Provide good examples" 
     }
-    It "<filename> line <linenr> uses the # sign correctly"  -TestCases @(
+    It "<filename> line <linenr> uses the # sign correctly" -TestCases @(
         $correctUse = '^#Requires', '^<#', '^#>', '^#region', '^#endregion', '^# ', '##vso\[task.'
         $comments = (Select-String -Path $file -Pattern '#')
         ForEach ($comment in $comments) {
@@ -90,9 +90,9 @@ Describe "Analyze code" -ForEach @(
         $file | Should -Not -FileContentMatch 'return `$'
     }
     
-#    It "<fileName> should have an Get-TokenValidity" {
-#       ($content | Select-String -Pattern 'Get-TokenValidity') | Should -Be $true
-#    }
+    #    It "<fileName> should have an Get-TokenValidity" {
+    #       ($content | Select-String -Pattern 'Get-TokenValidity') | Should -Be $true
+    #    }
     
     It "<fileName> function start with function name and should be $($file.BaseName) " {
         $content[0] -match "function $($file.BaseName) {" | Should -Be $true
