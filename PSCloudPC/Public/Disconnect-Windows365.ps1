@@ -20,6 +20,9 @@ Function Disconnect-Windows365 {
                 Write-Verbose "Disconnecting from Windows 365"
                 try {
                     Disconnect-MgGraph
+                    $script:Authtime = $null
+                    $script:Authtoken = $null
+                    $script:Authheader = $null
                     Write-Verbose "Disconnected from Windows 365"
                 }
                 catch {
@@ -27,14 +30,16 @@ Function Disconnect-Windows365 {
                 }
             }
         }
-        try {
-            $script:Authtime = $null
-            $script:Authtoken = $null
-            $script:Authheader = $null
-            Write-Verbose "Cleared token cache"
-        }
-        catch {
-            Write-Error "Failed to clear token cache, Error: $($_.Exception.Message)"
+        Else {
+            try {
+                $script:Authtime = $null
+                $script:Authtoken = $null
+                $script:Authheader = $null
+                Write-Verbose "Cleared token cache"
+            }
+            catch {
+                Write-Error "Failed to clear token cache, Error: $($_.Exception.Message)"
+            }
         }
     }
 }

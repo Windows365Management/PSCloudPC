@@ -3,7 +3,7 @@ function Connect-Windows365 {
     .SYNOPSIS
     Connect to Windows 365 via Powershell
     .DESCRIPTION
-    Connect to Windows 365 via Powershell via Interactive Browser, Device Code or Service Principal
+    Connect to Windows 365 via Powershell via Interactive Browser, Device Code, Service Principal or Access Token.
     .PARAMETER ClientSecret
     Client Secret for Service Principal Authentication
     .PARAMETER TenantID
@@ -13,15 +13,19 @@ function Connect-Windows365 {
     .PARAMETER ClientCertificate
     Client Certificate for Service Principal Authentication, this must be the actual certificate not only the thumbprint
     .PARAMETER DeviceCode
-    Use Device Code Authentication (Boolean)
+    Use Device Code Authentication (Switch to use Device Code Authentication)
+    .PARAMETER Token
+    Use a Token for Authentication, this must be a valid access token for the Microsoft Graph API with CloudPC permissions
     .EXAMPLE
     Connect-Windows365
     .EXAMPLE
-    Connect-Windows365 -DeviceCode:$true
+    Connect-Windows365 -DeviceCode
     .EXAMPLE
     Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012
     .EXAMPLE
     Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientCertificate "Certificate"
+    .EXAMPLE
+    Connect-Windows365 -Token "YourAccessToken"
     #>
     [CmdletBinding(DefaultParameterSetName = 'Interactive')]
     param (
@@ -40,7 +44,12 @@ function Connect-Windows365 {
         [System.Security.Cryptography.X509Certificates.X509Certificate2]$ClientCertificate,
 
         [parameter(Mandatory, ParameterSetName = "DeviceCode")]
-        [Bool]$DeviceCode
+        [switch]$DeviceCode,
+
+        [parameter(Mandatory, ParameterSetName = "Token")]
+        [string]$Token
+
+
     )
     begin {
         # Clear the token cache
@@ -124,7 +133,7 @@ function Connect-Windows365 {
 
                 Write-Verbose "Using Device Code Authentication"
 
-                $response = Connect-MgGraph -UseDeviceCode
+                Connect-MgGraph -UseDeviceCode
 
                 # Get the Access Token
                 $Parameters = @{
@@ -140,6 +149,20 @@ function Connect-Windows365 {
                 $script:Authtime = [System.DateTime]::UtcNow
                 $script:Authtoken = $Token
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }
+            }
+            Token {
+
+                Write-Verbose "Using Token Authentication"
+
+                if (-not $Token) {
+                    Write-Error "Token is required for Token Authentication"
+                    return
+                }
+
+                $script:Authtime = [System.DateTime]::UtcNow
+                $script:Authtoken = $Token
+                $script:Authheader = @{Authorization = "Bearer $($Token)" }
+
             }
         }
     }
