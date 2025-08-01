@@ -1,4 +1,4 @@
-$modulePath = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "PSCloudPC"
+$modulePath = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "source"
 $psFiles = Get-ChildItem -Path (Join-Path -Path $modulePath -ChildPath "Public")
 
 Describe "Analyze code" -ForEach @(
@@ -10,7 +10,7 @@ Describe "Analyze code" -ForEach @(
             content     = Get-Content -Path $file
             helpInfo    = Get-Help $file.BaseName
             IgnoreRules = @('PSUseApprovedVerbs')
-            fileobj     = $file 
+            fileobj     = $file
         }
     }
 ) {
@@ -30,11 +30,11 @@ Describe "Analyze code" -ForEach @(
     It "<fileName> should have a SYNOPSIS section in the help block" {
         $file | Should -FileContentMatch '.SYNOPSIS'
     }
-     
+
     It "<fileName> should have a DESCRIPTION section in the help block" {
         $file | Should -FileContentMatch '.DESCRIPTION'
     }
-      
+
     It "<fileName> should have a EXAMPLE section in the help block" {
         $file | Should -FileContentMatch '.EXAMPLE'
     }
@@ -46,7 +46,7 @@ Describe "Analyze code" -ForEach @(
             }
         }
     ) {
-        (($code.StartsWith($fileBase)) -or ($code.Contains("| {0}" -f $fileBase) )) | Should -Be $true -Because "Provide good examples" 
+        (($code.StartsWith($fileBase)) -or ($code.Contains("| {0}" -f $fileBase) )) | Should -Be $true -Because "Provide good examples"
     }
     It "<filename> line <linenr> uses the # sign correctly" -TestCases @(
         $correctUse = '^#Requires', '^<#', '^#>', '^#region', '^#endregion', '^# ', '##vso\[task.'
@@ -57,7 +57,7 @@ Describe "Analyze code" -ForEach @(
             }
             if ($correct -notcontains $true) {
                 $correctComment = $false
-            } 
+            }
             else {
                 $correctComment = $true
             }
@@ -71,33 +71,33 @@ Describe "Analyze code" -ForEach @(
     ) {
         $correctComment | should -be $true -because "comment $line should match $($correctUse -join ',' | Out-String)"
     }
-    
+
     It "<fileName> should be an advanced function" {
         $file | Should -FileContentMatch 'function'
         $file | Should -FileContentMatch 'cmdletbinding'
         $file | Should -FileContentMatch 'param'
     }
-    
+
     It "<fileName> should contain Write-Verbose blocks" {
         $file | Should -FileContentMatch 'Write-Verbose'
     }
-    
+
     It "<fileName> should not contain Write-Host" {
         $file | Should -Not -FileContentMatch 'Write-Host'
     }
-    
+
     It "<fileName> should not contain return in functions" {
         $file | Should -Not -FileContentMatch 'return `$'
     }
-    
+
     #    It "<fileName> should have an Get-TokenValidity" {
     #       ($content | Select-String -Pattern 'Get-TokenValidity') | Should -Be $true
     #    }
-    
+
     It "<fileName> function start with function name and should be $($file.BaseName) " {
         $content[0] -match "function $($file.BaseName) {" | Should -Be $true
     }
-    
+
     It "<fileBase> function should be available in module" {
         try {
             Get-Command $fileBase -Module "PSCloudPC"
@@ -113,6 +113,6 @@ Describe "Analyze code" -ForEach @(
             }
         }
     ) {
-        $name | Should -MatchExactly '^[A-Z].*' -Because "PascalCasing" 
+        $name | Should -MatchExactly '^[A-Z].*' -Because "PascalCasing"
     }
 }
