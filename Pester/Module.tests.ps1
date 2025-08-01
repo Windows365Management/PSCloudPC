@@ -2,7 +2,7 @@ $module = 'PSCloudPC'
 Describe "$module Global module tests" {
     Context 'Module Setup' {
         BeforeAll {
-            $modulePath = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "source"
+            $modulePath = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "Src"
             $binaryFile = "PSCloudPC.psm1"
             $manifestFile = "PSCloudPC.psd1"
             $moduleContent = Import-PowerShellDataFile (Join-Path -Path $modulePath -ChildPath $manifestFile)
@@ -26,7 +26,7 @@ Describe "$module Global module tests" {
         }
 
         It "$module root module should be $binaryFile in $manifestFile" {
-           $binaryFile -eq $moduleContent.RootModule | Should -Be $true
+            $binaryFile -eq $moduleContent.RootModule | Should -Be $true
         }
 
         It "$module should have a semver version" {
