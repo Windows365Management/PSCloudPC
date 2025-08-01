@@ -58,16 +58,21 @@ DeviceManagementConfiguration.ReadWrite.All
 CloudPC.ReadWrite.All
 ```
 
-
 - Device Code
 ```powershell
-Connect-Windows365 -DeviceCode:$true -TenantID <Example>.onmicrosoft.com
+Connect-Windows365 -DeviceCode
 ```
 You can use the Device Code to connect interactively for Linux or Mac.
+
+- Token
+```powershell
+Connect-Windows365 -Token "ACCESS TOKEN for Graph API"
+```
 
 ## Cmdlets
 This module provides the following cmdlets:
 - Connect-Windows365
+- Disconnect-Windows365
 - Export-CPCProvisioningPolicy
 - Get-CloudPC
 - Get-CPCAzureNetworkConnection
