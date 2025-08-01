@@ -43,7 +43,7 @@ function Connect-Windows365 {
         [Bool]$DeviceCode
     )
     begin {
-        #Clear the token cache
+        # Clear the token cache
         $script:Authtime = $null
         $script:Authtoken = $null
         $script:Authheader = $null
