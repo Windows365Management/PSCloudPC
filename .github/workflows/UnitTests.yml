@@ -35,11 +35,11 @@ jobs:
       - name: Importing PSCloudPC module
         shell: pwsh
         run: |
-          Import-Module ./source/PSCloudPC.psd1 -Force -ErrorAction Stop
+          Import-Module ./Source/PSCloudPC.psd1 -Force -ErrorAction Stop
       - name: PSSA check
         shell: pwsh
         run: |
-          Invoke-ScriptAnalyzer -Path ./source/Public/*.ps1 -Recurse -ExcludeRule PSAvoidTrailingWhitespace -Outvariable issues
+          Invoke-ScriptAnalyzer -Path ./Source/Public/*.ps1 -Recurse -ExcludeRule PSAvoidTrailingWhitespace -Outvariable issues
           $errors   = $issues.Where({$_.Severity -eq 'Error'})
           $warnings = $issues.Where({$_.Severity -eq 'Warning'})
           if ($errors) {
@@ -55,15 +55,15 @@ jobs:
       - name: Pester Functions check
         shell: pwsh
         run: |
-          Import-Module ./source/PSCloudPC.psd1 -Force -ErrorAction Stop
+          Import-Module ./Source/PSCloudPC.psd1 -Force -ErrorAction Stop
           Invoke-Pester -Path (Join-Path -Path "./Pester" -ChildPath "Functions.tests.ps1") -Output detailed
       - name: Pester Files check
         shell: pwsh
         run: |
-          Import-Module ./source/PSCloudPC.psd1 -Force -ErrorAction Stop
+          Import-Module ./Source/PSCloudPC.psd1 -Force -ErrorAction Stop
           Invoke-Pester -Path (Join-Path -Path "./Pester" -ChildPath "Files.tests.ps1") -Output detailed
       # - name: Pester Individual Functions check
       #   shell: pwsh
       #   run: |
-      #     Import-Module ./source/PSCloudPC.psd1 -Force -ErrorAction Stop
+      #     Import-Module ./Source/PSCloudPC.psd1 -Force -ErrorAction Stop
       #     Invoke-Pester -Path (Join-Path -Path "./Pester" -ChildPath "IndividualFunctions.tests.ps1") -Output detailed

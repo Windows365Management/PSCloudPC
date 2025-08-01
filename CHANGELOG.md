@@ -1,6 +1,13 @@
 # Changelog
 This file contains all the changes to this Windows 365 PowerShell module.
 
+## 1.0.15
+###Changes
+- Restructure module repository
+- Changed Authentication to Microsoft.Graph
+- Added authentication for token based auth
+- Added Pester tests for disconnect-windows365
+
 ## 1.0.13 [25-09-2024]
 ###Changes
 - Changed authentication check the docs for examples
