@@ -1,56 +1,110 @@
 <#
-This file tests the Disconnect-Windows365 function by using Pester
+This file tests the Connect-Windows365 function by using Pester
 #>
 
 
-$modulename = 'PSCloudPC'
+# Tests/Connect-Windows365.Tests.ps1
+Import-Module Pester -MinimumVersion 5.0
 
-BeforeAll {
-  # Import the module - correct relative path from Tests folder
-  Import-Module "./PSCloudPC/Src/PSCloudPC.psm1" -Force
+Describe 'Connect-Windows365' {
+  BeforeAll {
+    # Load the script into the test session
+    . "./PSCloudPC/Src/Public/Connect-Windows365.ps1"
 
-
-  Function Set-GraphVersion {
-    # This function sets the Graph API version to beta
-    Write-Verbose "Graph API version set to beta"
-  }
-
-  Function Connect-MgGraph {
-    # Mock function to simulate connection to Microsoft Graph
-    Write-Verbose "Mocked Connect-MgGraph"
-  }
-
-  Function Invoke-MgGraphRequest {
-    # Mock function to simulate invoking a Microsoft Graph API request
-    Write-Verbose "Mocked Invoke-MgGraphRequest"
-  }
-}
-
-Describe "Connect-Windows365" {
-
-  It "Should Connect to Windows 365 using Interactive Authentication" {
-
-    Mock -CommandName Set-GraphVersion -MockWith {
-      Write-Host "Setting Graph API version to beta"
-      $script:GraphVersion = "beta"
+    function Set-GraphVersion {
+      $script:MSGraphVersion = 'beta'
     }
 
-    Mock -CommandName Connect-MgGraph -MockWith { $null }
-
-    Mock -CommandName Invoke-MgGraphRequest -MockWith {
-
-      Write-Output "Mocked Invoke-MgGraphRequest"
-      $script:GraphVersion = "beta"
-      $script:Authtoken = "mocked_token"
-      $script:Authheader = @{ Authorization = "Bearer mocked_token" }
-      $script:Authtime = [System.DateTime]::UtcNow
+    $script:mockconnectMgGraphdata = @{
+      RequestMessage = @{
+        Method     = "GET"
+        RequestUri = "https://graph.microsoft.com/v1.0/me"
+        Version    = 2.0
+        Content    = $null
+        Headers    = @{
+          "User-Agent"        = @(
+            "Mozilla/5.0",
+            "(Macintosh; Darwin 24.6.0 Darwin Kernel Version 24.6.0: Mon Jul 14 11:28:30 PDT 2025; root:xnu-11417.140.69~1/RELEASE_ARM64_T6030; en-US)",
+            "PowerShell/2025.2.0",
+            "Invoke-MgGraphRequest"
+          )
+          "FeatureFlag"       = "00000043"
+          "Cache-Control"     = "no-store, no-cache"
+          "Authorization"     = "Bearer eyJ0eXAiOiJKV1QiLCJub25jZSI6IlUtbmFOYTk1OThDWFllOTBucU1QY3dRelFKdmRYbkoyRENyMUcxS2p3SFkiLCJhbGciOiJSUzI1NiIsIng1dCI6IkpZaEFjVFBNWl9MWDZEQmxPV1E3SG4wTmVYRSIsImtpZCI6IkpZaEFjVFBNWl9MWDZEQmxPV1E3SG4wTmVYRSJ9..."
+          "Accept-Encoding"   = "gzip"
+          "SdkVersion"        = "graph-powershell/2.20.0"
+          "client-request-id" = "099d9abb-acb5-4470-b19b-232c65e24881"
+        }
+      }
     }
 
-  Connect-Windows365
+    $script:mockcertificateobject = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new()
 
-  $script:GraphVersion | Should -Be "beta"
-  $script:Authtoken | Should -Not -BeNullOrEmpty
-  $script:Authheader | Should -Not -BeNullOrEmpty
-  $script:Authtime | Should -Not -BeNullOrEmpty
-}
+  }
+
+  Context "Interactive Authentication" {
+
+    It 'Should not throw an error when connecting to Windows 365' {
+
+      Mock -CommandName Set-GraphVersion -Verifiable
+
+      Mock -CommandName Connect-MgGraph -MockWith { $null }
+
+      Mock -CommandName Invoke-MgGraphRequest -Verifiable -ParameterFilter { $script:mockconnectMgGraphdata }
+
+      { Connect-Windows365 } | Should -Not -Throw
+
+    }
+  }
+
+  Context "Client Secret Authentication" {
+
+    It 'Should not throw an error when connecting to Windows 365' {
+
+      Mock -CommandName Set-GraphVersion -Verifiable
+
+      Mock -CommandName Invoke-RestMethod -MockWith { $null }
+
+      { Connect-Windows365 -TenantID "dummy" -ClientID "dummy" -ClientSecret "dummy" } | Should -Not -Throw
+
+    }
+  }
+
+  Context "Client Certificate Authentication" {
+
+    It 'Should not throw an error when connecting to Windows 365' {
+
+      Mock -CommandName Set-GraphVersion -Verifiable
+
+      Mock -CommandName Connect-MgGraph -MockWith { $null }
+
+      { Connect-Windows365 -TenantID "dummy" -ClientID "dummy" -ClientCertificate $script:mockcertificateobject } | Should -Not -Throw
+
+    }
+  }
+
+  Context "Device Code Authentication" {
+
+    It 'Should not throw an error when connecting to Windows 365' {
+
+      Mock -CommandName Set-GraphVersion -Verifiable
+
+      Mock -CommandName Connect-MgGraph -MockWith { $null }
+
+      Mock -CommandName Invoke-MgGraphRequest -Verifiable -ParameterFilter { $script:mockconnectMgGraphdata }
+
+      { Connect-Windows365 -DeviceCode } | Should -Not -Throw
+
+    }
+  }
+  Context "Token Authentication" {
+
+    It 'Should not throw an error when connecting to Windows 365' {
+
+      Mock -CommandName Set-GraphVersion -Verifiable
+
+      { Connect-Windows365 -Token "dummy" } | Should -Not -Throw
+
+    }
+  }
 }

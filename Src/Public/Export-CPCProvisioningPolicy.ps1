@@ -16,7 +16,7 @@ function Export-CPCProvisioningPolicy {
         [parameter(Mandatory = $true, ParameterSetName = "Name")]
         [string]$OutputFolder
     )
-    
+
     Begin {
         Get-TokenValidity
 
@@ -27,7 +27,7 @@ function Export-CPCProvisioningPolicy {
             break
         }
     }
-    
+
     Process {
 
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies/$($Policy.id)/"
@@ -36,7 +36,7 @@ function Export-CPCProvisioningPolicy {
 
         try {
             $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
-    
+
             if ($null -eq $result) {
                 Write-Error "No Provisioning Policy returned"
                 break
@@ -52,5 +52,5 @@ function Export-CPCProvisioningPolicy {
             Throw $_.Exception.Message
         }
     }
-    
+
 }
