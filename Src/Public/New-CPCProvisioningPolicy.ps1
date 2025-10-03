@@ -55,7 +55,7 @@ function New-CPCProvisioningPolicy {
         [Parameter(Mandatory = $false)]
         [string]$Description,
 
-        [ValidateSet('dedicated', 'shared')]
+        [ValidateSet('dedicated', 'shared', 'sharedByEntraGroup')]
         [string]$ProvisioningType = "dedicated",
 
         [parameter(Mandatory = $false)]
