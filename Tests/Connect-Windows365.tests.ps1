@@ -8,8 +8,8 @@ Import-Module Pester -MinimumVersion 5.0
 
 Describe 'Connect-Windows365' {
   BeforeAll {
-    # Load the script into the test session
-    . "./PSCloudPC/Src/Public/Connect-Windows365.ps1"
+    # Load the module into the test session
+    Import-Module "./PSCloudPC/Src/Public/Connect-Windows365.ps1"
 
     function Set-GraphVersion {
       $script:MSGraphVersion = 'beta'
@@ -51,6 +51,8 @@ Describe 'Connect-Windows365' {
       Mock -CommandName Connect-MgGraph -MockWith { $null }
 
       Mock -CommandName Invoke-MgGraphRequest -Verifiable -ParameterFilter { $script:mockconnectMgGraphdata }
+
+      Mock -CommandName Connect-Windows365 -MockWith { $null }
 
       { Connect-Windows365 } | Should -Not -Throw
 
