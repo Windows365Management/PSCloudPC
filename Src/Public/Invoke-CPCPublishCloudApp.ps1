@@ -1,4 +1,4 @@
-function Publish-CloudApp{
+function Invoke-CPCPublishCloudApp {
     <#
     .SYNOPSIS
     Publishes a Cloud App to make it available to users
@@ -11,56 +11,56 @@ function Publish-CloudApp{
 
     .PARAMETER Name
     Enter the name of the Cloud App
-    
+
     .PARAMETER InputObject
     Cloud App object from Get-CloudApp
 
     .EXAMPLE
-    Publish-CloudApp -Id "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
+    Invoke-CPCPublishCloudApp-Id "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
 
     .EXAMPLE
-    Publish-CloudApp -Name "Microsoft Access"
-    
-    .EXAMPLE
-    Get-CloudApp -Name "Access" | Publish-CloudApp
+    Invoke-CPCPublishCloudApp -Name "Microsoft Access"
 
     .EXAMPLE
-    Get-CloudApp | Where-Object { $_.appStatus -eq "available" } | Publish-CloudApp
+    Get-CloudApp -Name "Access" | Invoke-CPCPublishCloudApp
+
+    .EXAMPLE
+    Get-CloudApp | Where-Object { $_.appStatus -eq "available" } | Invoke-CPCPublishCloudApp
     #>
     [CmdletBinding(DefaultParameterSetName = 'Id')]
     param (
         [Parameter(Mandatory = $true, ParameterSetName = 'Id')]
         [string]$Id,
-        
+
         [Parameter(Mandatory = $true, ParameterSetName = 'Name')]
         [string]$Name,
-        
+
         [Parameter(Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'InputObject')]
         [PSCustomObject]$InputObject
     )
 
     begin {
         Get-TokenValidity
-        
+
         Write-Verbose "Getting Cloud Apps"
         $AvailableApps = Get-CloudApp
-        
+
         # Check if there are apps available
         if ($null -eq $AvailableApps) {
             Write-Error "No apps available to publish"
             return
         }
-        
+
         $url = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudApps/publish"
         Write-Verbose "URL: $url"
-        
+
         # Initialize array to collect app IDs for batch processing
         $AppsToPublish = @()
     }
 
     process {
         $AppId = $null
-        
+
         switch ($PsCmdlet.ParameterSetName) {
             'Id' {
                 Write-Verbose "Processing by Id: $Id"
@@ -73,7 +73,7 @@ function Publish-CloudApp{
                 $AppId = $App.id
                 Write-Verbose "Found app: $($App.displayName) (ID: $AppId)"
             }
-            
+
             'Name' {
                 Write-Verbose "Processing by Name: $Name"
                 # Find the app by display name (case-insensitive)
@@ -89,7 +89,7 @@ function Publish-CloudApp{
                 $AppId = $App.id
                 Write-Verbose "Found app: $($App.displayName) (ID: $AppId)"
             }
-            
+
             'InputObject' {
                 Write-Verbose "Processing from pipeline object"
                 if ($null -eq $InputObject.id) {
@@ -100,7 +100,7 @@ function Publish-CloudApp{
                 Write-Verbose "Processing app: $($InputObject.displayName) (ID: $AppId)"
             }
         }
-        
+
         # Add to collection for batch processing
         if ($AppId) {
             $AppsToPublish += $AppId
@@ -112,19 +112,19 @@ function Publish-CloudApp{
             Write-Warning "No apps to publish"
             return
         }
-        
+
         Write-Verbose "Publishing $($AppsToPublish.Count) app(s)"
-        
+
         # Prepare the request body
         $params = @{
             cloudAppIds = $AppsToPublish
         } | ConvertTo-Json -Depth 10
-        
+
         Write-Verbose "Request body: $params"
 
         try {
             $result = Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $params
-            
+
             # Output success message for each published app
             foreach ($AppId in $AppsToPublish) {
                 $App = $AvailableApps | Where-Object { $_.id -eq $AppId }
