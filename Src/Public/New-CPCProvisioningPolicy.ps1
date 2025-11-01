@@ -33,13 +33,13 @@ function New-CPCProvisioningPolicy {
     .PARAMETER WindowsAutopatch
     Enter the Windows Autopatch for the Provisioning Policy (notManaged or starterManaged) (Default: notManaged)
     .EXAMPLE
-    New-CPCProvisioningPolicy -Name "Test-AzureADJoin" -Description "Test-AzureADJoin" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -DomainJoinType "AzureADJoin" -EnableSingleSignOn $true -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US"
+    New-CPCProvisioningPolicy -Name "Test-AzureADJoin" -Description "Test-AzureADJoin" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -DomainJoinType "AzureADJoin" -EnableSingleSignOn $true -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US"
     .EXAMPLE
-    New-CPCProvisioningPolicy -Name "Test-HybridADJoin" -Description "Test-HybridADJoin" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -DomainJoinType "hybridAzureADJoin" -EnableSingleSignOn $false -AzureNetworkConnection "Azure Network Connection" -Language "en-US"
+    New-CPCProvisioningPolicy -Name "Test-HybridADJoin" -Description "Test-HybridADJoin" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -DomainJoinType "hybridAzureADJoin" -EnableSingleSignOn $false -AzureNetworkConnection "Azure Network Connection" -Language "en-US"
     .EXAMPLE
-    New-CPCProvisioningPolicy -Name "Test-Autopatch" -Description "Test-Autopatch" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true
+    New-CPCProvisioningPolicy -Name "Test-Autopatch" -Description "Test-Autopatch" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true
     .EXAMPLE
-    New-CPCProvisioningPolicy -Name "Test-NamingTemplate" -Description "Test-NamingTemplate" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true -NamingTemplate "%USERNAME:5%-%RAND:5%"
+    New-CPCProvisioningPolicy -Name "Test-NamingTemplate" -Description "Test-NamingTemplate" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true -NamingTemplate "%USERNAME:5%-%RAND:5%"
     #>
     [CmdletBinding(DefaultParameterSetName = 'AzureADJoin')]
     param (
@@ -87,6 +87,9 @@ function New-CPCProvisioningPolicy {
         [string]$WindowsAutopatch = "notManaged",
 
         [parameter(Mandatory = $false)]
+        [string]$WindowsAutopatchGroupId,
+
+        [parameter(Mandatory = $false)]
         [string]$Language = 'en-US'
     )
 
@@ -111,12 +114,7 @@ function New-CPCProvisioningPolicy {
 
     Process {
 
-        If ($WindowsAutopatch -eq "notManaged") {
-            $WindowsAutopatchprofile = ""
-        }
-        Else {
-            $WindowsAutopatchprofile = $null
-        }
+
         if ($NamingTemplate) {
             Write-Verbose "Naming template: $NamingTemplate"
         }
@@ -162,23 +160,41 @@ function New-CPCProvisioningPolicy {
         }
 
         $params = @{
-            DisplayName             = $Name
-            Description             = $Description
-            ProvisioningType        = $ProvisioningType
-            ManagedBy               = $ManagedBy
-            ImageId                 = $ImageId
-            ImageType               = $ImageType
-            enableSingleSignOn      = $EnableSingleSignOn
-            DomainJoinConfigurations   = $domainJoinConfigurations
-            MicrosoftManagedDesktop = @{
-                Type    = $WindowsAutopatch
-                Profile = $WindowsAutopatchprofile
+            DisplayName              = $Name
+            Description              = $Description
+            ProvisioningType         = $ProvisioningType
+            ManagedBy                = $ManagedBy
+            ImageId                  = $ImageId
+            ImageType                = $ImageType
+            enableSingleSignOn       = $EnableSingleSignOn
+            DomainJoinConfigurations = $domainJoinConfigurations
+            MicrosoftManagedDesktop  = @{
+                managedType = $WindowsAutopatch
+                type        = $WindowsAutopatch
+                profile     = ""
             }
-            WindowsSettings         = @{
+            WindowsSettings          = @{
                 Language = $Language
             }
-            cloudPcNamingTemplate   = $NamingTemplate
+            WindowsSetting           = @{
+                locale = $Language
+            }
+            cloudPcNamingTemplate    = $NamingTemplate
+            autopatch                = @()
+            autopilotConfiguration   = $null
         }
+
+        If ($WindowsAutopatch -eq "starterManaged") {
+            $params.autopatch = @{
+                autopatchGroupId = $WindowsAutopatchGroupId
+            }
+        }
+        Else {
+            $params.autopatch = @{
+                autopatchGroupId = $null
+            }
+        }
+
         $body = $params | ConvertTo-Json -Depth 10
 
 
