@@ -49,7 +49,7 @@ function New-CPCProvisioningPolicy {
         [Parameter(Mandatory = $false)]
         [string]$Description,
 
-        [ValidateSet('dedicated', 'shared', 'sharedByEntraGroup')]
+        [ValidateSet('dedicated', 'sharedByUser', 'sharedByEntraGroup')]
         [string]$ProvisioningType = "dedicated",
 
         [parameter(Mandatory = $false)]
@@ -89,6 +89,10 @@ function New-CPCProvisioningPolicy {
         [parameter(Mandatory = $false)]
         [string]$WindowsAutopatchGroupId,
 
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('cloudApp', 'cloudPc')]
+        [string]$userExperience = "cloudPc",
+
         [parameter(Mandatory = $false)]
         [string]$Language = 'en-US'
     )
@@ -108,6 +112,11 @@ function New-CPCProvisioningPolicy {
         # Validate if DomainJoinType is azureADJoin, then EnableSingleSignOn can be used, otherwise throw an error.
         if ($DomainJoinType -ne 'azureADJoin' -and $PSBoundParameters.ContainsKey('EnableSingleSignOn')) {
             Write-Error "The parameter -EnableSingleSignOn can only be used with -DomainJoinType 'azureADJoin'."
+            break
+        }
+
+        If (($ProvisioningType -ne "sharedByEntraGroup") -and ($userExperience -eq "cloudApp")) {
+            Write-Error "The parameter provisioning type must be 'sharedByEntraGroup' when user experience is 'cloudApp'."
             break
         }
     }
@@ -160,28 +169,30 @@ function New-CPCProvisioningPolicy {
         }
 
         $params = @{
-            DisplayName              = $Name
-            Description              = $Description
-            ProvisioningType         = $ProvisioningType
-            ManagedBy                = $ManagedBy
-            ImageId                  = $ImageId
-            ImageType                = $ImageType
-            enableSingleSignOn       = $EnableSingleSignOn
-            DomainJoinConfigurations = $domainJoinConfigurations
-            MicrosoftManagedDesktop  = @{
+            DisplayName                    = $Name
+            Description                    = $Description
+            ProvisioningType               = $ProvisioningType
+            ManagedBy                      = $ManagedBy
+            ImageId                        = $ImageId
+            ImageType                      = $ImageType
+            enableSingleSignOn             = $EnableSingleSignOn
+            DomainJoinConfigurations       = $domainJoinConfigurations
+            MicrosoftManagedDesktop        = @{
                 managedType = $WindowsAutopatch
                 type        = $WindowsAutopatch
                 profile     = ""
             }
-            WindowsSettings          = @{
+            WindowsSettings                = @{
                 Language = $Language
             }
-            WindowsSetting           = @{
+            WindowsSetting                 = @{
                 locale = $Language
             }
-            cloudPcNamingTemplate    = $NamingTemplate
-            autopatch                = @()
-            autopilotConfiguration   = $null
+            cloudPcNamingTemplate          = $NamingTemplate
+            autopatch                      = @()
+            autopilotConfiguration         = $null
+            userExperienceType             = $userExperience
+            userSettingsPersistenceEnabled = $false
         }
 
         If ($WindowsAutopatch -eq "starterManaged") {
