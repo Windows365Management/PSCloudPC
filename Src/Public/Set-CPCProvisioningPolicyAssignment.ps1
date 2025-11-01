@@ -5,7 +5,7 @@ function Set-CPCProvisioningPolicyAssignment {
     .DESCRIPTION
     Assign a Cloud PC Provisioning Policy to a group
     .PARAMETER Name
-    Name of the Cloud PC Provisioning Policy 
+    Name of the Cloud PC Provisioning Policy
     .PARAMETER GroupName
     Name of the group to assign the policy to
     .EXAMPLE
@@ -18,12 +18,12 @@ function Set-CPCProvisioningPolicyAssignment {
         [parameter(Mandatory = $true, ParameterSetName = 'Name')]
         [string]$Name,
         [Parameter(mandatory = $false)][string]$GroupName,
-        [Parameter(mandatory = $false)][switch]$Force
-        # TODO: Add SupportsShouldProcess
-        # TODO: Add Frontline Support
+        [Parameter(mandatory = $false)][switch]$Force,
+        [ValidateSet('Frontline', 'Enterprise')]
+        [Parameter(Mandatory = $false)][string]$ProvisioningType = "Enterprise"
 
     )
-    
+
     begin {
         Get-TokenValidity
 
@@ -58,7 +58,7 @@ function Set-CPCProvisioningPolicyAssignment {
             Write-Verbose "Force parameter is not set. Adding existing, if present, assignments to body"
 
             $assignmenturl = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies/$($Policy.id)?`$expand=assignments"
-            
+
             Write-Verbose "Current Assignments url: $($assignmenturl)"
 
             $assignments = Invoke-RestMethod -Uri $assignmenturl -Headers $script:Authheader -Method GET
@@ -75,7 +75,6 @@ function Set-CPCProvisioningPolicyAssignment {
             }
             Else {
                 Write-Verbose "Assignments found"
-                # $GroupID = $currentassignments += $script:GroupID
                 $GroupID = New-Object System.Collections.Generic.List[System.Object]
                 $GroupID.Add($script:GroupID)
                 $currentassignments | ForEach-Object {
@@ -96,7 +95,7 @@ function Set-CPCProvisioningPolicyAssignment {
         $GroupID | ForEach-Object {
             $params.Assignments += @{
                 Target = @{
-                    GroupId = $_  
+                    GroupId = $_
                 }
             }
         }
@@ -109,6 +108,6 @@ function Set-CPCProvisioningPolicyAssignment {
         catch {
             Throw $_.Exception.Message
         }
-        
+
     }
 }
