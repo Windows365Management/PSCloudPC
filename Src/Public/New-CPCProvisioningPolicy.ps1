@@ -32,6 +32,12 @@ function New-CPCProvisioningPolicy {
     Apply device name template. Create unique names for your devices. Names must be between 5 and 15 characters, and can contain letters, numbers, hyphens, and underscores. Names cannot include a blank space. Use the %USERNAME:x% macro to add the first x letters of username. Use the %RAND:y% macro to add a random alphanumeric string of length y, y must be 5 or more. Names must contain a randomized string.
     .PARAMETER WindowsAutopatch
     Enter the Windows Autopatch for the Provisioning Policy (notManaged or starterManaged) (Default: notManaged)
+    .PARAMETER WindowsAutopatchGroupId
+    Enter the Windows Autopatch Group Id for the Provisioning Policy (Info: Get-CPCWindowsAutopatchGroup)
+    .PARAMETER userExperience
+    Enter the User Experience for the Provisioning Policy (cloudPc or cloudApp) (Default: cloudPc)
+    .PARAMETER userSettingsPersistenceEnabled
+    Enable user settings persistence for the Provisioning Policy (Default: $false)
     .EXAMPLE
     New-CPCProvisioningPolicy -Name "Test-AzureADJoin" -Description "Test-AzureADJoin" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -DomainJoinType "AzureADJoin" -EnableSingleSignOn $true -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US"
     .EXAMPLE
@@ -40,6 +46,8 @@ function New-CPCProvisioningPolicy {
     New-CPCProvisioningPolicy -Name "Test-Autopatch" -Description "Test-Autopatch" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true
     .EXAMPLE
     New-CPCProvisioningPolicy -Name "Test-NamingTemplate" -Description "Test-NamingTemplate" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true -NamingTemplate "%USERNAME:5%-%RAND:5%"
+    .EXAMPLE
+    New-CPCProvisioningPolicy -Name "Test-CloudApps" -Description "Test-AzureADJoin" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -DomainJoinType "AzureADJoin" -EnableSingleSignOn $true -RegionName "northeurope" -RegionGroup "europeUnion" -Language "en-US" -ProvisioningType sharedByEntraGroup -userExperience cloudApp
     #>
     [CmdletBinding(DefaultParameterSetName = 'AzureADJoin')]
     param (
@@ -124,14 +132,6 @@ function New-CPCProvisioningPolicy {
     Process {
 
 
-        if ($NamingTemplate) {
-            Write-Verbose "Naming template: $NamingTemplate"
-        }
-        Else {
-            Write-Verbose "Naming template not set, setting default CPC-%USERNAME:5%-%RAND:5%"
-            $NamingTemplate = "CPC-%USERNAME:5%-%RAND:5%"
-        }
-
         If ($AzureNetworkConnection) {
             $domainJoinConfigurations = @()
             foreach ($Network in $AzureNetworkConnection) {
@@ -160,9 +160,10 @@ function New-CPCProvisioningPolicy {
         else {
             $domainJoinConfig = @(
                 @{
-                    Type        = "$DomainJoinType"
-                    RegionName  = $RegionName
-                    RegionGroup = $RegionGroup
+                    domainJoinType = "$DomainJoinType"
+                    Type           = "$DomainJoinType"
+                    RegionName     = $RegionName
+                    RegionGroup    = $RegionGroup
                 }
             )
             $domainJoinConfigurations += $domainJoinConfig
@@ -201,8 +202,21 @@ function New-CPCProvisioningPolicy {
             }
         }
         Else {
-            $params.autopatch = @{
-                autopatchGroupId = $null
+            $params.autopatch = $null
+        }
+
+        if ($NamingTemplate) {
+            Write-Verbose "Naming template: $NamingTemplate"
+            $params.cloudPcNamingTemplate = $NamingTemplate
+        }
+        Else {
+            if ($ProvisioningType -eq "sharedByEntraGroup") {
+                Write-Verbose "a cloudApp provisioning type cant use a naming template."
+                $params.cloudPcNamingTemplate = $null
+            }
+            else {
+                Write-Verbose "Naming template not set, setting default CPC-%USERNAME:5%-%RAND:5%"
+                $params.cloudPcNamingTemplate = "CPC-%USERNAME:5%-%RAND:5%"
             }
         }
 
