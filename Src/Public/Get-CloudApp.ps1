@@ -1,26 +1,19 @@
-function Get-CloudApp{
+function Get-CloudApp {
     <#
     .SYNOPSIS
     Returns all Cloud PC Apps or Cloud PC Apps with a specific name
-
     .DESCRIPTION
     The function will return all Cloud PC Apps or Cloud PC Apps with a specific name
-    
     .PARAMETER Name
     Enter the name of the Cloud PC App
-    
     .PARAMETER Id
     Enter the id of the Cloud PC App
-    
     .EXAMPLE
     Get-CloudApp -Name "Access"
-    
     .EXAMPLE
     Get-CloudApp -Id "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
-    
     .EXAMPLE
     Get-CloudApp
-    
     .EXAMPLE
     Get-CloudApp | Where-Object { $_.appStatus -eq "published" }
     #>
@@ -68,7 +61,8 @@ function Get-CloudApp{
             # Handle single item response (when getting by ID)
             if ($PsCmdlet.ParameterSetName -eq 'Id') {
                 $apps = @($result)
-            } else {
+            }
+            else {
                 $apps = $result.value
             }
             
@@ -79,12 +73,12 @@ function Get-CloudApp{
 
             $apps | ForEach-Object {
                 $Info = [PSCustomObject]@{
-                    id                       = $_.id
-                    discoveredAppName        = $_.discoveredAppName
-                    displayName              = $_.displayName
-                    appStatus                = $_.appStatus
-                    availableToUser          = $_.availableToUser
-                    lastPublishedDateTime    = $_.lastPublishedDateTime
+                    id                    = $_.id
+                    discoveredAppName     = $_.discoveredAppName
+                    displayName           = $_.displayName
+                    appStatus             = $_.appStatus
+                    availableToUser       = $_.availableToUser
+                    lastPublishedDateTime = $_.lastPublishedDateTime
                 }
                 $returnResults += $Info
             }

@@ -2,28 +2,20 @@ function Invoke-CPCPublishCloudApp {
     <#
     .SYNOPSIS
     Publishes a Cloud App to make it available to users
-
     .DESCRIPTION
     The function will publish a Cloud App to make it available to users
-
     .PARAMETER Id
     Enter the id of the Cloud App
-
     .PARAMETER Name
     Enter the name of the Cloud App
-
     .PARAMETER InputObject
     Cloud App object from Get-CloudApp
-
     .EXAMPLE
-    Invoke-CPCPublishCloudApp-Id "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
-
+    Invoke-CPCPublishCloudApp -Id "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
     .EXAMPLE
     Invoke-CPCPublishCloudApp -Name "Microsoft Access"
-
     .EXAMPLE
     Get-CloudApp -Name "Access" | Invoke-CPCPublishCloudApp
-
     .EXAMPLE
     Get-CloudApp | Where-Object { $_.appStatus -eq "available" } | Invoke-CPCPublishCloudApp
     #>
