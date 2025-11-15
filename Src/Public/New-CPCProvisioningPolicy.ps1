@@ -9,7 +9,7 @@ function New-CPCProvisioningPolicy {
     .PARAMETER Description
     Enter the description of the Provisioning Policy
     .PARAMETER ProvisioningType
-    Enter the Provisioning Type of the Provisioning Policy (dedicated or shared) (Default: dedicated)
+    Enter the Provisioning Type of the Provisioning Policy (dedicated, sharedByUser or sharedByEntraGroup) (Default: dedicated)
     .PARAMETER ManagedBy
     Enter the Managed By of the Provisioning Policy (Windows365 or Microsoft) (Default: Windows365)
     .PARAMETER imageType

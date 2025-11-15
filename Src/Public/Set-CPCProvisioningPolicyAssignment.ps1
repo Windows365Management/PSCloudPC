@@ -17,9 +17,11 @@ function Set-CPCProvisioningPolicyAssignment {
     .PARAMETER AllotmentLicensesCount
     Number of licenses to allot for the Service Plan (default: 1)
     .EXAMPLE
-    Set-CPCEnterpriseProvisioningPolicyAssignment -Name "MyUserSettingsPolicy" -GroupName "MyGroup"
+    Set-CPCProvisioningPolicyAssignment -Name "MyUserSettingsPolicy" -GroupName "MyGroup"
     .EXAMPLE
-    Set-CPCEnterpriseProvisioningPolicyAssignment -Name "MyUserSettingsPolicy" -GroupName "MyGroup" -Force (Removes existing assignments)
+    Set-CPCProvisioningPolicyAssignment -Name "MyUserSettingsPolicy" -GroupName "MyGroup" -Force (Removes existing assignments)
+    .EXAMPLE
+    Set-CPCProvisioningPolicyAssignment -Name "MyUserSettingsPolicy" -GroupName "MyGroup" -ProvisioningType "sharedByEntraGroup" -ServicePlanName
     #>
     [CmdletBinding(DefaultParameterSetName = 'Name')]
     param (
