@@ -46,6 +46,8 @@ function Get-CPCProvisioningPolicy {
             $Info = [PSCustomObject]@{
                 id                       = $_.id
                 displayName              = $_.displayName
+                userExperienceType       = $_.userExperienceType
+                provisioningType         = $_.provisioningType
                 imageId                  = $_.imageId
                 imageDisplayName         = $_.imageDisplayName
                 imageType                = $_.imageType
