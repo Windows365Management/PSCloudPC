@@ -9,7 +9,7 @@ function New-CPCProvisioningPolicy {
     .PARAMETER Description
     Enter the description of the Provisioning Policy
     .PARAMETER ProvisioningType
-    Enter the Provisioning Type of the Provisioning Policy (dedicated or shared) (Default: dedicated)
+    Enter the Provisioning Type of the Provisioning Policy (dedicated, sharedByUser or sharedByEntraGroup) (Default: dedicated)
     .PARAMETER ManagedBy
     Enter the Managed By of the Provisioning Policy (Windows365 or Microsoft) (Default: Windows365)
     .PARAMETER imageType
@@ -32,20 +32,22 @@ function New-CPCProvisioningPolicy {
     Apply device name template. Create unique names for your devices. Names must be between 5 and 15 characters, and can contain letters, numbers, hyphens, and underscores. Names cannot include a blank space. Use the %USERNAME:x% macro to add the first x letters of username. Use the %RAND:y% macro to add a random alphanumeric string of length y, y must be 5 or more. Names must contain a randomized string.
     .PARAMETER WindowsAutopatch
     Enter the Windows Autopatch for the Provisioning Policy (notManaged or starterManaged) (Default: notManaged)
-    .PARAMETER GroupName
-    Enter the Group Name for assigning the Provisioning Policy (mandatory for Frontline)
-    .PARAMETER ServicePlanName
-    Enter the Service Plan Name for assigning the Provisioning Policy (mandatory for Frontline)
+    .PARAMETER WindowsAutopatchGroupId
+    Enter the Windows Autopatch Group Id for the Provisioning Policy (Info: Get-CPCWindowsAutopatchGroup)
+    .PARAMETER userExperience
+    Enter the User Experience for the Provisioning Policy (cloudPc or cloudApp) (Default: cloudPc)
+    .PARAMETER userSettingsPersistenceEnabled
+    Enable user settings persistence for the Provisioning Policy (Default: $false)
     .EXAMPLE
-    New-CPCProvisioningPolicy -Name "Test-AzureADJoin" -Description "Test-AzureADJoin" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -DomainJoinType "AzureADJoin" -EnableSingleSignOn $true -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US"
+    New-CPCProvisioningPolicy -Name "Test-AzureADJoin" -Description "Test-AzureADJoin" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -DomainJoinType "AzureADJoin" -EnableSingleSignOn $true -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US"
     .EXAMPLE
-    New-CPCProvisioningPolicy -Name "Test-HybridADJoin" -Description "Test-HybridADJoin" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -DomainJoinType "hybridAzureADJoin" -EnableSingleSignOn $false -AzureNetworkConnection "Azure Network Connection" -Language "en-US"
+    New-CPCProvisioningPolicy -Name "Test-HybridADJoin" -Description "Test-HybridADJoin" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -DomainJoinType "hybridAzureADJoin" -EnableSingleSignOn $false -AzureNetworkConnection "Azure Network Connection" -Language "en-US"
     .EXAMPLE
-    New-CPCProvisioningPolicy -Name "Test-Autopatch" -Description "Test-Autopatch" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true 
+    New-CPCProvisioningPolicy -Name "Test-Autopatch" -Description "Test-Autopatch" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true
     .EXAMPLE
-    New-CPCProvisioningPolicy -Name "Test-NamingTemplate" -Description "Test-NamingTemplate" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true -NamingTemplate "%USERNAME:5%-%RAND:5%"
+    New-CPCProvisioningPolicy -Name "Test-NamingTemplate" -Description "Test-NamingTemplate" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true -NamingTemplate "%USERNAME:5%-%RAND:5%"
     .EXAMPLE
-    New-CPCProvisioningPolicy -Name "Test-NamingTemplate2" -Description "Test-NamingTemplate" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true -NamingTemplate "%USERNAME:5%-%RAND:5%"  -GroupName "All Users" -ServicePlanName "Cloud PC Frontline 2vCPU/8GB/128GB"
+    New-CPCProvisioningPolicy -Name "Test-CloudApps" -Description "Test-AzureADJoin" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -DomainJoinType "AzureADJoin" -EnableSingleSignOn $true -RegionName "northeurope" -RegionGroup "europeUnion" -Language "en-US" -ProvisioningType sharedByEntraGroup -userExperience cloudApp
     #>
     [CmdletBinding(DefaultParameterSetName = 'AzureADJoin')]
     param (
@@ -55,7 +57,7 @@ function New-CPCProvisioningPolicy {
         [Parameter(Mandatory = $false)]
         [string]$Description,
 
-        [ValidateSet('dedicated', 'shared')]
+        [ValidateSet('dedicated', 'sharedByUser', 'sharedByEntraGroup')]
         [string]$ProvisioningType = "dedicated",
 
         [parameter(Mandatory = $false)]
@@ -93,15 +95,16 @@ function New-CPCProvisioningPolicy {
         [string]$WindowsAutopatch = "notManaged",
 
         [parameter(Mandatory = $false)]
-        [string]$Language = 'en-US',
+        [string]$WindowsAutopatchGroupId,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('cloudApp', 'cloudPc')]
+        [string]$userExperience = "cloudPc",
 
         [parameter(Mandatory = $false)]
-        [string]$GroupName,
-        
-        [parameter(Mandatory = $false)]
-        [string]$ServicePlanName
+        [string]$Language = 'en-US'
     )
-    
+
     begin {
         Get-TokenValidity
 
@@ -119,40 +122,15 @@ function New-CPCProvisioningPolicy {
             Write-Error "The parameter -EnableSingleSignOn can only be used with -DomainJoinType 'azureADJoin'."
             break
         }
-        If ($GroupName) {
-            Get-AzureADGroupID -GroupName $GroupName
-    
-            If ($null -eq $script:GroupID) {
-                Throw "No group found with name $GroupName"
-                return
-            }
-        }
 
-        If ($ServicePlanName) {
-            $ServicePlan = Get-CPCServicePlan -ServicePlanName $ServicePlanName
-    
-            If ($null -eq $ServicePlan) {
-                Throw "No Service Plan found with name $ServicePlanName"
-                return
-            }
+        If (($ProvisioningType -ne "sharedByEntraGroup") -and ($userExperience -eq "cloudApp")) {
+            Write-Error "The parameter provisioning type must be 'sharedByEntraGroup' when user experience is 'cloudApp'."
+            break
         }
     }
 
     Process {
 
-        If ($WindowsAutopatch -eq "notManaged") {
-            $WindowsAutopatchprofile = ""
-        }
-        Else {
-            $WindowsAutopatchprofile = $null
-        }
-        if ($NamingTemplate) {
-            Write-Verbose "Naming template: $NamingTemplate"
-        }
-        Else {
-            Write-Verbose "Naming template not set, setting default CPC-%USERNAME:5%-%RAND:5%"
-            $NamingTemplate = "CPC-%USERNAME:5%-%RAND:5%"
-        }
 
         If ($AzureNetworkConnection) {
             $domainJoinConfigurations = @()
@@ -162,12 +140,10 @@ function New-CPCProvisioningPolicy {
 
                 If ($null -eq $AzureNetworkInfo) {
                     Throw "No Azure Network Connection found with name $Network"
-                    break
                 }
 
                 if ($AzureNetworkInfo.healthCheckStatus -ne "passed") {
                     Throw "Azure Network Connection $Network is not healthy"
-                    break
                 }
 
                 Write-Verbose "AzureNetworkConnection ID: $($AzureNetworkInfo.Id)"
@@ -184,32 +160,66 @@ function New-CPCProvisioningPolicy {
         else {
             $domainJoinConfig = @(
                 @{
-                    Type        = "$DomainJoinType"
-                    RegionName  = $RegionName
-                    RegionGroup = $RegionGroup
+                    domainJoinType = "$DomainJoinType"
+                    Type           = "$DomainJoinType"
+                    RegionName     = $RegionName
+                    RegionGroup    = $RegionGroup
                 }
             )
             $domainJoinConfigurations += $domainJoinConfig
         }
 
         $params = @{
-            DisplayName             = $Name
-            Description             = $Description
-            ProvisioningType        = $ProvisioningType
-            ManagedBy               = $ManagedBy
-            ImageId                 = $ImageId
-            ImageType               = $ImageType
-            enableSingleSignOn      = $EnableSingleSignOn
-            DomainJoinConfigurations   = $domainJoinConfigurations
-            MicrosoftManagedDesktop = @{
-                Type    = $WindowsAutopatch
-                Profile = $WindowsAutopatchprofile
+            DisplayName                    = $Name
+            Description                    = $Description
+            ProvisioningType               = $ProvisioningType
+            ManagedBy                      = $ManagedBy
+            ImageId                        = $ImageId
+            ImageType                      = $ImageType
+            enableSingleSignOn             = $EnableSingleSignOn
+            DomainJoinConfigurations       = $domainJoinConfigurations
+            MicrosoftManagedDesktop        = @{
+                managedType = $WindowsAutopatch
+                type        = $WindowsAutopatch
+                profile     = ""
             }
-            WindowsSettings         = @{
+            WindowsSettings                = @{
                 Language = $Language
             }
-            cloudPcNamingTemplate   = $NamingTemplate
+            WindowsSetting                 = @{
+                locale = $Language
+            }
+            cloudPcNamingTemplate          = $NamingTemplate
+            autopatch                      = @()
+            autopilotConfiguration         = $null
+            userExperienceType             = $userExperience
+            userSettingsPersistenceEnabled = $false
         }
+
+        If ($WindowsAutopatch -eq "starterManaged") {
+            $params.autopatch = @{
+                autopatchGroupId = $WindowsAutopatchGroupId
+            }
+        }
+        Else {
+            $params.autopatch = $null
+        }
+
+        if ($NamingTemplate) {
+            Write-Verbose "Naming template: $NamingTemplate"
+            $params.cloudPcNamingTemplate = $NamingTemplate
+        }
+        Else {
+            if ($ProvisioningType -eq "sharedByEntraGroup") {
+                Write-Verbose "A cloudApp provisioning type can't use a naming template."
+                $params.cloudPcNamingTemplate = $null
+            }
+            else {
+                Write-Verbose "Naming template not set, setting default CPC-%USERNAME:5%-%RAND:5%"
+                $params.cloudPcNamingTemplate = "CPC-%USERNAME:5%-%RAND:5%"
+            }
+        }
+
         $body = $params | ConvertTo-Json -Depth 10
 
 
@@ -223,64 +233,8 @@ function New-CPCProvisioningPolicy {
         }
 
         $PolicyId = ($Result.Content | ConvertFrom-Json).id
-        
+
         Write-Verbose "Policy ID: $($PolicyId)"
 
-
-        If ($ProvisioningType -eq "shared") {
-
-            Write-Verbose "Creating FrontlineAssignment Body"
-            Write-Verbose "Assigning provisioning policy to group $GroupName"
-            Write-Verbose "Assigning service plan $ServicePlanName"
-
-            $assignmentparams = @{
-                assignments = @(
-                    @{
-                        target = @{
-                            groupId       = $script:GroupID
-                            servicePlanId = $($ServicePlan.Id)
-                        }
-                    }
-                )
-            }
-            $assignmentbody = $assignmentparams | ConvertTo-Json -Depth 10
-            Write-Verbose $assignmentbody
-        }
-
-        If (($Null -ne $GroupName) -and ($Null -eq $ServicePlanName)) {
-
-            Write-Verbose "Creating Normalassignment Body"
-            Write-Verbose "Assigning provisioning policy to group $GroupName"
-
-            $assignmentparams = @{
-                assignments = @(
-                    @{
-                        target = @{
-                            groupId = $script:GroupID
-                        }
-                    }
-                )
-            }
-            $assignmentbody = $assignmentparams | ConvertTo-Json -Depth 10
-            Write-Verbose $assignmentbody
-        }
-
-        If ($Null -ne $assignmentbody) {
-
-            Write-Verbose "Assigning provisioning policy to group $GroupName"
-
-            $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies/$($PolicyId)/assign"
-
-            Write-Verbose $url
-    
-            try {
-                $Result = Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $assignmentbody
-            }
-            catch {
-                Throw $_.Exception.Message
-            }
-
-        }    
-        
     }
 }
