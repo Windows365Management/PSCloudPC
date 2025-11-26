@@ -211,7 +211,7 @@ function New-CPCProvisioningPolicy {
         }
         Else {
             if ($ProvisioningType -eq "sharedByEntraGroup") {
-                Write-Verbose "a cloudApp provisioning type cant use a naming template."
+                Write-Verbose "A cloudApp provisioning type can't use a naming template."
                 $params.cloudPcNamingTemplate = $null
             }
             else {

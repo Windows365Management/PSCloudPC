@@ -21,7 +21,7 @@ function Set-CPCProvisioningPolicyAssignment {
     .EXAMPLE
     Set-CPCProvisioningPolicyAssignment -Name "MyUserSettingsPolicy" -GroupName "MyGroup" -Force (Removes existing assignments)
     .EXAMPLE
-    Set-CPCProvisioningPolicyAssignment -Name "MyUserSettingsPolicy" -GroupName "MyGroup" -ProvisioningType "sharedByEntraGroup" -ServicePlanName
+    Set-CPCProvisioningPolicyAssignment -Name "MyUserSettingsPolicy" -GroupName "MyGroup" -ProvisioningType "sharedByEntraGroup" -ServicePlanName "Cloud PC Frontline 2vCPU/8GB/128GB"
     #>
     [CmdletBinding(DefaultParameterSetName = 'Name')]
     param (
@@ -70,7 +70,6 @@ function Set-CPCProvisioningPolicyAssignment {
 
             If ($null -eq $ServicePlan) {
                 Throw "No Service Plan found with name $ServicePlanName"
-                return
             }
         }
 
@@ -142,7 +141,7 @@ function Set-CPCProvisioningPolicyAssignment {
                             "@odata.type"          = "#microsoft.graph.cloudPcManagementGroupAssignmentTarget"
                             GroupId                = $script:GroupID
                             ServicePlanId          = $ServicePlan.id
-                            AllotmentDisplayName   = "FrontlineAssigment"
+                            AllotmentDisplayName   = "FrontlineAssignment"
                             AllotmentLicensesCount = $AllotmentLicensesCount
                         }
                     }
