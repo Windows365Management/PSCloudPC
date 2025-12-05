@@ -15,6 +15,10 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+      - name: Check out site repository
+        uses: actions/checkout@v2
+        with:
+          repository: 'PSCloudPC-site'
       - name: Install platyPS module
         shell: pwsh
         run: |
@@ -24,8 +28,9 @@ jobs:
         run: |
           Import-Module platyPS -Force
           Import-Module ./Src/PSCloudPC.psm1 -Force
-          New-MarkdownHelp -Module "PSCloudPC" -OutputFolder "./Docs" -Force
+          New-MarkdownHelp -Module "PSCloudPC" -OutputFolder "./docs/cmdlets" -Force
       - name: Commit files
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "Regenerated Docs"
+          repository: 'PSCloudPC-site'
