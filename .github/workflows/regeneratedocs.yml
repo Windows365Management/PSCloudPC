@@ -19,12 +19,12 @@ jobs:
         shell: pwsh
         run: |
           Import-Module ./Src/PSCloudPC.psm1
-      - name: Install Microsoft.PowerShell.PlatyPS module
+      - name: Install PlatyPS module
         shell: pwsh
         run: |
-          Install-Module -Name Microsoft.PowerShell.PlatyPS -Force
-      - name: Publishing module
+          Install-Module -Name PlatyPS -Force
+      - name: Regenerate Docs
         shell: pwsh
         run: |
-          Import-Module Microsoft.PowerShell.PlatyPS -Force
+          Import-Module PlatyPS -Force
           New-MarkdownHelp -Module "PSCloudPC" -OutputFolder ".\Docs" -Force
