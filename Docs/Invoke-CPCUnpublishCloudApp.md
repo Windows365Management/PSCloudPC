@@ -5,42 +5,62 @@ online version:
 schema: 2.0.0
 ---
 
-# Invoke-CPCEndGracePeriod
+# Invoke-CPCUnpublishCloudApp
 
 ## SYNOPSIS
-Function to end the grace period of a CloudPC
+UnPublishes a Cloud App to make it unavailable to users
 
 ## SYNTAX
 
-### Name (Default)
+### Id (Default)
 ```
-Invoke-CPCEndGracePeriod -Name <String> [-Force] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Invoke-CPCUnpublishCloudApp -Id <String> [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
-### All
+### Name
 ```
-Invoke-CPCEndGracePeriod [-All] [-Force] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Invoke-CPCUnpublishCloudApp -Name <String> [-ProgressAction <ActionPreference>] [<CommonParameters>]
+```
+
+### InputObject
+```
+Invoke-CPCUnpublishCloudApp -InputObject <PSObject> [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-Function to end the grace period of a CloudPC
+The function will unPublishes a Cloud App to make it unavailable to users
 
 ## EXAMPLES
 
 ### EXAMPLE 1
 ```
-Invoke-CPCEndGracePeriod -Name "CloudPC01"
+Invoke-CPCUnpublishCloudApp -Id "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
 ```
 
 ### EXAMPLE 2
 ```
-Invoke-CPCEndGracePeriod -All -Force
+Invoke-CPCUnpublishCloudApp -Name "Microsoft Access"
 ```
 
 ## PARAMETERS
 
+### -Id
+Enter the id of the Cloud App
+
+```yaml
+Type: String
+Parameter Sets: Id
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -Name
-Name of the CloudPC to end the grace period of
+Enter the name of the Cloud App
 
 ```yaml
 Type: String
@@ -54,33 +74,18 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -All
-{{ Fill All Description }}
+### -InputObject
+Cloud App object from Get-CloudApp
 
 ```yaml
-Type: SwitchParameter
-Parameter Sets: All
+Type: PSObject
+Parameter Sets: InputObject
 Aliases:
 
-Required: False
+Required: True
 Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Force
-Force parameter to end the grace period of all CloudPCs
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
+Default value: None
+Accept pipeline input: True (ByValue)
 Accept wildcard characters: False
 ```
 

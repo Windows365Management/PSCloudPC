@@ -5,39 +5,55 @@ online version:
 schema: 2.0.0
 ---
 
-# Remove-CPCAzureNetworkConnection
+# Disconnect-Windows365
 
 ## SYNOPSIS
-Removes a Cloud PC Azure Network Connection
+Disconnects from Windows 365 and clears the token cache.
 
 ## SYNTAX
 
 ```
-Remove-CPCAzureNetworkConnection [-Name] <String> [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Disconnect-Windows365 [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-The function will remove a Cloud PC Azure Network Connection
+Disconnects from Windows 365 and clears the token cache.
 
 ## EXAMPLES
 
 ### EXAMPLE 1
 ```
-Remove-CPCAzureNetworkConnection -name "Azure Network Connection 01"
+Disconnect-Windows365
 ```
 
 ## PARAMETERS
 
-### -Name
-Enter the name of the Cloud PC Azure Network Connection
+### -WhatIf
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
 
 ```yaml
-Type: String
+Type: SwitchParameter
 Parameter Sets: (All)
-Aliases:
+Aliases: wi
 
-Required: True
-Position: 1
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Confirm
+Prompts you for confirmation before running the cmdlet.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
