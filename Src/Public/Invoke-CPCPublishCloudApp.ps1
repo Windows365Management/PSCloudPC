@@ -14,10 +14,6 @@ function Invoke-CPCPublishCloudApp {
     Invoke-CPCPublishCloudApp -Id "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
     .EXAMPLE
     Invoke-CPCPublishCloudApp -Name "Microsoft Access"
-    .EXAMPLE
-    Get-CloudApp -Name "Access" | Invoke-CPCPublishCloudApp
-    .EXAMPLE
-    Get-CloudApp | Where-Object { $_.appStatus -eq "available" } | Invoke-CPCPublishCloudApp
     #>
     [CmdletBinding(DefaultParameterSetName = 'Id')]
     param (

@@ -1,0 +1,32 @@
+name: regenerateDocs
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "develop" branch
+  push:
+    branches: [ "develop" ]
+  pull_request:
+    branches: [ "develop" ]
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Install platyPS module
+        shell: pwsh
+        run: |
+          Install-Module -Name platyPS -Force
+      - name: Regenerate Docs
+        shell: pwsh
+        run: |
+          Import-Module platyPS -Force
+          Import-Module ./Src/PSCloudPC.psm1 -Force
+          New-MarkdownHelp -Module "PSCloudPC" -OutputFolder ".\Docs" -Force
+      - name: Commit files
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Regenerated Docs"
+          branch: develop

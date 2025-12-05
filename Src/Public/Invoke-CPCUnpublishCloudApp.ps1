@@ -1,10 +1,10 @@
 function Invoke-CPCUnpublishCloudApp {
     <#
     .SYNOPSIS
-    Unpublishes a Cloud App to make it unavailable to users
+    UnPublishes a Cloud App to make it unavailable to users
 
     .DESCRIPTION
-    The function will unpublish a Cloud App to make it unavailable to users
+    The function will unPublishes a Cloud App to make it unavailable to users
 
     .PARAMETER Id
     Enter the id of the Cloud App
@@ -21,11 +21,6 @@ function Invoke-CPCUnpublishCloudApp {
     .EXAMPLE
     Invoke-CPCUnpublishCloudApp -Name "Microsoft Access"
 
-    .EXAMPLE
-    Get-CloudApp -Name "Access" | Invoke-CPCUnpublishCloudApp
-
-    .EXAMPLE
-    Get-CloudApp | Where-Object { $_.appStatus -eq "published" } | Invoke-CPCUnpublishCloudApp
     #>
     [CmdletBinding(DefaultParameterSetName = 'Id')]
     param (
