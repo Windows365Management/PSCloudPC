@@ -38,4 +38,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "Regenerated Docs."
-          repository: 'Windows365Management/PSCloudPC-site'
+          repository: 'PSCloudPC-site'
