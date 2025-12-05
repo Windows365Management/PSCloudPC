@@ -24,7 +24,7 @@ jobs:
         run: |
           Import-Module platyPS -Force
           Import-Module ./Src/PSCloudPC.psm1 -Force
-          New-MarkdownHelp -Module "PSCloudPC" -OutputFolder ".\Docs" -Force
+          New-MarkdownHelp -Module "PSCloudPC" -OutputFolder "./Docs" -Force
       - name: Commit files
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
