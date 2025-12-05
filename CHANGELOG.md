@@ -1,6 +1,15 @@
 # Changelog
 This file contains all the changes to this Windows 365 PowerShell module.
 
+## 1.0.16
+### Breaking Changes
+- Rebuild New-CPCProvisioningPolicy
+- Rebuild Set-CPCProvisioningPolicyAssignment
+
+### Changes
+- Add new CMDlets for CloudApps
+- Edited New-CPCProvisioningPolicy
+
 ## 1.0.15
 ###Changes
 - Restructure module repository

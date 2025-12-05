@@ -1,0 +1,27 @@
+name: regenerateDocs
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "develop" branch
+  push:
+    branches: [ "develop" ]
+  pull_request:
+    branches: [ "develop" ]
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Import PSCloudPC module
+        shell: pwsh
+        run: |
+          Import-Module ./Src/PSCloudPC.psm1
+      - name: Install PSPlaty module
+        shell: pwsh
+        run: |
+          Install-Module -Name PSPlaty -Force
+      - name: Publishing module
+        shell: pwsh
+        run: |
+          New-MarkdownHelp -Module "PSCloudPC" -OutputFolder ".\Docs" -Force
