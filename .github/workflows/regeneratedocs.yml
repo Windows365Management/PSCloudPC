@@ -15,16 +15,13 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Import PSCloudPC module
+      - name: Install platyPS module
         shell: pwsh
         run: |
-          Import-Module ./Src/PSCloudPC.psm1
-      - name: Install PlatyPS module
-        shell: pwsh
-        run: |
-          Install-Module -Name PlatyPS -Force
+          Install-Module -Name platyPS -Force
       - name: Regenerate Docs
         shell: pwsh
         run: |
-          Import-Module PlatyPS -Force
+          Import-Module platyPS -Force
+          Import-Module ./Src/PSCloudPC.psm1 -Force
           New-MarkdownHelp -Module "PSCloudPC" -OutputFolder ".\Docs" -Force
