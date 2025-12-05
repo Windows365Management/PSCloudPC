@@ -24,15 +24,7 @@ jobs:
         shell: pwsh
         run: |
           Import-Module platyPS -Force
-          Import-Module ./PSCloudPC/Src/PSCloudPC.psm1 -Force
-          New-MarkdownHelp -Module "PSCloudPC" -OutputFolder "./PSCloudPC/Docs" -Force
+          Import-Module ./Src/PSCloudPC.psm1 -Force
+          New-MarkdownHelp -Module "PSCloudPC" -OutputFolder "./Docs" -Force
       - name: Commit files
         uses: stefanzweifel/git-auto-commit-action@v4
-      # - name: Pull request
-      #   uses: peter-evans/create-pull-request@v4
-      #   with:
-      #     commit-message: "Regenerated Docs."
-      #     branch: 'regeneratedocs'
-      #     title: "Regenerated Docs"
-      #     body: "This PR was created automatically to regenerate the documentation."
-      #     base: 'main'
