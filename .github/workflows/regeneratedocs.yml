@@ -15,14 +15,6 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-        with:
-          repository: 'Windows365Management/PSCloudPC'
-          path: 'PSCloudPC'
-      - name: Check out site repository
-        uses: actions/checkout@v2
-        with:
-          repository: 'Windows365Management/PSCloudPC-site'
-          path: 'PSCloudPC-site'
       - name: Install platyPS module
         shell: pwsh
         run: |
@@ -36,8 +28,6 @@ jobs:
           New-MarkdownHelp -Module "PSCloudPC" -OutputFolder "./PSCloudPC/Docs" -Force
       - name: Commit files
         uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          repository: 'PSCloudPC'
       # - name: Pull request
       #   uses: peter-evans/create-pull-request@v4
       #   with:
