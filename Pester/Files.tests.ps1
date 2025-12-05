@@ -53,7 +53,7 @@ Describe "Analyze code" -ForEach @(
         $comments = (Select-String -Path $file -Pattern '#')
         ForEach ($comment in $comments) {
             $correct = ForEach ($use in $correctUse) {
-                ($comment.line.trim() -match $use)
+                ($comment.line.trim() -like $use)
             }
             if ($correct -notcontains $true) {
                 $correctComment = $false

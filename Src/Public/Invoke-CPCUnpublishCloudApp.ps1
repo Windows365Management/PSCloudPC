@@ -1,4 +1,4 @@
-function Invoke-CPCUnPublishCloudApp {
+function Invoke-CPCUnpublishCloudApp {
     <#
     .SYNOPSIS
     UnPublishes a Cloud App to make it unavailable to users
@@ -16,10 +16,10 @@ function Invoke-CPCUnPublishCloudApp {
     Cloud App object from Get-CloudApp
 
     .EXAMPLE
-    Invoke-CPCUnPublishCloudApp -Id "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
+    Invoke-CPCUnpublishCloudApp -Id "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
 
     .EXAMPLE
-    Invoke-CPCUnPublishCloudApp -Name "Microsoft Access"
+    Invoke-CPCUnpublishCloudApp -Name "Microsoft Access"
 
     #>
     [CmdletBinding(DefaultParameterSetName = 'Id')]
