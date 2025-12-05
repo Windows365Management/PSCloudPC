@@ -39,3 +39,13 @@ jobs:
         with:
           commit_message: "Regenerated Docs."
           repository: 'PSCloudPC-site'
+          branch: 'regeneratedocs'
+      - name: Pull request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Regenerated Docs."
+          branch: 'regeneratedocs'
+          title: "Regenerated Docs"
+          body: "This PR was created automatically to regenerate the documentation."
+          base: 'main'
