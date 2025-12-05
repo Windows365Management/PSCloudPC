@@ -23,6 +23,7 @@ jobs:
         shell: pwsh
         run: |
           Install-Module -Name platyPS -Force
+          ls
       - name: Regenerate Docs
         shell: pwsh
         run: |
