@@ -99,7 +99,7 @@ function New-CPCProvisioningPolicy {
 
         [Parameter(Mandatory = $false)]
         [ValidateSet('cloudApp', 'cloudPc')]
-        [string]$userExperience = "cloudPc",
+        [string]$UserExperience = "cloudPc",
 
         [parameter(Mandatory = $false)]
         [string]$Language = 'en-US'
