@@ -32,5 +32,5 @@ jobs:
       - name: Commit files
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "Regenerated Docs"
+          commit_message: "Regenerated Docs."
           repository: 'PSCloudPC-site'
