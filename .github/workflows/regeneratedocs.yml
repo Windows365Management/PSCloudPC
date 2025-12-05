@@ -26,4 +26,5 @@ jobs:
       - name: Publishing module
         shell: pwsh
         run: |
+          Import-Module Microsoft.PowerShell.PlatyPS -Force
           New-MarkdownHelp -Module "PSCloudPC" -OutputFolder ".\Docs" -Force
