@@ -19,10 +19,10 @@ jobs:
         shell: pwsh
         run: |
           Import-Module ./Src/PSCloudPC.psm1
-      - name: Install PSPlaty module
+      - name: Install Microsoft.PowerShell.PlatyPS module
         shell: pwsh
         run: |
-          Install-Module -Name PSPlaty -Force
+          Install-Module -Name Microsoft.PowerShell.PlatyPS -Force
       - name: Publishing module
         shell: pwsh
         run: |
