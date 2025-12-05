@@ -15,10 +15,14 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+        with:
+          repository: 'Windows365Management/PSCloudPC'
+          path: 'PSCloudPC'
       - name: Check out site repository
         uses: actions/checkout@v2
         with:
           repository: 'Windows365Management/PSCloudPC-site'
+          path: 'PSCloudPC-site'
       - name: Install platyPS module
         shell: pwsh
         run: |
