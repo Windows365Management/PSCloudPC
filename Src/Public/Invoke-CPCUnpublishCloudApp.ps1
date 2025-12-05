@@ -21,11 +21,6 @@ function Invoke-CPCUnpublishCloudApp {
     .EXAMPLE
     Invoke-CPCUnpublishCloudApp -Name "Microsoft Access"
 
-    .EXAMPLE
-    Get-CloudApp -Name "Access" | Invoke-CPCUnpublishCloudApp
-
-    .EXAMPLE
-    Get-CloudApp | Where-Object { $_.appStatus -eq "published" } | Invoke-CPCUnpublishCloudApp
     #>
     [CmdletBinding(DefaultParameterSetName = 'Id')]
     param (
