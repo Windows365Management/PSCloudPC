@@ -19,12 +19,14 @@ jobs:
         shell: pwsh
         run: |
           Install-Module -Name platyPS -Force
-          ls
       - name: Regenerate Docs
         shell: pwsh
         run: |
           Import-Module platyPS -Force
           Import-Module ./Src/PSCloudPC.psm1 -Force
-          New-MarkdownHelp -Module "PSCloudPC" -OutputFolder "./Docs" -Force
+          New-MarkdownHelp -Module "PSCloudPC" -OutputFolder ".\Docs" -Force
       - name: Commit files
         uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Regenerated Docs"
+          branch: develop
