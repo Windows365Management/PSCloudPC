@@ -1,10 +1,10 @@
 function Invoke-CPCUnPublishCloudApp {
     <#
     .SYNOPSIS
-    Unpublishes a Cloud App to make it unavailable to users
+    UnPublishes a Cloud App to make it unavailable to users
 
     .DESCRIPTION
-    The function will unpublish a Cloud App to make it unavailable to users
+    The function will unPublishes a Cloud App to make it unavailable to users
 
     .PARAMETER Id
     Enter the id of the Cloud App
