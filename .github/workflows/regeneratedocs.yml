@@ -40,10 +40,10 @@ jobs:
           commit_message: "Regenerated Docs."
           repository: 'PSCloudPC-site'
           branch: 'regeneratedocs'
+          create_branch: true
       - name: Pull request
         uses: peter-evans/create-pull-request@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Regenerated Docs."
           branch: 'regeneratedocs'
           title: "Regenerated Docs"
