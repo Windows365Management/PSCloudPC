@@ -19,9 +19,6 @@ function Invoke-CPCResize {
         Invoke-CPCResize -Name "CloudPC01" -ServicePlanId "30d0e128-de93-41dc-89ec-33d84bb662a0"
         .EXAMPLE
         Invoke-CPCResize -Name "CloudPC01" -ServicePlanName "Windows 365 Enterprise 4 vCPU, 16 GB, 256 GB"
-        .EXAMPLE
-        Get-CPCServicePlan | Where-Object { $_.vCpuCount -eq 4 }
-        Invoke-CPCResize -Name "CloudPC01" -ServicePlanId "<id from above>"
     #>
     [CmdletBinding(DefaultParameterSetName = 'ById', SupportsShouldProcess = $true)]
     param (
