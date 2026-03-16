@@ -154,11 +154,6 @@ function Connect-Windows365 {
 
                 Write-Verbose "Using Token Authentication"
 
-                if (-not $Token) {
-                    Write-Error "Token is required for Token Authentication"
-                    return
-                }
-
                 $script:Authtime = [System.DateTime]::UtcNow
                 $script:Authtoken = $Token
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }

@@ -80,26 +80,3 @@ jobs:
           draft: false
           prerelease: false
           body: ${{ steps.build_release_changelog.outputs.changelog }}
-  publish:
-    name: Publish
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2.4.0
-        with:
-          repository: ''
-          path: 'drop'
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PSCloudPC
-          path: drop
-      - name: Download a Build Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: PSCloudPC
-      - name: Publishing module
-        shell: pwsh
-        run: |
-          ./Compiler/PublishPSGallery.ps1 -PS_GALLERY_KEY ${{ secrets.PS_GALLERY_KEY }}
