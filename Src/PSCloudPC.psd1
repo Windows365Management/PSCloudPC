@@ -101,6 +101,7 @@
     'Remove-CPCCustomImage',
     'Remove-CPCProvisioningPolicy',
     'Remove-CPCUserSettingsPolicy',
+    'Set-CPCCrossRegionDisasterRecovery',
     'Set-CPCProvisioningPolicyAssignment',
     'Set-CPCUserSettingsPolicyAssignment',
     'Update-CPCOrganizationSetting',
