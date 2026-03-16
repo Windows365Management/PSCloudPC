@@ -69,7 +69,44 @@
   # NestedModules = @()
 
   # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-  FunctionsToExport = @('*')
+  FunctionsToExport = @(
+    'Connect-Windows365',
+    'Disconnect-Windows365',
+    'Export-CPCProvisioningPolicy',
+    'Get-CloudPC',
+    'Get-CloudApp',
+    'Get-CPCAzureNetworkConnection',
+    'Get-CPCCustomImage',
+    'Get-CPCGalleryImage',
+    'Get-CPCOrganizationSetting',
+    'Get-CPCProvisioningPolicy',
+    'Get-CPCRestorePoint',
+    'Get-CPCServicePlan',
+    'Get-CPCSupportedRegion',
+    'Get-CPCUserSettingsPolicy',
+    'Import-CPCProvisioningPolicy',
+    'Invoke-CPCEndGracePeriod',
+    'Invoke-CPCPublishCloudApp',
+    'Invoke-CPCReboot',
+    'Invoke-CPCRename',
+    'Invoke-CPCReprovision',
+    'Invoke-CPCResize',
+    'Invoke-CPCRestore',
+    'Invoke-CPCUnpublishCloudApp',
+    'New-CPCAzureNetworkConnection',
+    'New-CPCCustomImage',
+    'New-CPCProvisioningPolicy',
+    'New-CPCUserSettingsPolicy',
+    'Remove-CPCAzureNetworkConnection',
+    'Remove-CPCCustomImage',
+    'Remove-CPCProvisioningPolicy',
+    'Remove-CPCUserSettingsPolicy',
+    'Set-CPCProvisioningPolicyAssignment',
+    'Set-CPCUserSettingsPolicyAssignment',
+    'Update-CPCOrganizationSetting',
+    'Update-CPCUserSettingsPolicy',
+    'Update-CPCProvisioningPolicy'
+  )
 
   # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
   CmdletsToExport   = @()
