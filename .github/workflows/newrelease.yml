@@ -1,0 +1,35 @@
+# This is a basic workflow to help you get started with Actions
+
+name: releaseToPSGallery
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "develop" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          repository: ''
+          path: 'drop'
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PSCloudPC
+          path: src
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: PSCloudPC
+      - name: Publishing module
+        shell: pwsh
+        run: |
+          ./Publish/PublishPSGallery.ps1 -PS_GALLERY_KEY ${{ secrets.PS_GALLERY_KEY }}
