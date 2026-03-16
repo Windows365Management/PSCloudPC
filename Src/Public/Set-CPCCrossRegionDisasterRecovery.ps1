@@ -80,38 +80,52 @@ function Set-CPCCrossRegionDisasterRecovery {
     }
 
     Process {
-        $crossRegionDrSetting = @{
-            disasterRecoveryType                   = $DisasterRecoveryType
-            maintainCrossRegionRestorePointEnabled = $MaintainCrossRegionRestorePointEnabled
-            userInitiatedDisasterRecoveryAllowed   = $UserInitiatedDisasterRecoveryAllowed
-        }
-
-        If ($PSBoundParameters.ContainsKey('RegionName') -or $PSBoundParameters.ContainsKey('RegionGroup')) {
-            $networkSetting = @{}
-            If ($RegionName) { $networkSetting.regionName = $RegionName }
-            If ($RegionGroup) { $networkSetting.regionGroup = $RegionGroup }
-            $crossRegionDrSetting.disasterRecoveryNetworkSetting = $networkSetting
-        }
-        ElseIf ($DisasterRecoveryType -ne 'notConfigured') {
-            Write-Warning "RegionName and RegionGroup are recommended when DisasterRecoveryType is '$DisasterRecoveryType'."
-        }
-
-        $params = @{
+        $body = @{
             displayName                        = $Policy.displayName
-            crossRegionDisasterRecoverySetting = $crossRegionDrSetting
-        } | ConvertTo-Json -Depth 10
-
-        Write-Verbose "Request body: $params"
-
-        If ($PSCmdlet.ShouldProcess($Name, 'Set Cross-Region Disaster Recovery')) {
-            Write-Verbose "Configuring cross-region disaster recovery for User Settings Policy: $Name"
-            try {
-                Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method PATCH -ContentType "application/json" -Body $params
-                Write-Verbose "Successfully configured cross-region disaster recovery for '$Name'"
+            localAdminEnabled                  = $Policy.localAdminEnabled
+            selfServiceEnabled                 = $Policy.selfServiceEnabled
+            resetEnabled                       = $Policy.resetEnabled
+            restorePointSetting                = @{
+                userRestoreEnabled = $Policy.restorePointSetting.userRestoreEnabled
+                frequencyInHours   = $Policy.restorePointSetting.frequencyInHours
             }
-            catch {
-                Throw $_.Exception.Message
+            notificationSetting                = @{
+                restartPromptsDisabled = $Policy.notificationSetting.restartPromptsDisabled
             }
+            crossRegionDisasterRecoverySetting = @{}
+        }
+
+        If ($DisasterRecoveryType -eq 'crossRegion') {
+            $body.crossRegionDisasterRecoverySetting = @{
+                crossRegionDisasterRecoveryEnabled       = $true
+                disasterRecoveryType                     = $DisasterRecoveryType
+                maintainCrossRegionRestorePointEnabled   = $MaintainCrossRegionRestorePointEnabled
+                userInitiatedDisasterRecoveryAllowed     = $false
+                disasterRecoveryNetworkSetting = @{
+                    regionName  = $RegionName
+                    regionGroup = $RegionGroup
+                }
+            }
+        }
+
+        If ($DisasterRecoveryType -eq 'premium') {
+            $body.crossRegionDisasterRecoverySetting = @{
+                crossRegionDisasterRecoveryEnabled       = $false
+                disasterRecoveryType                     = $DisasterRecoveryType
+                maintainCrossRegionRestorePointEnabled   = $MaintainCrossRegionRestorePointEnabled
+                userInitiatedDisasterRecoveryAllowed     = $UserInitiatedDisasterRecoveryAllowed
+                disasterRecoveryNetworkSetting = @{
+                    regionName  = $RegionName
+                    regionGroup = $RegionGroup
+                }
+            }
+        }
+
+        $bodyJson = $body | ConvertTo-Json -Depth 10
+        Write-Verbose "Request Body: $bodyJson"
+
+        If ($PSCmdlet.ShouldProcess($Name, "Set Cross-Region Disaster Recovery")) {
+            Invoke-RestMethod -Uri $url -Headers $script:AuthHeader -Method PATCH -Body $bodyJson -ContentType "application/json"
         }
     }
 }
