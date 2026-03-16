@@ -45,14 +45,15 @@ function Get-CPCUserSettingsPolicy {
         $resultnew.value | ForEach-Object {
     
             $Info = [PSCustomObject]@{
-                id                   = $_.id
-                displayName          = $_.displayName
-                selfServiceEnabled   = $_.selfServiceEnabled
-                localAdminEnabled    = $_.localAdminEnabled
-                resetEnabled         = $_.resetEnabled
-                createdDateTime      = $_.createdDateTime
-                lastModifiedDateTime = $_.lastModifiedDateTime
-                restorePointSetting  = $_.restorePointSetting
+                id                              = $_.id
+                displayName                     = $_.displayName
+                selfServiceEnabled              = $_.selfServiceEnabled
+                localAdminEnabled               = $_.localAdminEnabled
+                resetEnabled                    = $_.resetEnabled
+                createdDateTime                 = $_.createdDateTime
+                lastModifiedDateTime            = $_.lastModifiedDateTime
+                restorePointSetting             = $_.restorePointSetting
+                crossRegionDisasterRecoverySetting = $_.crossRegionDisasterRecoverySetting
             }
             $returnResults += $Info
         }
