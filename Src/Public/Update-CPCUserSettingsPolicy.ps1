@@ -3,28 +3,49 @@ function Update-CPCUserSettingsPolicy {
     .SYNOPSIS
     Updates a User Settings Policy in the Intune Cloud PC Service
     .DESCRIPTION
-    Updates a User Settings Policy in the Intune Cloud PC Service
+    Updates a User Settings Policy in the Intune Cloud PC Service. Supports updating
+    LocalAdminEnabled, ResetEnabled, NotificationSetting, and restore point configuration.
     .PARAMETER Name
     Name of the User Settings Policy to update
     .PARAMETER LocalAdminEnabled
-    Enable or disable local admin
+    Enable or disable local admin on the Cloud PC. When $true the end user is an admin of the Cloud PC.
     .PARAMETER ResetEnabled
-    Allow targeted users to reprovision their Cloud PC from within the Windows 365 app and web app
+    Allow targeted users to reprovision their Cloud PC from within the Windows 365 app and web app.
     .PARAMETER UserRestoreEnabled
-    Enable or disable user restore
+    Enable or disable user-initiated restore from the Cloud PC restore point.
     .PARAMETER UserRestoreFrequency
-    Frequency of user restore points (4, 6, 12, 16, 24 hours)
+    Frequency (in hours) at which restore point snapshots are captured. Valid values: 4, 6, 12, 16, 24.
+    .PARAMETER DisableRestartPrompts
+    When $true, disables the restart prompts shown to the user on the Cloud PC (notificationSetting).
     .EXAMPLE
-    Update-CPCUserSettingsPolicy -Name "Your Settings Policy" -LocalAdminEnabled $true -UserRestoreEnabled $false -UserRestoreFrequency 6
+    Update-CPCUserSettingsPolicy -Name "Your Settings Policy" -LocalAdminEnabled $true
+    .EXAMPLE
+    Update-CPCUserSettingsPolicy -Name "Your Settings Policy" -LocalAdminEnabled $false -ResetEnabled $true -UserRestoreEnabled $true -UserRestoreFrequency 6
+    .EXAMPLE
+    Update-CPCUserSettingsPolicy -Name "Your Settings Policy" -DisableRestartPrompts $true
+    .NOTES
+    API reference: https://learn.microsoft.com/en-us/graph/api/cloudpcusersetting-update
     #>
-    [CmdletBinding(DefaultParameterSetName = 'Name')]
+    [CmdletBinding(DefaultParameterSetName = 'Name', SupportsShouldProcess = $true)]
     param (
         [parameter(Mandatory = $true, ParameterSetName = 'Name')]
         [string]$Name,
-        [Parameter(mandatory = $false)][bool]$LocalAdminEnabled,
-        [Parameter(mandatory = $false)][bool]$ResetEnabled,
-        [Parameter(mandatory = $false)][bool]$UserRestoreEnabled,
-        [ValidateSet('4', '6', '12', '16', '24')]$UserRestoreFrequency
+
+        [Parameter(Mandatory = $false)]
+        [bool]$LocalAdminEnabled,
+
+        [Parameter(Mandatory = $false)]
+        [bool]$ResetEnabled,
+
+        [Parameter(Mandatory = $false)]
+        [bool]$UserRestoreEnabled,
+
+        [ValidateSet('4', '6', '12', '16', '24')]
+        [Parameter(Mandatory = $false)]
+        [string]$UserRestoreFrequency,
+
+        [Parameter(Mandatory = $false)]
+        [bool]$DisableRestartPrompts
     )
 
     Begin {
@@ -40,58 +61,56 @@ function Update-CPCUserSettingsPolicy {
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/userSettings/$($Policy.id)"
 
         Write-Verbose "Update url: $($url)"
-
     }
 
     Process {
-        
+
         $params = @{
-            displayName = $($Policy.displayName)
+            displayName = $Policy.displayName
         }
 
-        If ($psboundparameters.ContainsKey("EnableSingleSignOn")){
-            $params.Add("LocalAdminEnabled", "$LocalAdminEnabled")
+        If ($PSBoundParameters.ContainsKey('LocalAdminEnabled')) {
+            $params['localAdminEnabled'] = $LocalAdminEnabled
         }
 
-        If ($psboundparameters.ContainsKey("SelfServiceEnabled")){
-            $params.Add("SelfServiceEnabled", $SelfServiceEnabled )
+        If ($PSBoundParameters.ContainsKey('ResetEnabled')) {
+            $params['resetEnabled'] = $ResetEnabled
         }
 
-        If ($psboundparameters.ContainsKey("ResetEnabled")){
-            $params.Add("resetEnabled", $resetEnabled )
-        }
+        If ($PSBoundParameters.ContainsKey('UserRestoreEnabled') -or $PSBoundParameters.ContainsKey('UserRestoreFrequency')) {
+            $restorePointSetting = @{}
 
-        If ($psboundparameters.ContainsKey("UserRestoreEnabled")){
-            If ($params.RestorePointSetting){
-                $params.RestorePointSetting += @{"UserRestoreEnabled" = "$UserRestoreEnabled"}
+            If ($PSBoundParameters.ContainsKey('UserRestoreEnabled')) {
+                $restorePointSetting['userRestoreEnabled'] = $UserRestoreEnabled
             }
-            else {  
-                $params += @{RestorePointSetting = @{"UserRestoreEnabled" = "$UserRestoreEnabled"}}
+
+            If ($PSBoundParameters.ContainsKey('UserRestoreFrequency')) {
+                $restorePointSetting['frequencyInHours'] = [int]$UserRestoreFrequency
             }
+
+            $params['restorePointSetting'] = $restorePointSetting
         }
 
-        If ($UserRestoreFrequency) {
-            If ($params.RestorePointSetting){
-                $params.RestorePointSetting += @{"frequencyInHours" = $UserRestoreFrequency}
-            }
-            else {  
-                $params += @{RestorePointSetting = @{"frequencyInHours" = $UserRestoreFrequency}}
+        If ($PSBoundParameters.ContainsKey('DisableRestartPrompts')) {
+            $params['notificationSetting'] = @{
+                restartPromptsDisabled = $DisableRestartPrompts
             }
         }
-        
-        Write-Verbose "Params: $($params)"
+
+        Write-Verbose "Params: $($params | ConvertTo-Json -Depth 10)"
 
         $body = $params | ConvertTo-Json -Depth 10
 
-        Write-Verbose "Body: $($body)"
-
-        try {
-            Write-Verbose "Updating User Settings Policy $($Name)"
-            $Result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
-            return $Result
-        }
-        catch {
-            Throw $_.Exception.Message
+        If ($PSCmdlet.ShouldProcess($Name, 'Update Cloud PC User Settings Policy')) {
+            try {
+                Write-Verbose "Updating User Settings Policy $($Name)"
+                $Result = Invoke-WebRequest -Uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
+                Write-Verbose "Result: $($Result.Content)"
+                return $Result
+            }
+            catch {
+                Throw $_.Exception.Message
+            }
         }
     }
 }
