@@ -21,4 +21,5 @@ jobs:
       - name: Publishing module
         shell: pwsh
         run: |
+          Get-ChildItem
           ./Windows365Management/PSCloudPC/Publish/PublishPSGallery.ps1 -PS_GALLERY_KEY ${{ secrets.PS_GALLERY_KEY }}
