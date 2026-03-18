@@ -19,6 +19,8 @@ if (-not (Test-Path $ModulePath)) {
     throw "Module path not found: $ModulePath"
 }
 
+Test the Manifest: Run Test-ModuleManifest -Path ./Src/PSCloudPC.psd1
+
 # Publish the module
 Publish-Module -Path $ModulePath -NuGetApiKey $PS_GALLERY_KEY -ErrorAction Stop
 
