@@ -1,4 +1,4 @@
-$modulePath = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "Src"
+$modulePath = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "PSCloudPc"
 $psFiles = Get-ChildItem -Path (Join-Path -Path $modulePath -ChildPath "Public")
 
 Describe "Analyze code" -ForEach @(
