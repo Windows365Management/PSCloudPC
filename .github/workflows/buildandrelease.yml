@@ -11,22 +11,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Get the version
         id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       - name: Get previous tag version
         id: get_previous_version
-        run: echo ::set-output name=PREVIOUSVERSION::git describe --tags $(git rev-list --tags --max-count=1)
+        run: echo "PREVIOUSVERSION=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
       - name: Print the version
         run: |
-            echo "Tag previous tag name is ${{ steps.get_version.outputs.VERSION }}"
-            echo "Tag name is ${{ steps.get_previous_version.outputs.PREVIOUSVERSION }}"
+            echo "Current tag version is ${{ steps.get_version.outputs.VERSION }}"
+            echo "Previous tag version is ${{ steps.get_previous_version.outputs.PREVIOUSVERSION }}"
       - name: "Build release changelog"
         id: build_release_changelog
         uses: mikepenz/release-changelog-builder-action@develop
         with:
-            fromTag: ${{ steps.get_version.outputs.PREVIOUSVERSION }}
+            fromTag: ${{ steps.get_previous_version.outputs.PREVIOUSVERSION }}
             toTag: ${{ steps.get_version.outputs.VERSION }}
             configurationJson: |
                 {
@@ -71,12 +73,24 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
-          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          name: Release ${{ steps.get_version.outputs.VERSION }}
           draft: false
           prerelease: false
           body: ${{ steps.build_release_changelog.outputs.changelog }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: Publish to PowerShell Gallery
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Publishing module to PowerShell Gallery
+        shell: pwsh
+        run: |
+          ./Publish/PublishPSGallery.ps1 -PS_GALLERY_KEY ${{ secrets.PS_GALLERY_KEY }}
