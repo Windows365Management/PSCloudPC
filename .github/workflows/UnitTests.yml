@@ -35,7 +35,7 @@ jobs:
       - name: Importing PSCloudPC module
         shell: pwsh
         run: |
-          Import-Module ./Src/PSCloudPC.psd1 -Force -ErrorAction Stop
+          Import-Module ./PSCloudPc/PSCloudPC.psd1 -Force -ErrorAction Stop
       - name: PSSA check
         shell: pwsh
         run: |
