@@ -8,7 +8,7 @@ param (
 Install-Module -Name MSAL.PS -Force -Scope CurrentUser
 
 # Set project name
-$env:ProjectName = "PSCloudPC"
+$env:ProjectName = "Src"
 
 # Build the correct module path relative to the Publish directory
 # When running from the repo root, the module manifest is at ./Src/PSCloudPC.psd1
