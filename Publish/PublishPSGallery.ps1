@@ -8,18 +8,21 @@ param (
 Install-Module -Name MSAL.PS -Force -Scope CurrentUser
 
 # Set project name
-$env:ProjectName = "PSCloudPC"
+$env:ProjectName = "PSCloudPc"
 
 # Build the correct module path relative to the Publish directory
-# When running from the repo root, the module manifest is at ./Src/PSCloudPC.psd1
-$ModulePath = Join-Path (Split-Path -Parent $PSScriptRoot) -ChildPath "Src"
+# When running from the repo root, the module manifest is at ./PSCloudPc/PSCloudPC.psd1
+$ModulePath = Join-Path (Split-Path -Parent $PSScriptRoot) -ChildPath "PSCloudPc"
 
 # Verify the module path exists
 if (-not (Test-Path $ModulePath)) {
     throw "Module path not found: $ModulePath"
 }
 
+#Test manifest
+Test-ModuleManifest -Path (Join-Path -Path $ModulePath -ChildPath "PSCloudPC.psd1")
+
 # Publish the module
-Publish-Module -Path $ModulePath -NuGetApiKey $PS_GALLERY_KEY -ErrorAction Stop
+Publish-Module -Name (Join-Path -Path $ModulePath -ChildPath "PSCloudPC.psd1") -NuGetApiKey $PS_GALLERY_KEY -ErrorAction Stop
 
 Write-Host "Module $env:ProjectName published successfully to PowerShell Gallery"
