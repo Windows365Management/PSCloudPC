@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param (
     [Parameter()]
-    [securestring]$PS_GALLERY_KEY
+    [string]$PS_GALLERY_KEY
 )
 
 # Install required module
