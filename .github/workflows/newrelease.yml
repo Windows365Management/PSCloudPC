@@ -1,5 +1,3 @@
-# This is a basic workflow to help you get started with Actions
-
 name: releaseToPSGallery
 
 # Controls when the workflow will run
@@ -23,4 +21,5 @@ jobs:
       - name: Publishing module
         shell: pwsh
         run: |
-          Publish/PublishPSGallery.ps1 -PS_GALLERY_KEY ${{ secrets.PS_GALLERY_KEY }}
+          Write-Host "$PSScriptRoot"
+          $PSScriptRoot/Publish/PublishPSGallery.ps1 -PS_GALLERY_KEY ${{ secrets.PS_GALLERY_KEY }}
