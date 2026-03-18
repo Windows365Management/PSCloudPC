@@ -20,15 +20,6 @@ jobs:
         with:
           repository: ''
           path: 'drop'
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PSCloudPC
-          path: src
-      - name: Download a Build Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: PSCloudPC
       - name: Publishing module
         shell: pwsh
         run: |
