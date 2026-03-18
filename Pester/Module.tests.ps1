@@ -2,7 +2,7 @@ $module = 'PSCloudPC'
 Describe "$module Global module tests" {
     Context 'Module Setup' {
         BeforeAll {
-            $modulePath = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "Src"
+            $modulePath = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "PSCloudPc"
             $binaryFile = "PSCloudPC.psm1"
             $manifestFile = "PSCloudPC.psd1"
             $moduleContent = Import-PowerShellDataFile (Join-Path -Path $modulePath -ChildPath $manifestFile)

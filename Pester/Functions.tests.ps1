@@ -1,7 +1,7 @@
-$modulePath = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "Src"
+$modulePath = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "PSCloudPc"
 $moduleFunctions = (Import-PowerShellDataFile (Join-Path -Path $modulePath -ChildPath "PSCloudPC.psd1")).FunctionsToExport
 BeforeAll {
-    $modulePath = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "Src"
+    $modulePath = Join-Path -Path (Join-Path ".././" -ChildPath "PSCloudPC") -ChildPath "PSCloudPc"
     Write-Host $modulePath
     Write-Host "In before $modulePath"
     (Join-Path -Path $modulePath -ChildPath "Public")
