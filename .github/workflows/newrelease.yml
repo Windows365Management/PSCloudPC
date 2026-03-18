@@ -23,4 +23,4 @@ jobs:
       - name: Publishing module
         shell: pwsh
         run: |
-          ./Publish/PublishPSGallery.ps1 -PS_GALLERY_KEY ${{ secrets.PS_GALLERY_KEY }}
+          Publish/PublishPSGallery.ps1 -PS_GALLERY_KEY ${{ secrets.PS_GALLERY_KEY }}
