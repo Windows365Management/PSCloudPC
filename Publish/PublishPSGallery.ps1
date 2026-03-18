@@ -23,6 +23,6 @@ if (-not (Test-Path $ModulePath)) {
 Test-ModuleManifest -Path (Join-Path -Path $ModulePath -ChildPath "PSCloudPC.psd1")
 
 # Publish the module
-Publish-Module -Name $ModulePath -NuGetApiKey $PS_GALLERY_KEY -ErrorAction Stop
+Publish-Module -Name (Join-Path -Path $ModulePath -ChildPath "PSCloudPC.psd1") -NuGetApiKey $PS_GALLERY_KEY -ErrorAction Stop
 
 Write-Host "Module $env:ProjectName published successfully to PowerShell Gallery"
