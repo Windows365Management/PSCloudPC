@@ -4,11 +4,15 @@ function Update-CPCUserSettingsPolicy {
     Updates a User Settings Policy in the Intune Cloud PC Service
     .DESCRIPTION
     Updates a User Settings Policy in the Intune Cloud PC Service. Supports updating
-    LocalAdminEnabled, ResetEnabled, NotificationSetting, and restore point configuration.
+    LocalAdminEnabled, SelfServiceEnabled, ResetEnabled, NotificationSetting, and restore
+    point configuration.
     .PARAMETER Name
     Name of the User Settings Policy to update
     .PARAMETER LocalAdminEnabled
     Enable or disable local admin on the Cloud PC. When $true the end user is an admin of the Cloud PC.
+    .PARAMETER SelfServiceEnabled
+    Enable or disable self-service for the Cloud PC user. When $true, users can perform self-service
+    actions such as upgrading their Cloud PC from within the Windows 365 app.
     .PARAMETER ResetEnabled
     Allow targeted users to reprovision their Cloud PC from within the Windows 365 app and web app.
     .PARAMETER UserRestoreEnabled
@@ -20,7 +24,11 @@ function Update-CPCUserSettingsPolicy {
     .EXAMPLE
     Update-CPCUserSettingsPolicy -Name "Your Settings Policy" -LocalAdminEnabled $true
     .EXAMPLE
+    Update-CPCUserSettingsPolicy -Name "Your Settings Policy" -SelfServiceEnabled $true
+    .EXAMPLE
     Update-CPCUserSettingsPolicy -Name "Your Settings Policy" -LocalAdminEnabled $false -ResetEnabled $true -UserRestoreEnabled $true -UserRestoreFrequency 6
+    .EXAMPLE
+    Update-CPCUserSettingsPolicy -Name "Your Settings Policy" -SelfServiceEnabled $true -ResetEnabled $true
     .EXAMPLE
     Update-CPCUserSettingsPolicy -Name "Your Settings Policy" -DisableRestartPrompts $true
     .NOTES
@@ -33,6 +41,9 @@ function Update-CPCUserSettingsPolicy {
 
         [Parameter(Mandatory = $false)]
         [bool]$LocalAdminEnabled,
+
+        [Parameter(Mandatory = $false)]
+        [bool]$SelfServiceEnabled,
 
         [Parameter(Mandatory = $false)]
         [bool]$ResetEnabled,
@@ -71,6 +82,10 @@ function Update-CPCUserSettingsPolicy {
 
         If ($PSBoundParameters.ContainsKey('LocalAdminEnabled')) {
             $params['localAdminEnabled'] = $LocalAdminEnabled
+        }
+
+        If ($PSBoundParameters.ContainsKey('SelfServiceEnabled')) {
+            $params['selfServiceEnabled'] = $SelfServiceEnabled
         }
 
         If ($PSBoundParameters.ContainsKey('ResetEnabled')) {
