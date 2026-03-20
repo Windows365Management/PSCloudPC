@@ -17,12 +17,17 @@ function Update-CPCUserSettingsPolicy {
     Frequency (in hours) at which restore point snapshots are captured. Valid values: 4, 6, 12, 16, 24.
     .PARAMETER DisableRestartPrompts
     When $true, disables the restart prompts shown to the user on the Cloud PC (notificationSetting).
+    .PARAMETER SelfServiceEnabled
+    Allow or prevent targeted users from performing self-service actions (e.g. upgrading their Cloud PC)
+    from within the Windows 365 app. Uses the Graph beta selfServiceEnabled property.
     .EXAMPLE
     Update-CPCUserSettingsPolicy -Name "Your Settings Policy" -LocalAdminEnabled $true
     .EXAMPLE
     Update-CPCUserSettingsPolicy -Name "Your Settings Policy" -LocalAdminEnabled $false -ResetEnabled $true -UserRestoreEnabled $true -UserRestoreFrequency 6
     .EXAMPLE
     Update-CPCUserSettingsPolicy -Name "Your Settings Policy" -DisableRestartPrompts $true
+    .EXAMPLE
+    Update-CPCUserSettingsPolicy -Name "Your Settings Policy" -SelfServiceEnabled $true
     .NOTES
     API reference: https://learn.microsoft.com/en-us/graph/api/cloudpcusersetting-update
     #>
@@ -45,7 +50,10 @@ function Update-CPCUserSettingsPolicy {
         [string]$UserRestoreFrequency,
 
         [Parameter(Mandatory = $false)]
-        [bool]$DisableRestartPrompts
+        [bool]$DisableRestartPrompts,
+
+        [Parameter(Mandatory = $false)]
+        [bool]$SelfServiceEnabled
     )
 
     Begin {
@@ -95,6 +103,10 @@ function Update-CPCUserSettingsPolicy {
             $params['notificationSetting'] = @{
                 restartPromptsDisabled = $DisableRestartPrompts
             }
+        }
+
+        If ($PSBoundParameters.ContainsKey('SelfServiceEnabled')) {
+            $params['selfServiceEnabled'] = $SelfServiceEnabled
         }
 
         Write-Verbose "Params: $($params | ConvertTo-Json -Depth 10)"
