@@ -1,54 +1,88 @@
 function Invoke-CPCRestore {
     <#
     .SYNOPSIS
-    Restore a Cloud PC to a certain point in time with
+    Restore a Cloud PC to a certain point in time.
     .DESCRIPTION
-    The function will restore a Cloud PC to a certain point in time
+    Restore a Cloud PC to a previous state using a snapshot. When -SnapshotId is
+    provided the restore runs non-interactively and is safe to call from automation
+    scripts or pipelines. When -SnapshotId is omitted the user is presented with
+    an interactive Out-GridView selector to choose a restore point (requires a
+    graphical session).
     .PARAMETER Name
-    Enter the Cloud PC display name
+    The display name of the Cloud PC to restore.
+    .PARAMETER SnapshotId
+    The unique identifier of the restore-point snapshot to restore to. Use
+    Get-CPCRestorePoint to obtain snapshot IDs. When this parameter is supplied
+    the function runs non-interactively without opening a GUI selector.
     .EXAMPLE
-    Invoke-CPCRestorePoint -Name "CloudPC01"
+    Invoke-CPCRestore -Name "CloudPC01"
+    # Interactive: opens a restore-point picker GUI.
+    .EXAMPLE
+    $snapshots = Get-CPCRestorePoint -Name "CloudPC01"
+    Invoke-CPCRestore -Name "CloudPC01" -SnapshotId $snapshots[0].id
+    # Non-interactive: restores to the most recent snapshot directly.
+    .NOTES
+    API reference: https://learn.microsoft.com/en-us/graph/api/cloudpc-restore
+    Required permission: CloudPC.ReadWrite.All
     #>
 
-    [CmdletBinding(DefaultParameterSetName = 'Name')]
+    [CmdletBinding(DefaultParameterSetName = 'Interactive', SupportsShouldProcess = $true)]
     param (
-        [parameter(Mandatory = $false, ParameterSetName = 'Name')]
-        [string]$Name
+        [Parameter(Mandatory = $true)]
+        [string]$Name,
+
+        [Parameter(Mandatory = $false)]
+        [string]$SnapshotId
     )
-    
+
     begin {
         Get-TokenValidity
-        
+
         $CloudPC = Get-CloudPC -name $Name
-        
-        $url = "https://graph.microsoft.com/beta/deviceManagement/managedDevices/$($CloudPC.managedDeviceId)/restoreCloudPc"
-        Write-Verbose "URL: $url"
 
-        $RestorePoints = Get-CPCRestorePoint -name $Name
+        If ($null -eq $CloudPC) {
+            Throw "No Cloud PC found with name '$Name'"
+            return
+        }
 
+        $url = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/restore"
+        Write-Verbose "Restore URL: $url"
+
+        If (-not $PSBoundParameters.ContainsKey('SnapshotId')) {
+            $RestorePoints = Get-CPCRestorePoint -name $Name
+        }
     }
 
     Process {
-        
-        $SelectedRestorePoint = $RestorePoints | Out-GridView -OutputMode Single -Title "Select restore point"
 
-        If($null -eq $SelectedRestorePoint) {
-            Write-Error "No restore point selected"
-            break
+        If ($PSBoundParameters.ContainsKey('SnapshotId')) {
+            $selectedSnapshotId = $SnapshotId
+            Write-Verbose "Using provided SnapshotId: $selectedSnapshotId"
         }
+        Else {
+            $SelectedRestorePoint = $RestorePoints | Out-GridView -OutputMode Single -Title "Select restore point for '$Name'"
 
-        Write-Verbose "Selected restore point: $($SelectedRestorePoint.id)"
+            If ($null -eq $SelectedRestorePoint) {
+                Write-Error "No restore point selected"
+                return
+            }
+
+            $selectedSnapshotId = $SelectedRestorePoint.id
+            Write-Verbose "Selected restore point: $selectedSnapshotId"
+        }
 
         $params = @{
-            CloudPcSnapshotId = $($SelectedRestorePoint.id)
+            cloudPcSnapshotId = $selectedSnapshotId
         } | ConvertTo-Json -Depth 10
 
-        try {
-            Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $params
+        If ($PSCmdlet.ShouldProcess($Name, "Restore Cloud PC to snapshot '$selectedSnapshotId'")) {
+            try {
+                Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $params
+                Write-Verbose "Restore initiated for Cloud PC '$Name'"
+            }
+            catch {
+                Throw $_.Exception.Message
+            }
         }
-        catch {
-            Throw $_.Exception.Message
-        }
-    
     }
 }
