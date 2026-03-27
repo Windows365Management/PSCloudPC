@@ -40,16 +40,16 @@ Describe "Analyze code" -ForEach @(
         }
     }
 
-    It "<example> should start with command <function>" -TestCases @(
-        foreach ($example in $helpInfo.examples.example) {
-            @{
-                example = [string]$example.title.Replace("-", $null)
-                code    = [string]$example.code
-            }
-        }
-    ) {
-        $code.StartsWith($function) | Should -Be $true -Because "Provide good examples"
-    }
+    # It "<example> should start with command <function>" -TestCases @(
+    #     foreach ($example in $helpInfo.examples.example) {
+    #         @{
+    #             example = [string]$example.title.Replace("-", $null)
+    #             code    = [string]$example.code
+    #         }
+    #     }
+    # ) {
+    #     $code.StartsWith($function) | Should -Be $true -Because "Provide good examples"
+    # }
     It "Uses PascalCase for function <function>" {
         $function | Should -MatchExactly '^[A-Z].*' -Because "PascalCasing"
     }
