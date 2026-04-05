@@ -10,9 +10,6 @@ function Get-CPCRestorePoint {
     The display name of the Cloud PC.
     .EXAMPLE
     Get-CPCRestorePoint -Name "CloudPC01"
-    .EXAMPLE
-    $snapshots = Get-CPCRestorePoint -Name "CloudPC01"
-    $snapshots | Select-Object id, status, createdDateTime
     .NOTES
     API reference: https://learn.microsoft.com/en-us/graph/api/cloudpc-retrievesnapshots
     Required permission: CloudPC.Read.All
