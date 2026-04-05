@@ -31,7 +31,7 @@ function Get-CPCRestorePoint {
             return
         }
 
-        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/snapshots"
+        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/retrieveSnapshots"
 
         Write-Verbose "URL: $url"
     }
@@ -61,7 +61,7 @@ function Get-CPCRestorePoint {
             return $returnResults
         }
         catch {
-            Throw $_.Exception.Message
+            Throw $_
         }
     }
 }
