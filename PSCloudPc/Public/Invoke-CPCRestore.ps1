@@ -17,10 +17,6 @@ function Invoke-CPCRestore {
     .EXAMPLE
     Invoke-CPCRestore -Name "CloudPC01"
     # Interactive: opens a restore-point picker GUI.
-    .EXAMPLE
-    $snapshots = Get-CPCRestorePoint -Name "CloudPC01"
-    Invoke-CPCRestore -Name "CloudPC01" -SnapshotId $snapshots[0].id
-    # Non-interactive: restores to the most recent snapshot directly.
     .NOTES
     API reference: https://learn.microsoft.com/en-us/graph/api/cloudpc-restore
     Required permission: CloudPC.ReadWrite.All
