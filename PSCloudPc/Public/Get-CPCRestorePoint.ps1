@@ -1,53 +1,70 @@
 function Get-CPCRestorePoint {
     <#
     .SYNOPSIS
-    Get all Cloud PC restore points
+    Get all restore point snapshots for a Cloud PC.
     .DESCRIPTION
-    The function will restore a Cloud PC to a certain point in time
+    Returns all available restore point snapshots for a given Cloud PC.
+    Snapshots can be used with Invoke-CPCRestore to restore the Cloud PC to
+    a previous state.
     .PARAMETER Name
-    Enter the Cloud PC display name
+    The display name of the Cloud PC.
     .EXAMPLE
     Get-CPCRestorePoint -Name "CloudPC01"
+    .EXAMPLE
+    $snapshots = Get-CPCRestorePoint -Name "CloudPC01"
+    $snapshots | Select-Object id, status, createdDateTime
+    .NOTES
+    API reference: https://learn.microsoft.com/en-us/graph/api/cloudpc-retrievesnapshots
+    Required permission: CloudPC.Read.All
     #>
     [CmdletBinding()]
     param (
-        [parameter(Mandatory = $true, ParameterSetName = "Name")]
+        [parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]$Name
     )
-    
+
     begin {
         Get-TokenValidity
-        
-        $CloudPC = Get-CloudPC -name $Name
-        
-        $URL = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/snapshots?`$filter=cloudPcId+eq+'$($CloudPC.Id)'"
 
+        $CloudPC = Get-CloudPC -name $Name
+
+        if ($null -eq $CloudPC) {
+            Throw "No Cloud PC found with name '$Name'"
+            return
+        }
+
+        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/snapshots"
+
+        Write-Verbose "URL: $url"
     }
 
     Process {
-        write-verbose $url
-        $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
-    
-        if ($null -eq $result) {
-            Write-Error "No CloudPC restore points returned"
-            break
-        }
+        try {
+            $result = Invoke-RestMethod -Uri $url -Method GET -Headers $script:Authheader
 
-        $resultnew = $result.content | ConvertFrom-Json
-        $returnResults = @()
-        $resultnew.value | ForEach-Object {
-    
-            $Info = [PSCustomObject]@{
-                id                   = $_.id
-                CloudPC              = $($CloudPC.displayName)
-                status               = $_.status
-                createdDateTime      = $_.createdDateTime
-                lastRestoredDateTime = $_.lastRestoredDateTime
-                
+            if ($null -eq $result -or $null -eq $result.value) {
+                Write-Error "No restore points returned for Cloud PC '$Name'"
+                return
             }
-            $returnResults += $Info
+
+            $returnResults = @()
+            $result.value | ForEach-Object {
+                $Info = [PSCustomObject]@{
+                    id                   = $_.id
+                    CloudPC              = $CloudPC.displayName
+                    status               = $_.status
+                    createdDateTime      = $_.createdDateTime
+                    lastRestoredDateTime = $_.lastRestoredDateTime
+                    expirationDateTime   = $_.expirationDateTime
+                    snapshotType         = $_.snapshotType
+                }
+                $returnResults += $Info
+            }
+            return $returnResults
         }
-        return $returnResults
-    
+        catch {
+            Throw $_.Exception.Message
+        }
     }
 }
