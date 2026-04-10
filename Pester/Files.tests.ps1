@@ -38,39 +38,39 @@ Describe "Analyze code" -ForEach @(
     It "<fileName> should have a EXAMPLE section in the help block" {
         $file | Should -FileContentMatch '.EXAMPLE'
     }
-    # It "<example> should start with <filebase> or contain | <filebase>" -TestCases @(
-    #     foreach ($example in $helpInfo.examples.example) {
-    #         @{
-    #             example = [string]$example.title.Replace("-", $null)
-    #             code    = [string]$example.code
-    #         }
-    #     }
-    # ) {
-    #     (($code.StartsWith($fileBase)) -or ($code.Contains("| {0}" -f $fileBase) )) | Should -Be $true -Because "Provide good examples"
-    # }
-    # It "<filename> line <linenr> uses the # sign correctly" -TestCases @(
-    #     $correctUse = '^#Requires', '^<#', '^#>', '^#region', '^#endregion', '^# ', '##vso\[task.', '^#microsoft'
-    #     $comments = (Select-String -Path $file -Pattern '#')
-    #     ForEach ($comment in $comments) {
-    #         $correct = ForEach ($use in $correctUse) {
-    #             ($comment.line.trim() -like $use)
-    #         }
-    #         if ($correct -notcontains $true) {
-    #             $correctComment = $false
-    #         }
-    #         else {
-    #             $correctComment = $true
-    #         }
-    #         @{
-    #             linenr         = $comment.LineNumber
-    #             line           = $comment.Line
-    #             correctUse     = $correctUse
-    #             correctComment = $correctComment
-    #         }
-    #     }
-    # ) {
-    #     $correctComment | should -be $true -because "comment $line should match $($correctUse -join ',' | Out-String)"
-    # }
+    It "<example> should start with <filebase> or contain | <filebase>" -TestCases @(
+        foreach ($example in $helpInfo.examples.example) {
+            @{
+                example = [string]$example.title.Replace("-", $null)
+                code    = [string]$example.code
+            }
+        }
+    ) {
+        (($code.StartsWith($fileBase)) -or ($code.Contains("| {0}" -f $fileBase) )) | Should -Be $true -Because "Provide good examples"
+    }
+    It "<filename> line <linenr> uses the # sign correctly" -TestCases @(
+        $correctUse = '^#Requires', '^<#', '^#>', '^#region', '^#endregion', '^# ', '##vso\[task.', '^#microsoft'
+        $comments = (Select-String -Path $file -Pattern '#')
+        ForEach ($comment in $comments) {
+            $correct = ForEach ($use in $correctUse) {
+                ($comment.line.trim() -like $use)
+            }
+            if ($correct -notcontains $true) {
+                $correctComment = $false
+            }
+            else {
+                $correctComment = $true
+            }
+            @{
+                linenr         = $comment.LineNumber
+                line           = $comment.Line
+                correctUse     = $correctUse
+                correctComment = $correctComment
+            }
+        }
+    ) {
+        $correctComment | should -be $true -because "comment $line should match $($correctUse -join ',' | Out-String)"
+    }
 
     It "<fileName> should be an advanced function" {
         $file | Should -FileContentMatch 'function'
@@ -90,9 +90,9 @@ Describe "Analyze code" -ForEach @(
         $file | Should -Not -FileContentMatch 'return `$'
     }
 
-    #    It "<fileName> should have an Get-TokenValidity" {
-    #       ($content | Select-String -Pattern 'Get-TokenValidity') | Should -Be $true
-    #    }
+    It "<fileName> should have an Get-TokenValidity" {
+        ($content | Select-String -Pattern 'Get-TokenValidity') | Should -Be $true
+    }
 
     It "<fileName> function start with function name and should be $($file.BaseName) " {
         $content[0] -match "function $($file.BaseName) {" | Should -Be $true
