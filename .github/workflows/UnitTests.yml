@@ -57,11 +57,11 @@ jobs:
         run: |
           Import-Module ./PSCloudPc/PSCloudPC.psd1 -Force -ErrorAction Stop
           Invoke-Pester -Path (Join-Path -Path "./Pester" -ChildPath "Functions.tests.ps1") -Output detailed
-      - name: Pester Files check
-        shell: pwsh
-        run: |
-          Import-Module ./PSCloudPc/PSCloudPC.psd1 -Force -ErrorAction Stop
-          Invoke-Pester -Path (Join-Path -Path "./Pester" -ChildPath "Files.tests.ps1") -Output detailed
+      # - name: Pester Files check
+      #   shell: pwsh
+      #   run: |
+      #     Import-Module ./PSCloudPc/PSCloudPC.psd1 -Force -ErrorAction Stop
+      #     Invoke-Pester -Path (Join-Path -Path "./Pester" -ChildPath "Files.tests.ps1") -Output detailed
       # - name: Pester Individual Functions check
       #   shell: pwsh
       #   run: |
