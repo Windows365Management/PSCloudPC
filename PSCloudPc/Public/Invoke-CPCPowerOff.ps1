@@ -37,8 +37,9 @@ function Invoke-CPCPowerOff {
             return
         }
 
-        # powerOff is a beta-only API; always use beta endpoint
-        $url = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/powerOff"
+        # powerOff is a beta-only API; always use beta endpoint.
+        # NOTE: The Graph API action name is all-lowercase (/poweroff), not camelCase.
+        $url = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/poweroff"
 
         Write-Verbose "URL: $url"
     }

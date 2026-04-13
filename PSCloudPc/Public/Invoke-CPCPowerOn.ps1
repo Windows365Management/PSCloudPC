@@ -37,8 +37,9 @@ function Invoke-CPCPowerOn {
             return
         }
 
-        # powerOn is a beta-only API; always use beta endpoint
-        $url = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/powerOn"
+        # powerOn is a beta-only API; always use beta endpoint.
+        # NOTE: The Graph API action name is all-lowercase (/poweron), not camelCase.
+        $url = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/poweron"
 
         Write-Verbose "URL: $url"
     }
