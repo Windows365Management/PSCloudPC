@@ -59,8 +59,7 @@ function Invoke-CPCPowerOn {
             $targetId   = $CloudPCId
             $targetName = $CloudPCId
         }
-
-        # powerOn is a beta-only API; always use /beta/ path
+        
         $url = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs/$targetId/powerOn"
 
         Write-Verbose "URL: $url"
