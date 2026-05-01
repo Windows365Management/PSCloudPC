@@ -7,9 +7,13 @@ function Get-CPCRealTimeConnectionStatus {
     Microsoft Graph beta cloudPcReports getRealTimeRemoteConnectionStatus API.
 
     Unlike Get-CPCConnectivityHistory (which shows historical events), this function
-    returns the current state: whether a user is actively signed in, how long the
-    session has been running, and days since last use. Useful for live helpdesk
-    troubleshooting and monitoring dashboards.
+    returns the current state: whether a user is actively signed in and how many days
+    have elapsed since last sign-in. Useful for live helpdesk troubleshooting and
+    monitoring dashboards.
+
+    The underlying API returns a tabular payload (Schema + Values arrays) with
+    Content-Type: application/octet-stream. This function parses that format and
+    returns a typed PSCustomObject.
 
     You can identify the target Cloud PC by its managed device name (default) or
     by providing the Cloud PC object ID directly via -CloudPCId.
@@ -26,7 +30,7 @@ function Get-CPCRealTimeConnectionStatus {
     .EXAMPLE
     # Check all Cloud PCs and show only those with active sessions
     Get-CloudPC | ForEach-Object { Get-CPCRealTimeConnectionStatus -CloudPCId $_.id } |
-        Where-Object { $_.signInStatus -eq 'signedIn' }
+        Where-Object { $_.signInStatus -eq 'SignedIn' }
     .NOTES
     Requires CloudPC.Read.All or CloudPC.ReadWrite.All permission (delegated or application).
     This function uses the Microsoft Graph beta endpoint.
@@ -62,7 +66,10 @@ function Get-CPCRealTimeConnectionStatus {
             $targetName = $CloudPCId
         }
 
-        # getRealTimeRemoteConnectionStatus is a beta-only OData function on the reports resource
+        # getRealTimeRemoteConnectionStatus is a beta-only OData function on the reports resource.
+        # The response uses Content-Type: application/octet-stream with a tabular JSON body
+        # (TotalRowCount / Schema / Values). Invoke-WebRequest + ConvertFrom-Json is required
+        # because Invoke-RestMethod does not auto-parse octet-stream as JSON.
         $url = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/reports/getRealTimeRemoteConnectionStatus(cloudPcId='$targetId')"
 
         Write-Verbose "URL: $url"
@@ -72,26 +79,39 @@ function Get-CPCRealTimeConnectionStatus {
         Write-Verbose "Retrieving real-time connection status for Cloud PC '$targetName' (id: $targetId)"
 
         try {
-            $result = Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method GET -ContentType "application/json"
-
-            if ($null -eq $result) {
-                Write-Output "No real-time connection status returned for Cloud PC '$targetName'."
-                return
-            }
-
-            [PSCustomObject]@{
-                CloudPCName       = $targetName
-                CloudPCId         = $targetId
-                signInStatus      = $result.signInStatus
-                daysSinceLastUse  = $result.daysSinceLastUse
-                signInDateTime    = $result.signInDateTime
-                signOutDateTime   = $result.signOutDateTime
-                durationInSeconds = $result.durationInSeconds
-                usageStatus       = $result.usageStatus
-            }
+            $response = Invoke-WebRequest -Uri $url -Method GET -Headers $script:Authheader
+            $result   = $response.Content | ConvertFrom-Json
         }
         catch {
             Throw $_.Exception.Message
         }
+
+        if ($null -eq $result -or $result.TotalRowCount -eq 0 -or
+            $null -eq $result.Values -or $result.Values.Count -eq 0) {
+            Write-Output "No real-time connection status returned for Cloud PC '$targetName'."
+            return
+        }
+
+        # Build a column-name -> index map from the schema so the output is
+        # correct regardless of column ordering in future API versions.
+        $colIndex = @{}
+        for ($i = 0; $i -lt $result.Schema.Count; $i++) {
+            $colIndex[$result.Schema[$i].Column] = $i
+        }
+
+        $PSObjectResults = @()
+        $result.Values | ForEach-Object {
+            $row = $_
+            $entry = [PSCustomObject]@{
+                CloudPCName         = $targetName
+                CloudPCId           = $targetId
+                signInStatus        = if ($colIndex.ContainsKey('SignInStatus'))        { $row[$colIndex['SignInStatus']] }        else { $null }
+                daysSinceLastSignIn = if ($colIndex.ContainsKey('DaysSinceLastSignIn')) { $row[$colIndex['DaysSinceLastSignIn']] } else { $null }
+                managedDeviceName   = if ($colIndex.ContainsKey('ManagedDeviceName'))   { $row[$colIndex['ManagedDeviceName']] }   else { $null }
+            }
+            $PSObjectResults += $entry
+        }
+
+        return $PSObjectResults
     }
 }
