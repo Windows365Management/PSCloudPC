@@ -60,7 +60,11 @@ function Invoke-CPCPowerOff {
             $targetName = $CloudPCId
         }
 
-        $url = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs/$targetId/powerOff"
+        # poweroff is a beta-only API; always use beta endpoint.
+        # The Graph API action name is all-lowercase (/poweroff), not camelCase (/powerOff).
+        # Content-Type must be set to application/json even for body-less POST actions
+        # to avoid a 400 Bad Request response from the Graph API.
+        $url = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs/$targetId/poweroff"
 
         Write-Verbose "URL: $url"
     }
@@ -70,7 +74,7 @@ function Invoke-CPCPowerOff {
 
         if ($PSCmdlet.ShouldProcess($targetName, "Power off Cloud PC")) {
             try {
-                Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST
+                Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json"
                 Write-Output "Cloud PC '$targetName' power off initiated"
             }
             catch {
