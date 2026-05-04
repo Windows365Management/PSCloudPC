@@ -59,8 +59,12 @@ function Invoke-CPCPowerOn {
             $targetId   = $CloudPCId
             $targetName = $CloudPCId
         }
-        
-        $url = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs/$targetId/powerOn"
+
+        # poweron is a beta-only API; always use beta endpoint.
+        # The Graph API action name is all-lowercase (/poweron), not camelCase (/powerOn).
+        # Content-Type must be set to application/json even for body-less POST actions
+        # to avoid a 400 Bad Request response from the Graph API.
+        $url = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs/$targetId/poweron"
 
         Write-Verbose "URL: $url"
     }
@@ -70,7 +74,7 @@ function Invoke-CPCPowerOn {
 
         if ($PSCmdlet.ShouldProcess($targetName, "Power on Cloud PC")) {
             try {
-                Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST
+                Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json"
                 Write-Output "Cloud PC '$targetName' power on initiated"
             }
             catch {
