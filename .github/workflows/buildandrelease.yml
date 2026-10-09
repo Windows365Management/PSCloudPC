@@ -3,8 +3,7 @@ name: Build and Release Binaries
 on:
   push:
     tags:
-      - '*'
-  workflow_dispatch:
+      - 'v*'
 jobs:
   build:
     name: Build
@@ -19,11 +18,20 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       - name: Get previous tag version
         id: get_previous_version
-        run: echo "PREVIOUSVERSION=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
+        run: echo "PREVIOUSVERSION=$(git describe --tags --abbrev=0 ${{ steps.get_version.outputs.VERSION }}^ 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
       - name: Print the version
         run: |
             echo "Current tag version is ${{ steps.get_version.outputs.VERSION }}"
             echo "Previous tag version is ${{ steps.get_previous_version.outputs.PREVIOUSVERSION }}"
+      - name: Verify tag matches module version
+        shell: pwsh
+        run: |
+          $moduleVersion = (Import-PowerShellDataFile -Path ./PSCloudPc/PSCloudPC.psd1).ModuleVersion
+          $tagVersion = '${{ steps.get_version.outputs.VERSION }}'.TrimStart('v')
+          if ($moduleVersion -ne $tagVersion) {
+            throw "Tag version '$tagVersion' does not match ModuleVersion '$moduleVersion' in PSCloudPC.psd1"
+          }
+          Write-Host "Tag version matches ModuleVersion $moduleVersion"
       - name: "Build release changelog"
         id: build_release_changelog
         uses: mikepenz/release-changelog-builder-action@develop
