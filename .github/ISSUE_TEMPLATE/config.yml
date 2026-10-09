@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Questions and ideas
+    url: https://github.com/Windows365Management/PSCloudPC/discussions
+    about: Ask questions, share scripts and discuss ideas with the community.
+  - name: 📖 Documentation
+    url: https://pscloudpc.com
+    about: Cmdlet reference and getting started guides.
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/Windows365Management/PSCloudPC/blob/main/SECURITY.md
+    about: Please report vulnerabilities privately, not as a public issue.

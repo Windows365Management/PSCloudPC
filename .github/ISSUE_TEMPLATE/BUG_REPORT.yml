@@ -1,5 +1,5 @@
 name: Bug Report
-description: File a bug report
+description: Report something in PSCloudPC that is not working as expected
 title: "🪲[Bug]: "
 labels: ["bug"]
 
@@ -7,36 +7,73 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report!
+        Thanks for taking the time to report a bug! Please search the [existing issues](https://github.com/Windows365Management/PSCloudPC/issues) first to check whether it has already been reported.
+
+        > ⚠️ This issue is public. Remove tenant IDs, access tokens, client secrets and other sensitive information from commands and output before posting. To report a security vulnerability, follow the [security policy](https://github.com/Windows365Management/PSCloudPC/blob/main/SECURITY.md) instead.
   - type: input
-    id: contact
+    id: cmdlet
     attributes:
-      label: Contact Details
-      description: How can we get in touch with you if we need more info?
-      placeholder: ex. email@example.com
+      label: Cmdlet
+      description: Which cmdlet is affected?
+      placeholder: ex. Get-CloudPC
     validations:
       required: true
   - type: textarea
     id: what-happened
     attributes:
       label: What happened?
-      description: Also tell what did you expect to happen?
-      placeholder: Please tell what you see!
-      value: "A bug happened!"
+      description: Describe what happened and what you expected to happen instead.
     validations:
       required: true
   - type: textarea
     id: reproduce
     attributes:
-      label: Steps to reproduce?
-      description: Is there a way to reproduce, what command did you use for example?
-      placeholder: I performed the following steps
-      value: "This is what i did."
+      label: Steps to reproduce
+      description: The exact commands you ran, including parameters.
+      render: powershell
     validations:
       required: true
   - type: textarea
     id: logs
     attributes:
-      label: Relevant log output
-      description: Please copy and paste any relevant log output including verbose output.
+      label: Error message and verbose output
+      description: Run the command again with `-Verbose` and paste the output and the full error message.
       render: shell
+  - type: input
+    id: module-version
+    attributes:
+      label: PSCloudPC version
+      description: Output of `(Get-Module PSCloudPC).Version`
+      placeholder: ex. 1.0.17
+    validations:
+      required: true
+  - type: input
+    id: ps-version
+    attributes:
+      label: PowerShell version
+      description: Output of `$PSVersionTable.PSVersion`
+      placeholder: ex. 7.4.6
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+  - type: dropdown
+    id: auth
+    attributes:
+      label: Authentication method
+      options:
+        - Interactive
+        - Device code
+        - Client secret
+        - Client certificate
+        - Access token
+    validations:
+      required: true
