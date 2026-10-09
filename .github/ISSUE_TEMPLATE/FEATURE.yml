@@ -1,55 +1,44 @@
 name: Feature Request
-
-description: Use this template for submitting feature requests for the PSCloudPC module
-
+description: Suggest a new cmdlet or an improvement to PSCloudPC
 title: "🚀 [Feature Request]: "
 labels: [feature]
-assignees:
-  - 
 
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to suggest a new feature. Please provide the following details:
-  - type: input
-    id: contact
+        Thanks for taking the time to suggest a feature! Please search the [existing issues](https://github.com/Windows365Management/PSCloudPC/issues) first to check whether it has already been requested.
+  - type: textarea
+    id: problem
     attributes:
-      label: Contact Details
-      description: How can we get in touch with you if we need more info?
-      placeholder: ex. email@example.com
+      label: Problem
+      description: What are you trying to do, and what is missing or hard today?
+      placeholder: ex. I want to see which Cloud PCs have not been used for 30 days, but...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the cmdlet or change you would like, including example usage and expected output.
+      placeholder: |
+        Get-CPCUsage -InactiveDays 30
     validations:
       required: true
   - type: input
-    id: feature
+    id: graph-api
     attributes:
-      label: Feature
-      description: Is your feature request related to a problem? Please describe.
-      placeholder: A clear and concise description of what the problem is.
-    validations:
-      required: true
-
+      label: Microsoft Graph API reference
+      description: A link to the Microsoft Graph documentation for the endpoint, if you know it.
+      placeholder: https://learn.microsoft.com/graph/api/...
   - type: textarea
-    id: feature_description
-    attributes:
-      label: Feature Description
-      description: Can you describe the feature in detail?
-      placeholder: A clear and concise description of what you want to happen.
-    validations:
-      required: false
-  - type: textarea
-    id: feature_outcome
-    attributes:
-      label: Feature Output
-      description: What is the expected output for the feature?
-      placeholder: Enter your expected output here...
-    validations:
-      required: true
-  - type: textarea
-    id: feature_implementation
+    id: implementation
     attributes:
       label: Possible implementation
-      description: What is the expected output for the feature?
-      placeholder: Not obligatory, but suggest an idea for implementing the addition or change.
-    validations:
-      required: false
+      description: Optional. Any ideas on how to implement it.
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I would like to work on this and open a pull request
