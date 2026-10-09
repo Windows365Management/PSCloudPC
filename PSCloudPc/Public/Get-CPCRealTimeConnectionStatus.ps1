@@ -23,10 +23,6 @@ function Get-CPCRealTimeConnectionStatus {
     Get-CPCRealTimeConnectionStatus -Name "CPC-User-XXXX"
     .EXAMPLE
     Get-CPCRealTimeConnectionStatus -CloudPCId "4b5ad5e0-6a0b-4ffc-818d-36bb23cf4dbd"
-    .EXAMPLE
-    # Check all Cloud PCs and show only those with active sessions
-    Get-CloudPC | ForEach-Object { Get-CPCRealTimeConnectionStatus -CloudPCId $_.id } |
-        Where-Object { $_.signInStatus -eq 'signedIn' }
     .NOTES
     Requires CloudPC.Read.All or CloudPC.ReadWrite.All permission (delegated or application).
     This function uses the Microsoft Graph beta endpoint.
