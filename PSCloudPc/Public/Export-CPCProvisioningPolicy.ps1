@@ -49,7 +49,7 @@ function Export-CPCProvisioningPolicy {
             $JSON | Set-Content -Path "$($OutputFolder)\$($Policy.displayName).json"
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
     }
 

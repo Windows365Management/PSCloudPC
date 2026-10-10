@@ -95,7 +95,7 @@ function Invoke-CPCCreateSnapshot {
                 Write-Output "Snapshot creation triggered for Cloud PC '$($CloudPC.displayName)'. Use Get-CPCRestorePoint to check when it is available."
             }
             catch {
-                Throw $_.Exception.Message
+                Throw (Get-GraphErrorMessage $_)
             }
         }
     }

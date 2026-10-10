@@ -124,7 +124,7 @@ function Invoke-CPCPublishCloudApp {
             }
         }
         catch {
-            Write-Error "Failed to publish app(s): $($_.Exception.Message)"
+            Write-Error "Failed to publish app(s): $(Get-GraphErrorMessage $_)"
             throw
         }
     }

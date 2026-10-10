@@ -61,7 +61,7 @@ function Get-CPCRestorePoint {
             return $returnResults
         }
         catch {
-            Throw $_
+            Throw (Get-GraphErrorMessage $_)
         }
     }
 }

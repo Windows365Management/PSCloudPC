@@ -70,7 +70,7 @@ function Get-CPCAuditEvent {
             $result = Invoke-WebRequest -Uri $url -Method GET -Headers $script:authHeader
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
 
         if ($null -eq $result) {

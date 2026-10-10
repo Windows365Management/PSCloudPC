@@ -67,12 +67,12 @@ function Update-CPCOrganizationSetting {
         Write-Verbose "Body: $($body)"
         try {
             Write-Verbose "Updating Organization Settings "
-            $result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
+            $result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json"
             return $result
             
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
     }
 }

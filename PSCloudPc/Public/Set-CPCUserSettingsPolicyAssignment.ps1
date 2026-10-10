@@ -105,7 +105,7 @@ function Set-CPCUserSettingsPolicyAssignment {
             Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method Post -ContentType "application/json" -Body $body
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
         
     }

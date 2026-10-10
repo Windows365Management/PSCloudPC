@@ -116,12 +116,12 @@ function Update-CPCUserSettingsPolicy {
         If ($PSCmdlet.ShouldProcess($Name, 'Update Cloud PC User Settings Policy')) {
             try {
                 Write-Verbose "Updating User Settings Policy $($Name)"
-                $Result = Invoke-WebRequest -Uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
+                $Result = Invoke-WebRequest -Uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json"
                 Write-Verbose "Result: $($Result.Content)"
                 return $Result
             }
             catch {
-                Throw $_.Exception.Message
+                Throw (Get-GraphErrorMessage $_)
             }
         }
     }

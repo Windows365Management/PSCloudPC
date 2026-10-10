@@ -87,7 +87,7 @@ function Get-CPCRealTimeConnectionStatus {
             }
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
     }
 }

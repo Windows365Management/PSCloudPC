@@ -100,7 +100,7 @@ function Get-CPCRemoteActionResult {
             return $PSObjectResults
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
     }
 }

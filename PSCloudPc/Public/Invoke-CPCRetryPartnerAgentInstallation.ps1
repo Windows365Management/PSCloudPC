@@ -78,7 +78,7 @@ function Invoke-CPCRetryPartnerAgentInstallation {
                 Write-Output "Partner agent installation retry triggered for Cloud PC '$targetName'"
             }
             catch {
-                Throw $_.Exception.Message
+                Throw (Get-GraphErrorMessage $_)
             }
         }
     }

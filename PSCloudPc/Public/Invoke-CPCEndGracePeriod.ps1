@@ -70,7 +70,7 @@ function Invoke-CPCEndGracePeriod {
                     Write-Output "End Grace Period $($_.managedDeviceName)"
                 }                                       
                 catch {
-                    Throw $_.Exception.Message
+                    Throw (Get-GraphErrorMessage $_)
                 }
             }
         }
@@ -94,7 +94,7 @@ function Invoke-CPCEndGracePeriod {
                     Write-Output "End Grace Period $($_.managedDeviceName)"
                 }
                 catch {
-                    Throw $_.Exception.Message
+                    Throw (Get-GraphErrorMessage $_)
                 }
             }
         }

@@ -52,7 +52,7 @@ function Invoke-CPCRename {
             Write-Verbose "Cloud PC '$($CloudPC.displayName)' successfully renamed to '$NewDisplayName'"
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
 
     }

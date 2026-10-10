@@ -72,7 +72,7 @@ function Invoke-CPCReprovision {
                 Write-Output "Cloud PC $($CloudPC.displayName) reprovision initiated"
             }
             catch {
-                Throw $_.Exception.Message
+                Throw (Get-GraphErrorMessage $_)
             }
         }
     }
