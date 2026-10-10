@@ -62,12 +62,16 @@ function Invoke-APIRequest {
 
     Write-Verbose "Request: $Method $uri"
 
-    $result = Invoke-WebRequest @params
+    try {
+        $result = Invoke-WebRequest @params -ErrorAction Stop
+    }
+    catch {
+        Throw (Get-GraphErrorMessage $_)
+    }
 
     #Check if the result is null
     if ($null -eq $result) {
-        Write-Error "No results returned exiting function"
-        return
+        Throw "No response returned for $Method $uri"
     }
 
     $resultconvert = $result.Content | ConvertFrom-Json
@@ -80,11 +84,33 @@ function Invoke-APIRequest {
     $AllPages = @($resultconvert.value)
 
     #Loop through the API pages if there is a next link
+    #The nextLink is opaque (https://learn.microsoft.com/graph/paging), so only check scheme and host before sending the token to it
     $NextLink = $resultconvert.'@odata.nextLink'
+    $GraphHost = ([uri]$uri).Host
+    $SeenLinks = [System.Collections.Generic.HashSet[string]]::new()
+    $MaxPages = 1000
+    $PageCount = 1
 
     while ($null -ne $NextLink) {
+        $NextUri = $null
+        if (-not [uri]::TryCreate([string]$NextLink, [System.UriKind]::Absolute, [ref]$NextUri) -or $NextUri.Scheme -ne 'https' -or $NextUri.Host -ne $GraphHost) {
+            Throw "Refusing to follow @odata.nextLink '$NextLink': it must be an absolute https URL on $GraphHost"
+        }
+        if (-not $SeenLinks.Add([string]$NextLink)) {
+            Throw "Graph returned the same @odata.nextLink twice, stopping to avoid an endless loop: $NextLink"
+        }
+        if ($PageCount -ge $MaxPages) {
+            Throw "Stopped paging after $MaxPages pages for $uri"
+        }
+        $PageCount++
+
         Write-Verbose "Requesting next page: $NextLink"
-        $page = (Invoke-WebRequest -Uri $NextLink -Headers $Headers -Method Get).Content | ConvertFrom-Json
+        try {
+            $page = (Invoke-WebRequest -Uri $NextLink -Headers $Headers -Method Get -ErrorAction Stop).Content | ConvertFrom-Json
+        }
+        catch {
+            Throw (Get-GraphErrorMessage $_)
+        }
         $AllPages += $page.value
         $NextLink = $page.'@odata.nextLink'
     }
