@@ -54,7 +54,7 @@ function Get-CPCServicePlan {
         
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
     
     }

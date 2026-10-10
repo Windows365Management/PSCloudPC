@@ -163,7 +163,7 @@ function Invoke-CPCUnpublishCloudApp {
             }
         }
         catch {
-            Write-Error "Failed to unpublish app(s): $($_.Exception.Message)"
+            Write-Error "Failed to unpublish app(s): $(Get-GraphErrorMessage $_)"
             throw
         }
     }

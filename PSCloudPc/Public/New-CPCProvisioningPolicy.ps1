@@ -229,7 +229,7 @@ function New-CPCProvisioningPolicy {
             $Result = Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
 
         $PolicyId = ($Result.Content | ConvertFrom-Json).id

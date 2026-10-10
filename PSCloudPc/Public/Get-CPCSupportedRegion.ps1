@@ -48,7 +48,7 @@ function Get-CPCSupportedRegion {
         
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
     
     }

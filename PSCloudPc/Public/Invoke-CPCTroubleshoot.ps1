@@ -44,7 +44,7 @@ function Invoke-CPCTroubleshoot {
                 Write-Output "Troubleshoot action triggered for Cloud PC '$($CloudPC.displayName)'"
             }
             catch {
-                Throw $_.Exception.Message
+                Throw (Get-GraphErrorMessage $_)
             }
         }
     }

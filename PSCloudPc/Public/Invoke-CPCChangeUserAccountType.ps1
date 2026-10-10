@@ -84,7 +84,7 @@ function Invoke-CPCChangeUserAccountType {
                 Write-Output "Cloud PC '$targetName' user account type changed to '$UserAccountType'"
             }
             catch {
-                Throw $_.Exception.Message
+                Throw (Get-GraphErrorMessage $_)
             }
         }
     }

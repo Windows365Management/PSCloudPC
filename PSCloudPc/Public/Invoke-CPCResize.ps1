@@ -72,7 +72,7 @@ function Invoke-CPCResize {
                 Write-Output "Cloud PC '$($CloudPC.displayName)' resize initiated to service plan '$ServicePlanId'"
             }
             catch {
-                Throw $_.Exception.Message
+                Throw (Get-GraphErrorMessage $_)
             }
         }
     }

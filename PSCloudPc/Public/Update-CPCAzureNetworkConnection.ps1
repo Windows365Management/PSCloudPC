@@ -150,12 +150,12 @@ function Update-CPCAzureNetworkConnection {
         if ($PSCmdlet.ShouldProcess($targetName, 'Update Azure Network Connection')) {
             try {
                 Write-Verbose "Updating Azure Network Connection '$targetName'"
-                $result = Invoke-WebRequest -Uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
+                $result = Invoke-WebRequest -Uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json"
                 Write-Verbose "Result: $($result.Content)"
                 return $result
             }
             catch {
-                Throw $_.Exception.Message
+                Throw (Get-GraphErrorMessage $_)
             }
         }
     }

@@ -74,7 +74,7 @@ function Invoke-CPCPowerOn {
                 Write-Output "Cloud PC '$targetName' power on initiated"
             }
             catch {
-                Throw $_.Exception.Message
+                Throw (Get-GraphErrorMessage $_)
             }
         }
     }

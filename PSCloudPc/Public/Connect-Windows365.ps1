@@ -11,7 +11,7 @@ function Connect-Windows365 {
     .PARAMETER ClientID
     Client ID for Service Principal Authentication
     .PARAMETER ClientCertificate
-    Client Certificate for Service Principal Authentication, this must be the actual certificate not only the thumbprint
+    Client Certificate for Service Principal Authentication. This must be an X509Certificate2 object that includes its private key, not only the thumbprint. The app registration needs the Microsoft Graph application permissions granted with admin consent.
     .PARAMETER DeviceCode
     Use Device Code Authentication (Switch to use Device Code Authentication)
     .PARAMETER Token
@@ -23,7 +23,7 @@ function Connect-Windows365 {
     .EXAMPLE
     Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientSecret 12345678-1234-1234-1234-123456789012
     .EXAMPLE
-    Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientCertificate "Certificate"
+    Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID 12345678-1234-1234-1234-123456789012 -ClientCertificate (Get-PfxCertificate -FilePath ./app.pfx)
     .EXAMPLE
     Connect-Windows365 -Token "YourAccessToken"
     #>
@@ -121,19 +121,33 @@ function Connect-Windows365 {
 
                 Write-Verbose "Using Client Certificate Authentication"
 
-                $response = Connect-MGGraph -ClientId $clientId -TenantId $tenantId -Certificate $ClientCertificate
+                $tokenEndpoint = "https://login.microsoftonline.com/$TenantID/oauth2/v2.0/token"
 
-                $Token = $response.AccessToken
+                $body = @{
+                    Grant_Type            = "client_credentials"
+                    Scope                 = "https://graph.microsoft.com/.default"
+                    Client_Id             = $ClientID
+                    Client_Assertion_Type = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+                    Client_Assertion      = New-ClientAssertion -Certificate $ClientCertificate -ClientID $ClientID -TokenEndpoint $tokenEndpoint
+                }
+
+                $connection = Invoke-RestMethod `
+                    -Uri $tokenEndpoint `
+                    -Method POST `
+                    -Body $body
+
+                $Token = $connection.access_token
+
                 $script:Authtime = [System.DateTime]::UtcNow
                 $script:Authtoken = $Token
-                $script:Authheader = @{Authorization = "Bearer $($Request.access_token)" }
+                $script:Authheader = @{Authorization = "Bearer $($Token)" }
 
             }
             DeviceCode {
 
                 Write-Verbose "Using Device Code Authentication"
 
-                Connect-MgGraph -UseDeviceCode
+                Connect-MgGraph -Scopes $scopes -UseDeviceCode -NoWelcome
 
                 # Get the Access Token
                 $Parameters = @{
@@ -159,6 +173,13 @@ function Connect-Windows365 {
                 $script:Authheader = @{Authorization = "Bearer $($Token)" }
 
             }
+        }
+
+        if ([string]::IsNullOrWhiteSpace($script:Authtoken)) {
+            $script:Authtime = $null
+            $script:Authtoken = $null
+            $script:Authheader = $null
+            Throw "No access token was received using $($PsCmdlet.ParameterSetName) authentication. Check the sign-in details and permissions, then run Connect-Windows365 again."
         }
     }
 }

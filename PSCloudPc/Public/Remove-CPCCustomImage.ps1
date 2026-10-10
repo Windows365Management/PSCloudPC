@@ -47,7 +47,7 @@ function Remove-CPCCustomImage {
             Invoke-WebRequest -uri $deleteurl -Method DELETE -Headers $script:authHeader
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
         
     }

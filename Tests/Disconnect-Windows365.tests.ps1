@@ -2,42 +2,35 @@
 This file tests the Disconnect-Windows365 function by using Pester
 #>
 
-$modulename = 'PSCloudPC'
-
 BeforeAll {
-    # Import the module - correct relative path from Tests folder
-    Import-Module "./PSCloudPC/Src/PSCloudPC.psm1" -Force
-    Import-Module Microsoft.Graph.Authentication -Force
-
-    # Mock Disconnect-MgGraph to prevent actual disconnection during tests
-    Mock -CommandName Disconnect-MgGraph -MockWith { }
-
-    Function Get-MGContext {
-        return @{
-            ClientId            = [guid]::NewGuid().ToString()
-            TenantId            = [guid]::NewGuid().ToString()
-            Scopes              = @('AccessReview.Read.All', 'Agreement.Read.All')
-            AuthType            = 'Delegated'
-            TokenCredentialType = 'InteractiveBrowser'
-            Account             = 'admin@contoso.com'
-            AppName             = 'Microsoft Graph Command Line Tools'
-            ContextScope        = 'CurrentUser'
-            Environment         = 'Global'
-        }
-    }
+    Import-Module (Join-Path $PSScriptRoot '../PSCloudPc/PSCloudPC.psd1') -Force
 }
 
-Describe "Disconnect-Windows365" {
+AfterAll {
+    Remove-Module PSCloudPC -Force -ErrorAction SilentlyContinue
+}
 
-    It "Should disconnect from Windows 365 and clear the token cache when connected" {
+Describe 'Disconnect-Windows365' {
 
-        # Act
-        Disconnect-Windows365 -Verbose
-
-        # Assert
-        $script:Authtime | Should -BeNullOrEmpty
-        $script:Authtoken | Should -BeNullOrEmpty
-        $script:Authheader | Should -BeNullOrEmpty
+    BeforeAll {
+        Mock -ModuleName PSCloudPC Get-MgContext { [PSCustomObject]@{ Account = 'admin@contoso.com' } }
+        Mock -ModuleName PSCloudPC Disconnect-MgGraph { }
     }
 
+    It 'Disconnects from Microsoft Graph and clears the token cache' {
+        InModuleScope PSCloudPC {
+            $script:Authtime = [DateTime]::UtcNow
+            $script:Authtoken = 'token'
+            $script:Authheader = @{ Authorization = 'Bearer token' }
+        }
+
+        Disconnect-Windows365
+
+        Should -Invoke -ModuleName PSCloudPC Disconnect-MgGraph -Times 1
+        InModuleScope PSCloudPC {
+            $script:Authtime | Should -BeNullOrEmpty
+            $script:Authtoken | Should -BeNullOrEmpty
+            $script:Authheader | Should -BeNullOrEmpty
+        }
+    }
 }

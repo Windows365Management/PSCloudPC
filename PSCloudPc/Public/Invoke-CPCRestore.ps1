@@ -77,7 +77,7 @@ function Invoke-CPCRestore {
                 Write-Verbose "Restore initiated for Cloud PC '$Name'"
             }
             catch {
-                Throw $_.Exception.Message
+                Throw (Get-GraphErrorMessage $_)
             }
         }
     }

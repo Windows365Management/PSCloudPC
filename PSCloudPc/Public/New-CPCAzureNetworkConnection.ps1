@@ -113,7 +113,7 @@ function New-CPCAzureNetworkConnection {
             $result
         }
         catch {
-            Throw $_.Exception
+            Throw (Get-GraphErrorMessage $_)
         }        
     }
 }
