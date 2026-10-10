@@ -4,15 +4,24 @@ on:
   push:
     tags:
       - 'v*'
+
+# Read-only by default; jobs request only the extra permissions they need
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write       # create the GitHub Release
+      pull-requests: read   # read PR labels for the changelog
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Get the version
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
@@ -34,7 +43,7 @@ jobs:
           Write-Host "Tag version matches ModuleVersion $moduleVersion"
       - name: "Build release changelog"
         id: build_release_changelog
-        uses: mikepenz/release-changelog-builder-action@develop
+        uses: mikepenz/release-changelog-builder-action@cb021f9b36a51a7c6f18e4679b6fa2cb77a1260c # v6.3.0
         with:
             fromTag: ${{ steps.get_previous_version.outputs.PREVIOUSVERSION }}
             toTag: ${{ steps.get_version.outputs.VERSION }}
@@ -81,7 +90,7 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
           name: Release ${{ steps.get_version.outputs.VERSION }}
@@ -95,10 +104,16 @@ jobs:
     name: Publish to PowerShell Gallery
     needs: build
     runs-on: ubuntu-latest
+    # PS_GALLERY_KEY lives in this environment; each publish waits for a reviewer's approval
+    environment: release
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publishing module to PowerShell Gallery
         shell: pwsh
+        env:
+          PS_GALLERY_KEY: ${{ secrets.PS_GALLERY_KEY }}
         run: |
-          ./Publish/PublishPSGallery.ps1 -PS_GALLERY_KEY ${{ secrets.PS_GALLERY_KEY }}
+          ./Publish/PublishPSGallery.ps1 -PS_GALLERY_KEY $env:PS_GALLERY_KEY
