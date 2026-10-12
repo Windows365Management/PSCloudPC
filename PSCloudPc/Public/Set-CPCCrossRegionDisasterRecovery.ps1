@@ -42,7 +42,9 @@ function Set-CPCCrossRegionDisasterRecovery {
     .PARAMETER RegionGroup
     The cloudPcRegionGroup that the disaster recovery region belongs to (e.g. 'usEast',
     'usWest', 'europeUnion', 'unitedKingdom', 'asia'). Required when DisasterRecoveryType is
-    'crossRegion' or 'premium'. Only documented cloudPcRegionGroup values are accepted.
+    'crossRegion' or 'premium'. The value is passed to Graph as is, so region groups that
+    Microsoft adds later work without a module update; Graph rejects an unknown value.
+    See https://learn.microsoft.com/graph/api/resources/cloudpcregiongroup?view=graph-rest-beta
     .EXAMPLE
     Set-CPCCrossRegionDisasterRecovery -Name "UserSettings01" -DisasterRecoveryType crossRegion -RegionName "westus" -RegionGroup "usWest" -MaintainCrossRegionRestorePointEnabled $true
     .EXAMPLE
@@ -75,14 +77,7 @@ function Set-CPCCrossRegionDisasterRecovery {
         [Parameter(Mandatory = $false)]
         [string]$RegionName,
 
-        # Documented cloudPcRegionGroup members, without the unknownFutureValue sentinel
         [Parameter(Mandatory = $false)]
-        [ValidateSet('default', 'australia', 'canada', 'usCentral', 'usEast', 'usWest', 'france', 'germany',
-            'europeUnion', 'unitedKingdom', 'japan', 'asia', 'india', 'southAmerica', 'euap', 'usGovernment',
-            'usGovernmentDOD', 'norway', 'switzerland', 'southKorea', 'middleEast', 'mexico', 'australasia',
-            'europe', 'singapore', 'hongKong', 'ireland', 'sweden', 'poland', 'italy', 'spain', 'netherlands',
-            'brazil', 'israel', 'automatic', 'indonesia', 'taiwan', 'malaysia', 'newZealand', 'austria',
-            'denmark', 'belgium', 'kenya')]
         [string]$RegionGroup
     )
 
@@ -130,9 +125,11 @@ function Set-CPCCrossRegionDisasterRecovery {
         }
 
         If ($DisasterRecoveryType -in @('crossRegion', 'premium')) {
+            # Abstract Graph type: name the Microsoft-hosted subtype that regionName/regionGroup belong to
             $drSetting.disasterRecoveryNetworkSetting = @{
-                regionName  = $RegionName
-                regionGroup = $RegionGroup
+                '@odata.type' = '#microsoft.graph.cloudPcDisasterRecoveryMicrosoftHostedNetworkSetting'
+                regionName    = $RegionName
+                regionGroup   = $RegionGroup
             }
         }
 

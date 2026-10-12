@@ -4,7 +4,8 @@ Contract: PATCH /deviceManagement/virtualEndpoint/userSettings/{id} with a
 crossRegionDisasterRecoverySetting that uses disasterRecoveryType plus the deprecated
 crossRegionDisasterRecoveryEnabled, which Graph still requires ($true for crossRegion and
 premium, $false for notConfigured), a Microsoft-hosted network setting with
-regionName/regionGroup for crossRegion and premium, and documented cloudPcRegionGroup values.
+regionName/regionGroup for crossRegion and premium. RegionGroup is passed to Graph as is (no
+ValidateSet), so new cloudPcRegionGroup values work without a module update.
 The policy's current restorePointSetting (frequencyType, userRestoreEnabled) is sent back
 unchanged; the deprecated frequencyInHours is never sent.
 https://learn.microsoft.com/en-us/graph/api/cloudpcusersetting-update?view=graph-rest-beta
@@ -67,12 +68,13 @@ Describe 'Set-CPCCrossRegionDisasterRecovery' {
             }
         }
 
-        It 'sends disasterRecoveryType and the network setting with regionName/regionGroup' {
+        It 'sends disasterRecoveryType and the Microsoft-hosted network setting with regionName/regionGroup' {
             Set-CPCCrossRegionDisasterRecovery -Name 'UserSettings01' -DisasterRecoveryType $Type -RegionName 'westeurope' -RegionGroup 'europeUnion' -MaintainCrossRegionRestorePointEnabled $true | Out-Null
 
             Should -Invoke Invoke-RestMethod -ModuleName PSCloudPC -Times 1 -Exactly -ParameterFilter {
                 $dr = ($Body | ConvertFrom-Json).crossRegionDisasterRecoverySetting
                 $dr.disasterRecoveryType -eq $Type -and
+                $dr.disasterRecoveryNetworkSetting.'@odata.type' -ceq '#microsoft.graph.cloudPcDisasterRecoveryMicrosoftHostedNetworkSetting' -and
                 $dr.disasterRecoveryNetworkSetting.regionName -eq 'westeurope' -and
                 $dr.disasterRecoveryNetworkSetting.regionGroup -eq 'europeUnion' -and
                 $dr.maintainCrossRegionRestorePointEnabled -is [bool] -and
@@ -193,22 +195,18 @@ Describe 'Set-CPCCrossRegionDisasterRecovery' {
         }
     }
 
-    Context 'RegionGroup validation' {
+    Context 'RegionGroup is passed to Graph as is' {
 
-        It 'rejects undocumented region group "<Group>" and sends no PATCH' -ForEach @(
-            @{ Group = 'europeNorth' }
-            @{ Group = 'europeWest' }
-            @{ Group = 'asiaPacific' }
-        ) {
-            { Set-CPCCrossRegionDisasterRecovery -Name 'UserSettings01' -DisasterRecoveryType crossRegion -RegionName 'westeurope' -RegionGroup $Group -ErrorAction Stop } | Should -Throw
-
-            Should -Invoke Invoke-RestMethod -ModuleName PSCloudPC -Times 0
+        It 'has no ValidateSet on -RegionGroup, so new region groups need no module update' {
+            $attributes = (Get-Command -Name Set-CPCCrossRegionDisasterRecovery).Parameters['RegionGroup'].Attributes
+            @($attributes | Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] }).Count | Should -Be 0
         }
 
-        It 'accepts documented region group "<Group>"' -ForEach @(
+        It 'sends region group "<Group>" unchanged' -ForEach @(
             @{ Group = 'europeUnion' }
             @{ Group = 'usEast' }
             @{ Group = 'germany' }
+            @{ Group = 'someFutureRegionGroup' }
         ) {
             Set-CPCCrossRegionDisasterRecovery -Name 'UserSettings01' -DisasterRecoveryType crossRegion -RegionName 'westeurope' -RegionGroup $Group | Out-Null
 
