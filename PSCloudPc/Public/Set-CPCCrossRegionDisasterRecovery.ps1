@@ -14,6 +14,10 @@ function Set-CPCCrossRegionDisasterRecovery {
     - premium       : Premium DR — adds user-initiated failover capability on top of
                       cross-region standby
 
+    crossRegionDisasterRecoveryEnabled is deprecated in the Graph docs, but Graph still rejects
+    crossRegion and premium without it, so it is sent as $true for those types and $false for
+    notConfigured.
+
     Only the crossRegionDisasterRecoverySetting of the policy is changed. The restore point
     settings of the policy (frequencyType and userRestoreEnabled) are kept unchanged: their
     current values are sent back as they are. The deprecated frequencyInHours is never sent.
@@ -115,6 +119,8 @@ function Set-CPCCrossRegionDisasterRecovery {
     Process {
         $drSetting = @{
             disasterRecoveryType                   = $DisasterRecoveryType
+            # Deprecated, but Graph still answers 400 parameterValidationFailed for crossRegion without it
+            crossRegionDisasterRecoveryEnabled     = ($DisasterRecoveryType -ne 'notConfigured')
             maintainCrossRegionRestorePointEnabled = $MaintainCrossRegionRestorePointEnabled
             userInitiatedDisasterRecoveryAllowed   = $false
         }

@@ -1,8 +1,9 @@
 <#
 This file tests the Set-CPCCrossRegionDisasterRecovery function by using Pester.
 Contract: PATCH /deviceManagement/virtualEndpoint/userSettings/{id} with a
-crossRegionDisasterRecoverySetting that uses disasterRecoveryType (the deprecated
-crossRegionDisasterRecoveryEnabled is never sent), a Microsoft-hosted network setting with
+crossRegionDisasterRecoverySetting that uses disasterRecoveryType plus the deprecated
+crossRegionDisasterRecoveryEnabled, which Graph still requires ($true for crossRegion and
+premium, $false for notConfigured), a Microsoft-hosted network setting with
 regionName/regionGroup for crossRegion and premium, and documented cloudPcRegionGroup values.
 The policy's current restorePointSetting (frequencyType, userRestoreEnabled) is sent back
 unchanged; the deprecated frequencyInHours is never sent.
@@ -116,18 +117,19 @@ Describe 'Set-CPCCrossRegionDisasterRecovery' {
     }
 
     Context 'Deprecated and unrelated properties (<Type>)' -ForEach @(
-        @{ Type = 'notConfigured'; Params = @{} }
-        @{ Type = 'crossRegion'; Params = @{ RegionName = 'westeurope'; RegionGroup = 'europeUnion' } }
-        @{ Type = 'premium'; Params = @{ RegionName = 'westeurope'; RegionGroup = 'europeUnion' } }
+        @{ Type = 'notConfigured'; Params = @{}; Enabled = $false }
+        @{ Type = 'crossRegion'; Params = @{ RegionName = 'westeurope'; RegionGroup = 'europeUnion' }; Enabled = $true }
+        @{ Type = 'premium'; Params = @{ RegionName = 'westeurope'; RegionGroup = 'europeUnion' }; Enabled = $true }
     ) {
 
-        It 'never sends crossRegionDisasterRecoveryEnabled' {
+        It 'sends crossRegionDisasterRecoveryEnabled as <Enabled>, which Graph still requires' {
             Set-CPCCrossRegionDisasterRecovery -Name 'UserSettings01' -DisasterRecoveryType $Type @Params | Out-Null
 
             Should -Invoke Invoke-RestMethod -ModuleName PSCloudPC -Times 1 -Exactly -ParameterFilter {
                 $dr = ($Body | ConvertFrom-Json).crossRegionDisasterRecoverySetting
                 $null -ne $dr -and
-                $dr.PSObject.Properties.Name -notcontains 'crossRegionDisasterRecoveryEnabled'
+                $dr.PSObject.Properties.Name -ccontains 'crossRegionDisasterRecoveryEnabled' -and
+                $dr.crossRegionDisasterRecoveryEnabled -eq $Enabled
             }
         }
 
