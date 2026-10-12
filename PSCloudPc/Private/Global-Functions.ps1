@@ -26,23 +26,62 @@ function Get-TokenValidity {
     }
 }
 
+#Function to return the id of the one group with this exact display name
+#Stops the calling cmdlet ($Cmdlet) when 0 or more than 1 group matches, so -ErrorAction can't skip the check
+#https://learn.microsoft.com/graph/api/group-list?view=graph-rest-beta (Group.ReadBasic.All is enough)
 function Get-AzureADGroupID {
     param (
         [Parameter(Mandatory = $true)]
-        [string]$GroupName
+        [string]$GroupName,
+
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCmdlet]$Cmdlet
     )
 
-    $url = "https://graph.microsoft.com/$script:MSGraphVersion/groups?`$filter=displayName+eq+'$GroupName'"
+    #Double single quotes for OData, then encode the filter so names with ' & # + still give one exact match
+    $filter = "displayName eq '$($GroupName.Replace("'", "''"))'"
+    $url = "https://graph.microsoft.com/$script:MSGraphVersion/groups?`$filter=$([uri]::EscapeDataString($filter))&`$select=id,displayName"
 
-    $result = Invoke-RestMethod -Uri $url -Headers $script:Authheader -Method GET
+    Write-Verbose "Group lookup: GET $url"
 
-    if ($null -eq $result) {
-        Write-Error "No groups returned"
-        break
+    try {
+        $groups = @(Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET -ErrorAction Stop)
     }
-    
-    $script:GroupID = $result.value.id
+    catch {
+        Stop-CPCCommand -Cmdlet $Cmdlet -Message "Failed to look up group $($GroupName): $(Get-GraphErrorMessage $_)" -Category InvalidOperation
+    }
 
+    if ($groups.Count -eq 0) {
+        Stop-CPCCommand -Cmdlet $Cmdlet -Message "No group found with name $GroupName" -Category ObjectNotFound
+    }
+
+    if ($groups.Count -gt 1) {
+        Stop-CPCCommand -Cmdlet $Cmdlet -Message "$($groups.Count) groups found with name $GroupName ($($groups.id -join ', ')). The name must match exactly one group"
+    }
+
+    $groupId = [string]$groups[0].id
+
+    if ([string]::IsNullOrWhiteSpace($groupId)) {
+        Stop-CPCCommand -Cmdlet $Cmdlet -Message "Graph returned group $GroupName without an id" -Category InvalidResult
+    }
+
+    return $groupId
+}
+
+#Function to ask for confirmation of a change that removes something (for example existing policy assignments)
+#ConfirmImpact High prompts by default, like other destructive cmdlets; -Confirm:$false skips it and -WhatIf returns $false
+#The caller passes its own -WhatIf/-Confirm through
+function Confirm-CPCHighImpactAction {
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "High")]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Target,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Action
+    )
+
+    return $PSCmdlet.ShouldProcess($Target, $Action)
 }
 
 function Invoke-APIRequest {

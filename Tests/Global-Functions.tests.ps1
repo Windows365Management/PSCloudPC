@@ -214,3 +214,109 @@ Describe 'Get-TokenValidity' {
         }
     }
 }
+
+Describe 'Get-AzureADGroupID' {
+    # https://learn.microsoft.com/graph/api/group-list?view=graph-rest-beta
+    # The helper stops the cmdlet passed as -Cmdlet, so it is called from a small advanced function here.
+
+    BeforeEach {
+        InModuleScope PSCloudPC {
+            $script:Authtoken = "token"
+            $script:MSGraphVersion = "beta"
+        }
+    }
+
+    It "Returns the id of the one group with this name and escapes the name in the filter" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest { [PSCustomObject]@{ Content = '{"value":[{"id":"00000000-0000-0000-0000-0000000000a1","displayName":"O''Brien & Co"}]}' } }
+            function Test-GroupLookup { [CmdletBinding()] param ([string]$GroupName) Get-AzureADGroupID -GroupName $GroupName -Cmdlet $PSCmdlet }
+
+            $result = Test-GroupLookup -GroupName "O'Brien & Co"
+
+            $result | Should -BeOfType [string]
+            $result | Should -Be "00000000-0000-0000-0000-0000000000a1"
+            # ' is doubled for OData, then the whole filter is encoded (' -> %27, & -> %26, space -> %20)
+            Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+                ([uri]$Uri).OriginalString -eq "https://graph.microsoft.com/beta/groups?`$filter=displayName%20eq%20%27O%27%27Brien%20%26%20Co%27&`$select=id,displayName" -and
+                $Method -eq "GET"
+            }
+        }
+    }
+
+    It "Stops when no group has this name, also with -ErrorAction SilentlyContinue" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest { [PSCustomObject]@{ Content = '{"value":[]}' } }
+            function Test-GroupLookup { [CmdletBinding()] param ([string]$GroupName) Get-AzureADGroupID -GroupName $GroupName -Cmdlet $PSCmdlet }
+
+            { Test-GroupLookup -GroupName "Missing Group" -ErrorAction SilentlyContinue } | Should -Throw -ExpectedMessage "No group found with name Missing Group"
+        }
+    }
+
+    It "Stops and lists the ids when more than one group has this name" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest { [PSCustomObject]@{ Content = '{"value":[{"id":"00000000-0000-0000-0000-0000000000a1","displayName":"Team"},{"id":"00000000-0000-0000-0000-0000000000a2","displayName":"Team"}]}' } }
+            function Test-GroupLookup { [CmdletBinding()] param ([string]$GroupName) Get-AzureADGroupID -GroupName $GroupName -Cmdlet $PSCmdlet }
+
+            { Test-GroupLookup -GroupName "Team" -ErrorAction SilentlyContinue } |
+                Should -Throw -ExpectedMessage "2 groups found with name Team (00000000-0000-0000-0000-0000000000a1, 00000000-0000-0000-0000-0000000000a2)*"
+        }
+    }
+
+    It "Stops with the Graph error when the lookup fails" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest {
+                $errorRecord = [System.Management.Automation.ErrorRecord]::new(
+                    [System.Exception]::new("Response status code does not indicate success: 403 (Forbidden)."),
+                    "WebCmdletWebResponseException",
+                    "InvalidOperation",
+                    $null
+                )
+                $errorRecord.ErrorDetails = [System.Management.Automation.ErrorDetails]::new('{"error":{"code":"Authorization_RequestDenied","message":"Insufficient privileges to complete the operation."}}')
+                throw $errorRecord
+            }
+            function Test-GroupLookup { [CmdletBinding()] param ([string]$GroupName) Get-AzureADGroupID -GroupName $GroupName -Cmdlet $PSCmdlet }
+
+            { Test-GroupLookup -GroupName "Team" -ErrorAction SilentlyContinue } | Should -Throw -ExpectedMessage "Failed to look up group Team:*Authorization_RequestDenied*"
+        }
+    }
+}
+
+Describe "Invoke-APIRequest -AdditionalHeaders" {
+
+    It "Sends the extra headers on every page and keeps the Authorization header" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq "https://graph.microsoft.com/beta/test" } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"1"}],"@odata.nextLink":"https://graph.microsoft.com/beta/test?page=2"}' }
+            }
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq "https://graph.microsoft.com/beta/test?page=2" } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"2"}]}' }
+            }
+
+            $null = Invoke-APIRequest -uri "https://graph.microsoft.com/beta/test" -Token "token" -AdditionalHeaders @{ Prefer = "include-unknown-enum-members"; Authorization = "Bearer other" }
+
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly -ParameterFilter {
+                $Headers["Prefer"] -eq "include-unknown-enum-members" -and $Headers["Authorization"] -eq "Bearer token"
+            }
+        }
+    }
+}
+
+Describe "Confirm-CPCHighImpactAction" {
+
+    It "Has ConfirmImpact High, so it prompts by default" {
+        InModuleScope PSCloudPC {
+            $binding = (Get-Command Confirm-CPCHighImpactAction).ScriptBlock.Attributes |
+                Where-Object { $_ -is [System.Management.Automation.CmdletBindingAttribute] }
+
+            $binding.SupportsShouldProcess | Should -BeTrue
+            "$($binding.ConfirmImpact)" | Should -Be "High"
+        }
+    }
+
+    It "Returns true with -Confirm:`$false and false with -WhatIf" {
+        InModuleScope PSCloudPC {
+            Confirm-CPCHighImpactAction -Target "Policy" -Action "Remove" -Confirm:$false | Should -BeTrue
+            Confirm-CPCHighImpactAction -Target "Policy" -Action "Remove" -WhatIf | Should -BeFalse
+        }
+    }
+}
