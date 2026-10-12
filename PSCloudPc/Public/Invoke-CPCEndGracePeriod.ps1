@@ -76,7 +76,7 @@ function Invoke-CPCEndGracePeriod {
         }
         else {
 
-            Write-Output "$($Count) CloudPC(s) found in grace period" -ForegroundColor Yellow
+            Write-Host "$($Count) CloudPC(s) found in grace period" -ForegroundColor Yellow
             $choice = Read-Host "Are you sure you want to end the grace period for CloudPC(s)? (y/n)"
             if ($choice -ne "y") {
                 Write-Output "Exiting script"

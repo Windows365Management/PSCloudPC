@@ -47,7 +47,7 @@ function Get-CPCAuditEvent {
         switch ($PsCmdlet.ParameterSetName) {
             Activity {
                 Write-Verbose "Activity filter provided: $Activity"
-                $queryParams += "`$filter=activity+eq+'$($Activity)'"
+                $queryParams += "`$filter=activityType+eq+'$($Activity)'"
             }
         }
 

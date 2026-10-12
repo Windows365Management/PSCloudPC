@@ -75,15 +75,12 @@ function Get-CPCRealTimeConnectionStatus {
                 return
             }
 
-            [PSCustomObject]@{
-                CloudPCName       = $targetName
-                CloudPCId         = $targetId
-                signInStatus      = $result.signInStatus
-                daysSinceLastUse  = $result.daysSinceLastUse
-                signInDateTime    = $result.signInDateTime
-                signOutDateTime   = $result.signOutDateTime
-                durationInSeconds = $result.durationInSeconds
-                usageStatus       = $result.usageStatus
+            foreach ($row in $result.Values) {
+                $info = [ordered]@{}
+                for ($i = 0; $i -lt $result.Schema.Count; $i++) {
+                    $info[$result.Schema[$i].Column] = $row[$i]
+                }
+                [PSCustomObject]$info
             }
         }
         catch {

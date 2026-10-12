@@ -22,7 +22,7 @@ function Get-CPCProvisioningPolicy {
         switch ($PsCmdlet.ParameterSetName) {
             Name {
                 Write-Verbose "Name parameter provided"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies?`$filter=displayName+eq+'$($Name)'"
+                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies?`$filter=displayName+eq+'$($Name.Replace("'", "''"))'"
             }
             default {
                 $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies"
@@ -32,7 +32,7 @@ function Get-CPCProvisioningPolicy {
     
     Process {
         write-verbose $url
-        $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
+        $result = Invoke-WebRequest -uri $url -Method GET -Headers ($script:authHeader + @{ Prefer = "include-unknown-enum-members" })
     
         if ($null -eq $result) {
             Write-Error "No Provisioning Policy's returned"

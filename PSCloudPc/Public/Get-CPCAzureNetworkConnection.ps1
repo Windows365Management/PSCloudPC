@@ -22,7 +22,7 @@ function Get-CPCAzureNetworkConnection {
         switch ($PsCmdlet.ParameterSetName) {
             DisplayName {
                 Write-Verbose "DisplayName parameter provided"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/onPremisesConnections?`$filter=displayName+eq+'$($Name)'"
+                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/onPremisesConnections?`$filter=displayName+eq+'$($Name.Replace("'", "''"))'"
             }
             default {
                 $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/onPremisesConnections"

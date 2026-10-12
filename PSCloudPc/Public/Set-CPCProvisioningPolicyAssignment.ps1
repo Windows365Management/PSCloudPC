@@ -127,7 +127,7 @@ function Set-CPCProvisioningPolicyAssignment {
                     $GroupID = New-Object System.Collections.Generic.List[System.Object]
                     $GroupID.Add($script:GroupID)
                     $currentassignments | ForEach-Object {
-                        $GroupID.Add($_)
+                        if ($_ -ne $script:GroupID) { $GroupID.Add($_) }
                     }
                     Write-Verbose "GroupID Value: $($GroupID)"
 
