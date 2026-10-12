@@ -14,13 +14,18 @@ function Set-CPCCrossRegionDisasterRecovery {
     - premium       : Premium DR — adds user-initiated failover capability on top of
                       cross-region standby
 
-    crossRegionDisasterRecoveryEnabled is deprecated in the Graph docs, but Graph still rejects
-    crossRegion and premium without it, so it is sent as $true for those types and $false for
-    notConfigured.
+    Only the crossRegionDisasterRecoverySetting of the policy is changed, and within it only
+    what you pass: -MaintainCrossRegionRestorePointEnabled and -UserInitiatedDisasterRecoveryAllowed
+    keep their current value when they are not passed. Graph replaces the
+    whole policy on an update, so the cmdlet reads the current policy and sends all other
+    settings (local admin, reset, restore point settings and so on) back unchanged. Changes
+    someone else makes to the policy between that read and the update are overwritten. The
+    deprecated restorePointSetting frequencyInHours and the retired selfServiceEnabled and
+    notificationSetting are never sent.
 
-    Only the crossRegionDisasterRecoverySetting of the policy is changed. The restore point
-    settings of the policy (frequencyType and userRestoreEnabled) are kept unchanged: their
-    current values are sent back as they are. The deprecated frequencyInHours is never sent.
+    crossRegionDisasterRecoveryEnabled is deprecated in the Graph docs, but Graph still rejects
+    a crossRegion setting without it, so it is sent as $true for crossRegion and premium and as
+    $false for notConfigured.
 
     This function requires the Graph API beta endpoint and the CloudPC.ReadWrite.All permission.
     .PARAMETER Name
@@ -30,11 +35,14 @@ function Set-CPCCrossRegionDisasterRecovery {
     The disaster recovery mode to configure. Valid values: notConfigured, crossRegion, premium.
     .PARAMETER MaintainCrossRegionRestorePointEnabled
     When $true, Windows 365 continuously maintains cross-region restore points that can be
-    used during failover. When $false (default), only the initial provisioning image is
-    available after a disaster, which may result in data loss.
+    used during failover. When $false, only the initial provisioning image is available
+    after a disaster, which may result in data loss. When not passed, the current value of
+    the policy is kept (Graph's default for a new setting is $false).
     .PARAMETER UserInitiatedDisasterRecoveryAllowed
     When $true, end users can activate disaster recovery themselves from the Windows 365
-    portal. Only applicable when DisasterRecoveryType is 'premium'. Default is $false.
+    portal. Only applicable when DisasterRecoveryType is 'premium'; for the other types it is
+    always sent as $false. When not passed with premium, the current value of the policy is
+    kept (Graph's default for a new setting is $false).
     .PARAMETER RegionName
     The Azure region name to use as the disaster recovery target (e.g. 'westus',
     'northeurope', 'eastasia'). Required when DisasterRecoveryType is 'crossRegion' or
@@ -54,6 +62,7 @@ function Set-CPCCrossRegionDisasterRecovery {
     .NOTES
     Required permission: CloudPC.ReadWrite.All
     https://learn.microsoft.com/graph/api/cloudpcusersetting-update?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/cloudpcusersetting-get?view=graph-rest-beta
     https://learn.microsoft.com/graph/api/resources/cloudpccrossregiondisasterrecoverysetting?view=graph-rest-beta
     https://learn.microsoft.com/graph/api/resources/cloudpcregiongroup?view=graph-rest-beta
     https://learn.microsoft.com/graph/api/resources/cloudpcrestorepointsetting?view=graph-rest-beta
@@ -69,10 +78,10 @@ function Set-CPCCrossRegionDisasterRecovery {
         [string]$DisasterRecoveryType,
 
         [Parameter(Mandatory = $false)]
-        [bool]$MaintainCrossRegionRestorePointEnabled = $false,
+        [bool]$MaintainCrossRegionRestorePointEnabled,
 
         [Parameter(Mandatory = $false)]
-        [bool]$UserInitiatedDisasterRecoveryAllowed = $false,
+        [bool]$UserInitiatedDisasterRecoveryAllowed,
 
         [Parameter(Mandatory = $false)]
         [string]$RegionName,
@@ -112,58 +121,59 @@ function Set-CPCCrossRegionDisasterRecovery {
     }
 
     Process {
-        $drSetting = @{
-            disasterRecoveryType                   = $DisasterRecoveryType
-            # Deprecated, but Graph still answers 400 parameterValidationFailed for crossRegion without it
-            crossRegionDisasterRecoveryEnabled     = ($DisasterRecoveryType -ne 'notConfigured')
-            maintainCrossRegionRestorePointEnabled = $MaintainCrossRegionRestorePointEnabled
-            userInitiatedDisasterRecoveryAllowed   = $false
+        # PATCH replaces the whole policy and resets every setting that is left out,
+        # so read the current settings and change only what was passed
+        try {
+            $body = Get-CPCUserSettingBody -Id $Policy.id -ErrorAction Stop
+        }
+        catch {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message (Get-GraphErrorMessage $_) -Category InvalidOperation
         }
 
-        If ($DisasterRecoveryType -eq 'premium') {
-            $drSetting.userInitiatedDisasterRecoveryAllowed = $UserInitiatedDisasterRecoveryAllowed
+        # Start from the current disaster recovery setting, so options that weren't passed keep their value
+        $drSetting = @{}
+        If ($body["crossRegionDisasterRecoverySetting"] -is [hashtable]) {
+            $drSetting = $body["crossRegionDisasterRecoverySetting"]
+        }
+
+        $drSetting["disasterRecoveryType"] = $DisasterRecoveryType
+        # crossRegionDisasterRecoveryEnabled is deprecated, but Graph still rejects crossRegion unless it is true
+        $drSetting["crossRegionDisasterRecoveryEnabled"] = ($DisasterRecoveryType -ne "notConfigured")
+
+        If ($PSBoundParameters.ContainsKey('MaintainCrossRegionRestorePointEnabled')) {
+            $drSetting["maintainCrossRegionRestorePointEnabled"] = $MaintainCrossRegionRestorePointEnabled
+        }
+
+        # User-initiated failover is only supported for premium disaster recovery
+        If ($DisasterRecoveryType -ne 'premium') {
+            $drSetting["userInitiatedDisasterRecoveryAllowed"] = $false
+        }
+        ElseIf ($PSBoundParameters.ContainsKey('UserInitiatedDisasterRecoveryAllowed')) {
+            $drSetting["userInitiatedDisasterRecoveryAllowed"] = $UserInitiatedDisasterRecoveryAllowed
         }
 
         If ($DisasterRecoveryType -in @('crossRegion', 'premium')) {
             # Abstract Graph type: name the Microsoft-hosted subtype that regionName/regionGroup belong to
-            $drSetting.disasterRecoveryNetworkSetting = @{
+            $drSetting["disasterRecoveryNetworkSetting"] = @{
                 '@odata.type' = '#microsoft.graph.cloudPcDisasterRecoveryMicrosoftHostedNetworkSetting'
                 regionName    = $RegionName
                 regionGroup   = $RegionGroup
             }
         }
-
-        $body = @{
-            crossRegionDisasterRecoverySetting = $drSetting
+        Else {
+            # No network setting with notConfigured, as before
+            $drSetting.Remove("disasterRecoveryNetworkSetting")
         }
 
-        # Send the unchanged policy values the update docs list, only when the policy has them
-        foreach ($property in 'displayName', 'localAdminEnabled', 'resetEnabled') {
-            If ($null -ne $Policy.$property) {
-                $body[$property] = $Policy.$property
-            }
-        }
-
-        # Send the current restore point settings back unchanged, because it is not documented whether
-        # PATCH keeps or clears a restorePointSetting that is left out. The deprecated frequencyInHours is never sent.
-        # https://learn.microsoft.com/graph/api/resources/cloudpcrestorepointsetting?view=graph-rest-beta
-        $restorePointSetting = @{}
-        foreach ($property in 'frequencyType', 'userRestoreEnabled') {
-            If ($null -ne $Policy.restorePointSetting.$property) {
-                $restorePointSetting[$property] = $Policy.restorePointSetting.$property
-            }
-        }
-
-        If ($restorePointSetting.Count -gt 0) {
-            $body.restorePointSetting = $restorePointSetting
-        }
+        $body["crossRegionDisasterRecoverySetting"] = $drSetting
 
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Verbose "Request Body: $bodyJson"
 
         If ($PSCmdlet.ShouldProcess($Name, "Set Cross-Region Disaster Recovery to $DisasterRecoveryType")) {
             try {
-                Invoke-RestMethod -Uri $url -Headers $script:Authheader -Method PATCH -Body $bodyJson -ContentType "application/json"
+                # Graph returns 204 No Content; nothing is written to the output
+                $null = Invoke-RestMethod -Uri $url -Headers $script:Authheader -Method PATCH -Body $bodyJson -ContentType "application/json" -ErrorAction Stop
             }
             catch {
                 Throw (Get-GraphErrorMessage $_)

@@ -214,3 +214,104 @@ function Stop-CPCCommand {
     $errorRecord = [System.Management.Automation.ErrorRecord]::new([System.Exception]::new($Message), 'PSCloudPC.Guard', $Category, $null)
     $Cmdlet.ThrowTerminatingError($errorRecord)
 }
+
+#Function to read a Cloud PC user setting and return its writable properties as a hashtable for a PATCH body
+#PATCH on userSettings replaces the whole object: every writable property left out of the body goes back to its default,
+#and displayName is required. The update cmdlets therefore send the current values back and change only what was passed.
+#Every property the GET returns is copied, so a writable property Microsoft adds later is kept as well; left out are the
+#read-only ones (id, createdDateTime, lastModifiedDateTime, @odata.*), the assignments relationship, null values and the
+#retired ones (selfServiceEnabled, notificationSetting, restorePointSetting.frequencyInHours).
+#https://learn.microsoft.com/graph/api/cloudpcusersetting-get?view=graph-rest-beta
+#https://learn.microsoft.com/graph/api/cloudpcusersetting-update?view=graph-rest-beta
+#https://learn.microsoft.com/graph/api/resources/cloudpcusersetting?view=graph-rest-beta
+function Get-CPCUserSettingBody {
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Id
+    )
+
+    $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/userSettings/$Id"
+    $current = Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET
+
+    if ($null -eq $current -or [string]::IsNullOrWhiteSpace($current.displayName)) {
+        Throw "User setting $Id was not returned with a displayName, which every update requires"
+    }
+
+    #Read-only properties, the assignments relationship (only returned with $expand) and retired properties:
+    #selfServiceEnabled stopped working on December 1, 2023 and notificationSetting on July 14, 2026
+    $skipProperties = "id", "createdDateTime", "lastModifiedDateTime", "assignments", "selfServiceEnabled", "notificationSetting"
+
+    $body = @{}
+    foreach ($property in $current.PSObject.Properties) {
+        if ($property.Name -like "@odata.*" -or $property.Name -in $skipProperties -or $null -eq $property.Value) {
+            continue
+        }
+        $body[$property.Name] = ConvertTo-CPCRequestValue -Value $property.Value
+    }
+
+    #The deprecated frequencyInHours is not sent; frequencyType replaces it
+    if ($body["restorePointSetting"] -is [hashtable]) {
+        $body["restorePointSetting"].Remove("frequencyInHours")
+        if ($body["restorePointSetting"].Count -eq 0) {
+            $body.Remove("restorePointSetting")
+        }
+    }
+
+    if ($body["crossRegionDisasterRecoverySetting"] -is [hashtable]) {
+        $drSetting = $body["crossRegionDisasterRecoverySetting"]
+        $disasterRecoveryType = $drSetting["disasterRecoveryType"]
+        if ([string]::IsNullOrWhiteSpace($disasterRecoveryType) -and $drSetting["crossRegionDisasterRecoveryEnabled"] -eq $true) {
+            #Documented replacement for a setting that only has the deprecated flag
+            $disasterRecoveryType = "crossRegion"
+        }
+
+        if ([string]::IsNullOrWhiteSpace($disasterRecoveryType)) {
+            #Without a disasterRecoveryType Graph rejects the setting; left out, it stays at its default (notConfigured)
+            $body.Remove("crossRegionDisasterRecoverySetting")
+        }
+        else {
+            #crossRegionDisasterRecoveryEnabled is deprecated, but Graph still rejects crossRegion unless it is true
+            $drSetting["disasterRecoveryType"] = $disasterRecoveryType
+            $drSetting["crossRegionDisasterRecoveryEnabled"] = ($disasterRecoveryType -ne "notConfigured")
+        }
+    }
+
+    return $body
+}
+
+#Function to copy a value from ConvertFrom-Json into hashtables and arrays for a request body
+#Null values and @odata annotations are left out. @odata.type is kept on these nested objects: Graph returns it for
+#derived types, such as the Microsoft-hosted or Azure network connection disaster recovery network setting, and needs it
+#to tell them apart.
+function ConvertTo-CPCRequestValue {
+    param (
+        [Parameter(Mandatory = $true)]
+        [AllowNull()]
+        [AllowEmptyString()]
+        [AllowEmptyCollection()]
+        $Value
+    )
+
+    if ($Value -is [System.Management.Automation.PSCustomObject]) {
+        $result = @{}
+        foreach ($property in $Value.PSObject.Properties) {
+            if ($null -eq $property.Value -or ($property.Name -like "@odata.*" -and $property.Name -ne "@odata.type")) {
+                continue
+            }
+            $result[$property.Name] = ConvertTo-CPCRequestValue -Value $property.Value
+        }
+        return $result
+    }
+
+    if ($Value -is [array]) {
+        $items = @(foreach ($item in $Value) {
+                if ($null -ne $item) {
+                    ConvertTo-CPCRequestValue -Value $item
+                }
+            })
+        return , $items
+    }
+
+    return $Value
+}
