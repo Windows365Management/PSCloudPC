@@ -153,6 +153,145 @@ Describe 'Invoke-APIRequest' {
             { Invoke-APIRequest -uri 'https://graph.microsoft.com/beta/test' -Token 'token' } | Should -Throw '*No response returned*'
         }
     }
+
+    It 'Stops paging once MaxItems items are collected and returns only that many' {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test' } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"1"},{"id":"2"},{"id":"3"}],"@odata.nextLink":"https://graph.microsoft.com/beta/test?page=2"}' }
+            }
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test?page=2' } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"4"}]}' }
+            }
+
+            $result = @(Invoke-APIRequest -uri 'https://graph.microsoft.com/beta/test' -Token 'token' -MaxItems 2)
+
+            $result.id | Should -Be @('1', '2')
+            Should -Invoke Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test?page=2' } -Times 0 -Exactly
+        }
+    }
+
+    It 'Sends AdditionalHeaders on every page and never replaces the Authorization header' {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test' } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"1"}],"@odata.nextLink":"https://graph.microsoft.com/beta/test?page=2"}' }
+            }
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test?page=2' } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"2"}]}' }
+            }
+
+            Invoke-APIRequest -uri 'https://graph.microsoft.com/beta/test' -Token 'token' -AdditionalHeaders @{ Prefer = 'include-unknown-enum-members'; Authorization = 'Bearer other' } | Out-Null
+
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly -ParameterFilter {
+                $Headers.Prefer -eq 'include-unknown-enum-members' -and $Headers.Authorization -eq 'Bearer token'
+            }
+        }
+    }
+
+    It 'Follows nextLink while fewer than MaxItems items are collected' {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test' } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"1"}],"@odata.nextLink":"https://graph.microsoft.com/beta/test?page=2"}' }
+            }
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test?page=2' } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"2"},{"id":"3"}]}' }
+            }
+
+            $result = @(Invoke-APIRequest -uri 'https://graph.microsoft.com/beta/test' -Token 'token' -MaxItems 2)
+
+            $result.id | Should -Be @('1', '2')
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly
+        }
+    }
+}
+
+Describe 'Invoke-APIRequest guards when the caller ignores errors' {
+    # A plain Throw is skipped under -ErrorAction SilentlyContinue / $ErrorActionPreference = 'SilentlyContinue',
+    # which used to send the token to a foreign nextLink and loop on a failed page (security review X1).
+
+    It 'Never requests a foreign nextLink with -ErrorAction SilentlyContinue' {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test' } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"1"}],"@odata.nextLink":"https://evil.example.com/beta/test?page=2"}' }
+            }
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -like 'https://evil.example.com/*' } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"2"}]}' }
+            }
+
+            $thrown = $null
+            try { Invoke-APIRequest -uri 'https://graph.microsoft.com/beta/test' -Token 'token' -ErrorAction SilentlyContinue | Out-Null } catch { $thrown = $_ }
+
+            Should -Invoke Invoke-WebRequest -ParameterFilter { $Uri -like 'https://evil.example.com/*' } -Times 0 -Exactly
+            Should -Invoke Invoke-WebRequest -Times 1 -Exactly
+            "$thrown" | Should -BeLike '*Refusing to follow @odata.nextLink*'
+        }
+    }
+
+    It 'Never requests a foreign nextLink with $ErrorActionPreference = SilentlyContinue' {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test' } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"1"}],"@odata.nextLink":"https://evil.example.com/beta/test?page=2"}' }
+            }
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -like 'https://evil.example.com/*' } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"2"}]}' }
+            }
+
+            $thrown = $null
+            try {
+                & {
+                    $ErrorActionPreference = 'SilentlyContinue'
+                    Invoke-APIRequest -uri 'https://graph.microsoft.com/beta/test' -Token 'token' | Out-Null
+                }
+            }
+            catch { $thrown = $_ }
+
+            Should -Invoke Invoke-WebRequest -ParameterFilter { $Uri -like 'https://evil.example.com/*' } -Times 0 -Exactly
+            Should -Invoke Invoke-WebRequest -Times 1 -Exactly
+            "$thrown" | Should -BeLike '*Refusing to follow @odata.nextLink*'
+        }
+    }
+
+    It 'Stops after the second request when the same nextLink repeats, with -ErrorAction SilentlyContinue' {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"1"}],"@odata.nextLink":"https://graph.microsoft.com/beta/test?page=2"}' }
+            }
+
+            $thrown = $null
+            try { Invoke-APIRequest -uri 'https://graph.microsoft.com/beta/test' -Token 'token' -ErrorAction SilentlyContinue | Out-Null } catch { $thrown = $_ }
+
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly
+            "$thrown" | Should -BeLike '*same @odata.nextLink twice*'
+        }
+    }
+
+    It 'Stops at the failing page and never reuses the previous page, with -ErrorAction SilentlyContinue' {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test' } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"1"}],"@odata.nextLink":"https://graph.microsoft.com/beta/test?page=2"}' }
+            }
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test?page=2' } {
+                throw 'Response status code does not indicate success: 503 (Service Unavailable).'
+            }
+
+            $thrown = $null
+            $result = $null
+            try { $result = Invoke-APIRequest -uri 'https://graph.microsoft.com/beta/test' -Token 'token' -ErrorAction SilentlyContinue } catch { $thrown = $_ }
+
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly
+            Should -Invoke Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test?page=2' } -Times 1 -Exactly
+            $result | Should -BeNullOrEmpty
+            "$thrown" | Should -BeLike '*503*'
+        }
+    }
+
+    It 'Stops when the first request fails, with -ErrorAction SilentlyContinue' {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest { throw 'Response status code does not indicate success: 503 (Service Unavailable).' }
+
+            { Invoke-APIRequest -uri 'https://graph.microsoft.com/beta/test' -Token 'token' -ErrorAction SilentlyContinue } | Should -Throw '*503*'
+            Should -Invoke Invoke-WebRequest -Times 1 -Exactly
+        }
+    }
 }
 
 Describe 'Get-GraphErrorMessage' {

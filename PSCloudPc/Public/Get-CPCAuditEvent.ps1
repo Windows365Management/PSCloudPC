@@ -4,16 +4,19 @@ function Get-CPCAuditEvent {
     Returns Cloud PC audit events
     .DESCRIPTION
     The function will return all Cloud PC audit events, or audit events filtered
-    by activity name. Audit events record every create, update, and delete
+    by activity type. Audit events record every create, update, and delete
     operation performed on Cloud PC resources and are useful for compliance,
-    troubleshooting, and change tracking.
+    troubleshooting, and change tracking. All result pages are returned.
 
     Optionally use -Top to limit the number of results returned (audit logs
     can grow large in active tenants).
     .PARAMETER Activity
-    Filter audit events by activity name, e.g. "Update cloudPC" or
-    "Reprovision cloudPc". Use Get-CPCAuditEvent first to discover activity names
-    in your tenant.
+    Return only audit events whose activityType (or activity, when Graph fills it)
+    equals this value, e.g. "Create CloudPcUserSetting" or
+    "AssignToGroups CloudPcProvisioningPolicy". The match is exact and
+    case-insensitive and is done on the client, because Graph leaves the activity
+    property empty. Use Get-CPCAuditEvent first to discover the activity types in
+    your tenant.
     .PARAMETER Top
     Limit the number of audit events returned. When omitted all events are returned.
     .EXAMPLE
@@ -21,11 +24,12 @@ function Get-CPCAuditEvent {
     .EXAMPLE
     Get-CPCAuditEvent -Top 25
     .EXAMPLE
-    Get-CPCAuditEvent -Activity "Reprovision cloudPc"
+    Get-CPCAuditEvent -Activity "Create CloudPcUserSetting"
     .NOTES
     Requires CloudPC.Read.All or CloudPC.ReadWrite.All permission
     (delegated or application).
-    API reference: https://learn.microsoft.com/en-us/graph/api/virtualendpoint-list-auditevents
+    API reference: https://learn.microsoft.com/graph/api/virtualendpoint-list-auditevents?view=graph-rest-beta
+    Resource: https://learn.microsoft.com/graph/api/resources/cloudpcauditevent?view=graph-rest-beta
     #>
     [CmdletBinding()]
     param (
@@ -40,67 +44,48 @@ function Get-CPCAuditEvent {
     Begin {
         Get-TokenValidity
 
-        $baseUrl = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/auditEvents"
+        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/auditEvents"
+        $maxItems = 0
 
-        $queryParams = @()
-
-        switch ($PsCmdlet.ParameterSetName) {
-            Activity {
-                Write-Verbose "Activity filter provided: $Activity"
-                $queryParams += "`$filter=activity+eq+'$($Activity)'"
-            }
+        if ($PSBoundParameters.ContainsKey("Activity")) {
+            # Graph returns activity as null and puts the text in activityType, so filter on the client.
+            # With -Activity every page is read and -Top is applied after filtering.
+            Write-Verbose "Activity filter provided: $Activity"
         }
-
-        if ($PSBoundParameters.ContainsKey('Top')) {
-            $queryParams += "`$top=$Top"
-        }
-
-        if ($queryParams.Count -gt 0) {
-            $url = "$baseUrl`?$($queryParams -join '&')"
-        }
-        else {
-            $url = $baseUrl
+        elseif ($PSBoundParameters.ContainsKey("Top")) {
+            $url = "$url`?`$top=$Top"
+            $maxItems = $Top
         }
     }
 
     Process {
-        Write-Verbose $url
+        $events = @(Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET -MaxItems $maxItems)
 
-        try {
-            $result = Invoke-WebRequest -Uri $url -Method GET -Headers $script:authHeader
-        }
-        catch {
-            Throw (Get-GraphErrorMessage $_)
+        if ($PSBoundParameters.ContainsKey("Activity")) {
+            $events = @($events | Where-Object { $_.activityType -eq $Activity -or $_.activity -eq $Activity })
+            Write-Verbose "$($events.Count) audit events with activity type '$Activity'"
         }
 
-        if ($null -eq $result) {
-            Write-Error "No audit events returned"
-            return
+        if ($PSBoundParameters.ContainsKey("Top")) {
+            $events = @($events | Select-Object -First $Top)
         }
 
-        $resultnew = $result.content | ConvertFrom-Json
-        $returnResults = @()
-
-        $resultnew.value | ForEach-Object {
-
-            $Info = [PSCustomObject]@{
-                id                    = $_.id
-                displayName           = $_.displayName
-                componentName         = $_.componentName
-                activity              = $_.activity
-                activityDateTime      = $_.activityDateTime
-                activityOperationType = $_.activityOperationType
-                activityResult        = $_.activityResult
-                activityType          = $_.activityType
-                category              = $_.category
-                correlationId         = $_.correlationId
-                actor                 = $_.actor
-                resources             = $_.resources
+        foreach ($auditEvent in $events) {
+            [PSCustomObject]@{
+                id                    = $auditEvent.id
+                displayName           = $auditEvent.displayName
+                componentName         = $auditEvent.componentName
+                activity              = $auditEvent.activity
+                activityDateTime      = $auditEvent.activityDateTime
+                activityOperationType = $auditEvent.activityOperationType
+                activityResult        = $auditEvent.activityResult
+                activityType          = $auditEvent.activityType
+                category              = $auditEvent.category
+                correlationId         = $auditEvent.correlationId
+                actor                 = $auditEvent.actor
+                resources             = $auditEvent.resources
             }
-            $returnResults += $Info
         }
-        return $returnResults
-
     }
 
 }

@@ -4,63 +4,65 @@ function Get-CPCProvisioningPolicy {
     Returns all Provisioning Policy's or Provisioning Policy's with a specific name
 
     .DESCRIPTION
-    The function will return all Provisioning Policy's or Provisioning Policy's with a specific name
+    The function will return all Provisioning Policy's or Provisioning Policy's with a specific name.
+    All result pages are returned. The request asks for evolvable enum members
+    (Prefer: include-unknown-enum-members), so provisioningType shows sharedByUser,
+    sharedByEntraGroup or reserve instead of unknownFutureValue.
+    windowsSetting holds the current Windows settings (locale); windowsSettings is the deprecated
+    property and is kept for existing scripts. userExperienceType is a documented property
+    (cloudPc or cloudApp), but Graph doesn't return it in the default list response, so it can be empty.
     .PARAMETER name
     Enter the name of the Provisioning Policy
     .EXAMPLE
     Get-CPCProvisioningPolicy -name "ProvisioningPolicy01"
+    .NOTES
+    Requires CloudPC.Read.All or CloudPC.ReadWrite.All permission (delegated or application).
+    API reference: https://learn.microsoft.com/graph/api/virtualendpoint-list-provisioningpolicies?view=graph-rest-beta
+    Resource: https://learn.microsoft.com/graph/api/resources/cloudpcprovisioningpolicy?view=graph-rest-beta
 #>
     [CmdletBinding()]
     param (
         [parameter(ParameterSetName = "Name")]
-        [string]$Name 
+        [string]$Name
     )
-    
+
     Begin {
         Get-TokenValidity
 
         switch ($PsCmdlet.ParameterSetName) {
             Name {
                 Write-Verbose "Name parameter provided"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies?`$filter=displayName+eq+'$($Name)'"
+                $filterName = [uri]::EscapeDataString($Name.Replace("'", "''"))
+                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies?`$filter=displayName+eq+'$filterName'"
             }
             default {
                 $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies"
             }
         }
     }
-    
+
     Process {
         write-verbose $url
-        $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
-    
-        if ($null -eq $result) {
-            Write-Error "No Provisioning Policy's returned"
-            break
-        }
+        # Without this header Graph returns unknownFutureValue for evolvable enum members such as
+        # provisioningType sharedByUser, sharedByEntraGroup and reserve
+        $result = @(Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET -AdditionalHeaders @{ Prefer = "include-unknown-enum-members" })
 
-        $resultnew = $result.content | ConvertFrom-Json
-        $returnResults = @()
-        $resultnew.value | ForEach-Object {
-    
-            $Info = [PSCustomObject]@{
-                id                       = $_.id
-                displayName              = $_.displayName
-                userExperienceType       = $_.userExperienceType
-                provisioningType         = $_.provisioningType
-                imageId                  = $_.imageId
-                imageDisplayName         = $_.imageDisplayName
-                imageType                = $_.imageType
-                enableSingleSignOn       = $_.enableSingleSignOn
-                DomainJoinConfigurations = $_.domainJoinConfigurations
-                windowsSettings          = $_.windowsSettings
-                CloudPcNamingTemplate    = $_.CloudPcNamingTemplate
-
+        foreach ($policy in $result) {
+            [PSCustomObject]@{
+                id                       = $policy.id
+                displayName              = $policy.displayName
+                userExperienceType       = $policy.userExperienceType
+                provisioningType         = $policy.provisioningType
+                imageId                  = $policy.imageId
+                imageDisplayName         = $policy.imageDisplayName
+                imageType                = $policy.imageType
+                enableSingleSignOn       = $policy.enableSingleSignOn
+                DomainJoinConfigurations = $policy.domainJoinConfigurations
+                windowsSettings          = $policy.windowsSettings
+                CloudPcNamingTemplate    = $policy.CloudPcNamingTemplate
+                windowsSetting           = $policy.windowsSetting
             }
-            $returnResults += $Info
         }
-        return $returnResults
-    
     }
-    
+
 }

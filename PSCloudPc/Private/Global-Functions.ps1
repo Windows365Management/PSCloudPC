@@ -84,17 +84,23 @@ function Confirm-CPCHighImpactAction {
     return $PSCmdlet.ShouldProcess($Target, $Action)
 }
 
+#Every guard below stops with ThrowTerminatingError (Stop-CPCCommand), because a plain Throw is skipped when the
+#caller runs with -ErrorAction SilentlyContinue, which would send the token to a foreign nextLink or loop on a failed page
 function Invoke-APIRequest {
+    [CmdletBinding()]
     param (
         [Parameter()][string]$uri,
         [Parameter()][string]$Token,
         [Parameter()][string]$Method = 'Get',
+        #Stop paging once this many items are collected and return only that many (0 = all pages)
+        [Parameter()][int]$MaxItems = 0,
         #Extra request headers, for example @{ Prefer = "include-unknown-enum-members" }; also sent for every next page
         [Parameter()][hashtable]$AdditionalHeaders
     )
+    $ErrorActionPreference = "Stop"
+
     #Perform initial Graph Request
     $Headers = @{Authorization = "Bearer $($Token)" }
-
     #Extra request headers (for example Prefer: include-unknown-enum-members), sent on every page; never replaces Authorization
     if ($AdditionalHeaders) {
         foreach ($key in $AdditionalHeaders.Keys) {
@@ -112,16 +118,21 @@ function Invoke-APIRequest {
 
     Write-Verbose "Request: $Method $uri"
 
+    $result = $null
+    $requestError = $null
     try {
         $result = Invoke-WebRequest @params -ErrorAction Stop
     }
     catch {
-        Throw (Get-GraphErrorMessage $_)
+        $requestError = Get-GraphErrorMessage $_
+    }
+    if ($null -ne $requestError) {
+        Stop-CPCCommand -Cmdlet $PSCmdlet -Message $requestError -Category InvalidOperation
     }
 
     #Check if the result is null
     if ($null -eq $result) {
-        Throw "No response returned for $Method $uri"
+        Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No response returned for $Method $uri" -Category InvalidResult
     }
 
     $resultconvert = $result.Content | ConvertFrom-Json
@@ -142,27 +153,44 @@ function Invoke-APIRequest {
     $PageCount = 1
 
     while ($null -ne $NextLink) {
+        if ($MaxItems -gt 0 -and $AllPages.Count -ge $MaxItems) {
+            Write-Verbose "Collected $($AllPages.Count) items, not requesting more pages (MaxItems $MaxItems)"
+            break
+        }
         $NextUri = $null
         if (-not [uri]::TryCreate([string]$NextLink, [System.UriKind]::Absolute, [ref]$NextUri) -or $NextUri.Scheme -ne 'https' -or $NextUri.Host -ne $GraphHost) {
-            Throw "Refusing to follow @odata.nextLink '$NextLink': it must be an absolute https URL on $GraphHost"
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Refusing to follow @odata.nextLink '$NextLink': it must be an absolute https URL on $GraphHost" -Category SecurityError
         }
         if (-not $SeenLinks.Add([string]$NextLink)) {
-            Throw "Graph returned the same @odata.nextLink twice, stopping to avoid an endless loop: $NextLink"
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Graph returned the same @odata.nextLink twice, stopping to avoid an endless loop: $NextLink" -Category InvalidResult
         }
         if ($PageCount -ge $MaxPages) {
-            Throw "Stopped paging after $MaxPages pages for $uri"
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Stopped paging after $MaxPages pages for $uri" -Category LimitsExceeded
         }
         $PageCount++
 
         Write-Verbose "Requesting next page: $NextLink"
+        #Reset per page so a failed request can never reuse the previous page (and its nextLink)
+        $page = $null
+        $pageError = $null
         try {
             $page = (Invoke-WebRequest -Uri $NextLink -Headers $Headers -Method Get -ErrorAction Stop).Content | ConvertFrom-Json
         }
         catch {
-            Throw (Get-GraphErrorMessage $_)
+            $pageError = Get-GraphErrorMessage $_
+        }
+        if ($null -ne $pageError) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message $pageError -Category InvalidOperation
+        }
+        if ($null -eq $page) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No response returned for the next page: $NextLink" -Category InvalidResult
         }
         $AllPages += $page.value
         $NextLink = $page.'@odata.nextLink'
+    }
+
+    if ($MaxItems -gt 0 -and $AllPages.Count -gt $MaxItems) {
+        return $AllPages[0..($MaxItems - 1)]
     }
 
     return $AllPages
