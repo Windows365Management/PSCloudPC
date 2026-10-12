@@ -500,3 +500,171 @@ function Resolve-CPCAzureNetworkConnection {
     #Callers wrap the result in @() so one configuration is still sent as an array
     $joinConfigurations
 }
+
+#Function to report a problem with one Cloud PC as a non-terminating error of the calling cmdlet
+#The cmdlet then continues with the next pipeline object; -ErrorAction Stop still stops and -ErrorVariable records it
+function Write-CPCError {
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCmdlet]$Cmdlet,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+
+        [System.Management.Automation.ErrorCategory]$Category = 'InvalidOperation',
+
+        [object]$TargetObject
+    )
+
+    $errorRecord = [System.Management.Automation.ErrorRecord]::new([System.Exception]::new($Message), 'PSCloudPC.CloudPCError', $Category, $TargetObject)
+    $Cmdlet.WriteError($errorRecord)
+}
+
+#Function to resolve exactly one Cloud PC for the Cloud PC cmdlets, by managed device name or by id
+#A Cloud PC that is still provisioning, and every Windows 365 Business Cloud PC, has no managedDeviceName, so it can only be found by id
+#Returns the Graph cloudPC object, or writes a non-terminating error through the calling cmdlet and returns nothing
+#https://learn.microsoft.com/graph/api/virtualendpoint-list-cloudpcs?view=graph-rest-beta
+#https://learn.microsoft.com/graph/api/cloudpc-get?view=graph-rest-beta
+function Resolve-CPCCloudPC {
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCmdlet]$Cmdlet,
+
+        [string]$Name,
+
+        [string]$CloudPCId
+    )
+
+    if ($PSBoundParameters.ContainsKey('CloudPCId')) {
+        if ([string]::IsNullOrWhiteSpace($CloudPCId)) {
+            Write-CPCError -Cmdlet $Cmdlet -Message "The Cloud PC id is empty" -Category InvalidArgument
+            return
+        }
+
+        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudPCs/$([uri]::EscapeDataString($CloudPCId))"
+        Write-Verbose "Looking up Cloud PC by id: $CloudPCId"
+
+        $CloudPC = @()
+        $lookupError = $null
+        try {
+            $CloudPC = @(Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET -ErrorAction Stop)
+        }
+        catch {
+            $lookupError = Get-GraphErrorMessage $_
+        }
+
+        if ($null -ne $lookupError) {
+            Write-CPCError -Cmdlet $Cmdlet -Message "Cloud PC with id '$CloudPCId' could not be read: $lookupError" -Category ObjectNotFound -TargetObject $CloudPCId
+            return
+        }
+
+        if ($CloudPC.Count -ne 1 -or [string]::IsNullOrWhiteSpace([string]$CloudPC[0].id)) {
+            Write-CPCError -Cmdlet $Cmdlet -Message "No Cloud PC found with id '$CloudPCId'. Use Get-CloudPC to find Cloud PC ids." -Category ObjectNotFound -TargetObject $CloudPCId
+            return
+        }
+
+        return $CloudPC[0]
+    }
+
+    if ([string]::IsNullOrWhiteSpace($Name)) {
+        Write-CPCError -Cmdlet $Cmdlet -Message "A Cloud PC name or id is required" -Category InvalidArgument
+        return
+    }
+
+    #Filter on the server, then match the name exactly (case-insensitive) on the client
+    $filterValue = [uri]::EscapeDataString($Name.Replace("'", "''"))
+    $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudPCs?`$filter=managedDeviceName+eq+'$filterValue'"
+    Write-Verbose "Looking up Cloud PC by managed device name: $Name"
+
+    $CloudPC = @()
+    $lookupError = $null
+    try {
+        $CloudPC = @(Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET -ErrorAction Stop | Where-Object { $_.managedDeviceName -eq $Name })
+    }
+    catch {
+        $lookupError = Get-GraphErrorMessage $_
+    }
+
+    if ($null -ne $lookupError) {
+        Write-CPCError -Cmdlet $Cmdlet -Message "Cloud PC lookup for '$Name' failed: $lookupError" -Category InvalidOperation -TargetObject $Name
+        return
+    }
+
+    if ($CloudPC.Count -eq 0) {
+        Write-CPCError -Cmdlet $Cmdlet -Message "No Cloud PC found with managed device name '$Name'. Use Get-CloudPC to find the name; a Cloud PC that is still provisioning, and a Windows 365 Business Cloud PC, has no managed device name, so use -CloudPCId for it." -Category ObjectNotFound -TargetObject $Name
+        return
+    }
+
+    if ($CloudPC.Count -gt 1) {
+        Write-CPCError -Cmdlet $Cmdlet -Message "$($CloudPC.Count) Cloud PCs found with managed device name '$Name' ($($CloudPC.id -join ', ')). The name must match exactly one Cloud PC." -Category InvalidArgument -TargetObject $Name
+        return
+    }
+
+    if ([string]::IsNullOrWhiteSpace([string]$CloudPC[0].id)) {
+        Write-CPCError -Cmdlet $Cmdlet -Message "The Cloud PC with managed device name '$Name' has no id" -Category InvalidResult -TargetObject $Name
+        return
+    }
+
+    return $CloudPC[0]
+}
+
+#Function to report a failed request for one Cloud PC as a non-terminating error of the calling cmdlet, with the Graph code and message
+#Pass the error record from the catch block as -ErrorRecord
+function Write-CPCRequestError {
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCmdlet]$Cmdlet,
+
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.ErrorRecord]$ErrorRecord,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Action,
+
+        [Parameter(Mandatory = $true)]
+        [object]$CloudPC,
+
+        [string]$Hint
+    )
+
+    $message = "$Action failed for Cloud PC $(Get-CPCCloudPCLabel -CloudPC $CloudPC): $(Get-GraphErrorMessage $ErrorRecord)"
+    if (-not [string]::IsNullOrWhiteSpace($Hint)) {
+        $message = "$message $Hint"
+    }
+
+    Write-CPCError -Cmdlet $Cmdlet -Message $message -Category InvalidOperation -TargetObject $CloudPC.id
+}
+
+#Function to describe a Cloud PC in confirmation prompts and messages: "<managed device name> (<id>)"
+#Without a managed device name: "(no device name) (<id>)". The display name is never used, because it can't be passed to -Name
+function Get-CPCCloudPCLabel {
+    param (
+        [Parameter(Mandatory = $true)]
+        [object]$CloudPC
+    )
+
+    $name = Get-CPCCloudPCName -CloudPC $CloudPC
+    if ($null -eq $name) {
+        $name = "(no device name)"
+    }
+
+    return "$name ($($CloudPC.id))"
+}
+
+#Function to return the name that identifies a Cloud PC: its managed device name (the Intune device name), which -Name matches
+#Returns $null when it's empty: while the Cloud PC is still provisioning and always for Windows 365 Business Cloud PCs
+#The display name is never returned; it can be changed (rename, Windows App, "<policy> - <user>") and -Name doesn't accept it
+#https://learn.microsoft.com/graph/api/resources/cloudpc?view=graph-rest-1.0
+function Get-CPCCloudPCName {
+    param (
+        [Parameter(Mandatory = $true)]
+        [object]$CloudPC
+    )
+
+    $name = [string]$CloudPC.managedDeviceName
+    if ([string]::IsNullOrWhiteSpace($name)) {
+        return $null
+    }
+
+    return $name
+}

@@ -459,3 +459,214 @@ Describe "Confirm-CPCHighImpactAction" {
         }
     }
 }
+
+Describe "Resolve-CPCCloudPC" {
+    # Contract: GET /deviceManagement/virtualEndpoint/cloudPCs?$filter=managedDeviceName eq '<name>' plus an exact
+    # client-side match, or GET /deviceManagement/virtualEndpoint/cloudPCs/{id}. Exactly one Cloud PC, or one
+    # non-terminating error through the calling cmdlet (so a pipeline continues) and no output.
+    # https://learn.microsoft.com/graph/api/virtualendpoint-list-cloudpcs?view=graph-rest-beta
+    # https://learn.microsoft.com/graph/api/cloudpc-get?view=graph-rest-beta
+
+    BeforeEach {
+        InModuleScope PSCloudPC {
+            $script:Authtime = [DateTime]::UtcNow
+            $script:Authtoken = "token"
+            $script:Authheader = @{ Authorization = "Bearer token" }
+            $script:MSGraphVersion = "beta"
+
+            # Resolve-CPCCloudPC needs the PSCmdlet of an advanced function to stop
+            function script:Invoke-ResolveTest {
+                [CmdletBinding()]
+                param ([string]$Name, [string]$CloudPCId)
+
+                if ($CloudPCId) {
+                    Resolve-CPCCloudPC -Cmdlet $PSCmdlet -CloudPCId $CloudPCId
+                }
+                else {
+                    Resolve-CPCCloudPC -Cmdlet $PSCmdlet -Name $Name
+                }
+            }
+        }
+    }
+
+    It "Filters on managedDeviceName and returns only the exact match" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"00000000-0000-0000-0000-0000000000c1","managedDeviceName":"CPC-TEST-01"},{"id":"00000000-0000-0000-0000-0000000000c2","managedDeviceName":"CPC-TEST-010"}]}' }
+            }
+
+            $result = @(Invoke-ResolveTest -Name "cpc-test-01")
+
+            $result.Count | Should -Be 1
+            $result[0].id | Should -Be "00000000-0000-0000-0000-0000000000c1"
+            Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+                ([uri]$Uri).OriginalString -eq "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs?`$filter=managedDeviceName+eq+'cpc-test-01'"
+            }
+        }
+    }
+
+    It "Doubles single quotes and encodes the name in the filter" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"00000000-0000-0000-0000-0000000000c1","managedDeviceName":"CPC O''Test"}]}' }
+            }
+
+            (Invoke-ResolveTest -Name "CPC O'Test").id | Should -Be "00000000-0000-0000-0000-0000000000c1"
+            Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+                ([uri]$Uri).OriginalString -eq "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs?`$filter=managedDeviceName+eq+'CPC%20O%27%27Test'"
+            }
+        }
+    }
+
+    It "Writes one ObjectNotFound error and returns nothing when no Cloud PC matches" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest { [PSCustomObject]@{ Content = '{"value":[]}' } }
+
+            $result = Invoke-ResolveTest -Name "CPC-TEST-01" -ErrorAction SilentlyContinue -ErrorVariable resolveErrors
+
+            $result | Should -BeNullOrEmpty
+            # -ErrorVariable also collects the Graph errors the module caught; count only the module's own records
+            $moduleErrors = @($resolveErrors | Where-Object FullyQualifiedErrorId -like "PSCloudPC.CloudPCError*")
+            $moduleErrors.Count | Should -Be 1
+            $moduleErrors[0].Exception.Message | Should -BeLike "No Cloud PC found with managed device name 'CPC-TEST-01'*"
+            $moduleErrors[0].CategoryInfo.Category | Should -Be "ObjectNotFound"
+        }
+    }
+
+    It "Throws the same error with -ErrorAction Stop" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest { [PSCustomObject]@{ Content = '{"value":[]}' } }
+
+            { Invoke-ResolveTest -Name "CPC-TEST-01" -ErrorAction Stop } |
+                Should -Throw -ExpectedMessage "No Cloud PC found with managed device name 'CPC-TEST-01'*"
+        }
+    }
+
+    It "Writes one error that lists the ids and returns nothing when more than one Cloud PC matches" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"00000000-0000-0000-0000-0000000000c1","managedDeviceName":"CPC-TEST-01"},{"id":"00000000-0000-0000-0000-0000000000c2","managedDeviceName":"CPC-TEST-01"}]}' }
+            }
+
+            $result = Invoke-ResolveTest -Name "CPC-TEST-01" -ErrorAction SilentlyContinue -ErrorVariable resolveErrors
+
+            $result | Should -BeNullOrEmpty
+            # -ErrorVariable also collects the Graph errors the module caught; count only the module's own records
+            $moduleErrors = @($resolveErrors | Where-Object FullyQualifiedErrorId -like "PSCloudPC.CloudPCError*")
+            $moduleErrors.Count | Should -Be 1
+            $moduleErrors[0].Exception.Message |
+                Should -BeLike "2 Cloud PCs found with managed device name 'CPC-TEST-01' (00000000-0000-0000-0000-0000000000c1, 00000000-0000-0000-0000-0000000000c2)*"
+        }
+    }
+
+    It "Writes one error and returns nothing when the matching Cloud PC has no id" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest { [PSCustomObject]@{ Content = '{"value":[{"id":"","managedDeviceName":"CPC-TEST-01"}]}' } }
+
+            $result = Invoke-ResolveTest -Name "CPC-TEST-01" -ErrorAction SilentlyContinue -ErrorVariable resolveErrors
+
+            $result | Should -BeNullOrEmpty
+            # -ErrorVariable also collects the Graph errors the module caught; count only the module's own records
+            $moduleErrors = @($resolveErrors | Where-Object FullyQualifiedErrorId -like "PSCloudPC.CloudPCError*")
+            $moduleErrors.Count | Should -Be 1
+            $moduleErrors[0].Exception.Message | Should -BeLike "*has no id"
+        }
+    }
+
+    It "Reads a Cloud PC by id, also when it has no managed device name yet" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest {
+                [PSCustomObject]@{ Content = '{"id":"00000000-0000-0000-0000-0000000000c1","displayName":"Cloud PC Test 01","managedDeviceName":null,"status":"provisioning"}' }
+            }
+
+            $result = Invoke-ResolveTest -CloudPCId "00000000-0000-0000-0000-0000000000c1"
+
+            $result.id | Should -Be "00000000-0000-0000-0000-0000000000c1"
+            Get-CPCCloudPCLabel -CloudPC $result | Should -BeExactly "(no device name) (00000000-0000-0000-0000-0000000000c1)"
+            Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+                ([uri]$Uri).OriginalString -eq "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs/00000000-0000-0000-0000-0000000000c1"
+            }
+        }
+    }
+
+    It "Writes one error with the Graph code and returns nothing when the id is not found" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest {
+                $errorRecord = [System.Management.Automation.ErrorRecord]::new(
+                    [System.Exception]::new("Response status code does not indicate success: 404 (Not Found)."),
+                    "WebCmdletWebResponseException",
+                    "ObjectNotFound",
+                    $null
+                )
+                $errorRecord.ErrorDetails = [System.Management.Automation.ErrorDetails]::new('{"error":{"code":"ResourceNotFound","message":"Cloud PC not found"}}')
+                throw $errorRecord
+            }
+
+            $result = Invoke-ResolveTest -CloudPCId "00000000-0000-0000-0000-0000000000c9" -ErrorAction SilentlyContinue -ErrorVariable resolveErrors
+
+            $result | Should -BeNullOrEmpty
+            # -ErrorVariable also collects the Graph errors the module caught; count only the module's own records
+            $moduleErrors = @($resolveErrors | Where-Object FullyQualifiedErrorId -like "PSCloudPC.CloudPCError*")
+            $moduleErrors.Count | Should -Be 1
+            $moduleErrors[0].Exception.Message |
+                Should -BeLike "Cloud PC with id '00000000-0000-0000-0000-0000000000c9' could not be read*ResourceNotFound: Cloud PC not found*"
+            $moduleErrors[0].CategoryInfo.Category | Should -Be "ObjectNotFound"
+        }
+    }
+
+    It "Writes one error and sends no GET for a whitespace id" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest { [PSCustomObject]@{ Content = '{"id":"x"}' } }
+
+            $result = Invoke-ResolveTest -CloudPCId " " -ErrorAction SilentlyContinue -ErrorVariable resolveErrors
+
+            $result | Should -BeNullOrEmpty
+            # -ErrorVariable also collects the Graph errors the module caught; count only the module's own records
+            $moduleErrors = @($resolveErrors | Where-Object FullyQualifiedErrorId -like "PSCloudPC.CloudPCError*")
+            $moduleErrors.Count | Should -Be 1
+            $moduleErrors[0].Exception.Message | Should -Be "The Cloud PC id is empty"
+            Should -Invoke Invoke-WebRequest -Times 0 -Exactly
+        }
+    }
+
+    It "Escapes the id in the URL" {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest { [PSCustomObject]@{ Content = '{"id":"x"}' } }
+
+            Invoke-ResolveTest -CloudPCId "a/b?c" | Out-Null
+
+            Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+                ([uri]$Uri).OriginalString -eq "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs/a%2Fb%3Fc"
+            }
+        }
+    }
+}
+
+Describe "Get-CPCCloudPCName and Get-CPCCloudPCLabel" {
+    # A Cloud PC is named only by its managed device name (the Intune device name, what -Name matches).
+    # It's empty while provisioning and for Windows 365 Business; the display name is never used as a name.
+
+    It "Uses the managed device name when the display name differs" {
+        InModuleScope PSCloudPC {
+            $cloudPC = [PSCustomObject]@{ id = "00000000-0000-0000-0000-0000000000c1"; managedDeviceName = "CPC-TEST-01"; displayName = "Renamed Cloud PC" }
+
+            Get-CPCCloudPCName -CloudPC $cloudPC | Should -BeExactly "CPC-TEST-01"
+            Get-CPCCloudPCLabel -CloudPC $cloudPC | Should -BeExactly "CPC-TEST-01 (00000000-0000-0000-0000-0000000000c1)"
+        }
+    }
+
+    It "Returns no name and labels the Cloud PC as (no device name) plus id when the managed device name is <Case>" -ForEach @(
+        @{ Case = "null"; ManagedDeviceName = $null }
+        @{ Case = "empty"; ManagedDeviceName = "" }
+        @{ Case = "whitespace"; ManagedDeviceName = " " }
+    ) {
+        InModuleScope PSCloudPC -Parameters @{ ManagedDeviceName = $ManagedDeviceName } {
+            param ($ManagedDeviceName)
+            $cloudPC = [PSCustomObject]@{ id = "00000000-0000-0000-0000-0000000000c1"; managedDeviceName = $ManagedDeviceName; displayName = "Cloud PC Test 01" }
+
+            Get-CPCCloudPCName -CloudPC $cloudPC | Should -BeNullOrEmpty
+            Get-CPCCloudPCLabel -CloudPC $cloudPC | Should -BeExactly "(no device name) (00000000-0000-0000-0000-0000000000c1)"
+            Get-CPCCloudPCLabel -CloudPC $cloudPC | Should -Not -BeLike "*Cloud PC Test 01*"
+        }
+    }
+}
