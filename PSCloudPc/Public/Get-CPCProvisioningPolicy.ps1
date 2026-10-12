@@ -32,7 +32,7 @@ function Get-CPCProvisioningPolicy {
     
     Process {
         write-verbose $url
-        $result = Invoke-WebRequest -uri $url -Method GET -Headers ($script:authHeader + @{ Prefer = "include-unknown-enum-members" })
+        $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
     
         if ($null -eq $result) {
             Write-Error "No Provisioning Policy's returned"
