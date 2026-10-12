@@ -14,11 +14,15 @@ function Invoke-CPCResize {
         Enter the target service plan ID (GUID) to resize the Cloud PC to
         .PARAMETER ServicePlanName
         Enter the display name of the target service plan to resize the Cloud PC to.
-        The function will resolve the ID automatically using Get-CPCServicePlan.
+        The function will resolve the ID automatically using Get-CPCServicePlan. The name must
+        match exactly one service plan; otherwise no request is sent.
         .EXAMPLE
         Invoke-CPCResize -Name "CloudPC01" -ServicePlanId "30d0e128-de93-41dc-89ec-33d84bb662a0"
         .EXAMPLE
         Invoke-CPCResize -Name "CloudPC01" -ServicePlanName "Windows 365 Enterprise 4 vCPU, 16 GB, 256 GB"
+        .NOTES
+        Required permission: CloudPC.ReadWrite.All
+        https://learn.microsoft.com/graph/api/cloudpc-resize?view=graph-rest-beta
     #>
     [CmdletBinding(DefaultParameterSetName = 'ById', SupportsShouldProcess = $true)]
     param (
@@ -29,6 +33,7 @@ function Invoke-CPCResize {
         [string]$ServicePlanId,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'ByName')]
+        [ValidateNotNullOrEmpty()]
         [string]$ServicePlanName
     )
 
@@ -44,14 +49,17 @@ function Invoke-CPCResize {
 
         if ($PsCmdlet.ParameterSetName -eq 'ByName') {
             Write-Verbose "Looking up service plan by name: $ServicePlanName"
-            $ServicePlan = Get-CPCServicePlan -ServicePlanName $ServicePlanName
+            $ServicePlan = @(Get-CPCServicePlan -ServicePlanName $ServicePlanName)
 
-            if ($null -eq $ServicePlan) {
-                Write-Error "Service plan '$ServicePlanName' not found. Use Get-CPCServicePlan to list available plans."
-                break
+            if ($ServicePlan.Count -eq 0) {
+                Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Service plan '$ServicePlanName' not found. Use Get-CPCServicePlan to list available plans." -Category ObjectNotFound
             }
 
-            $ServicePlanId = $ServicePlan.id
+            if ($ServicePlan.Count -gt 1) {
+                Stop-CPCCommand -Cmdlet $PSCmdlet -Message "$($ServicePlan.Count) service plans found with name '$ServicePlanName' ($($ServicePlan.id -join ', ')). Use -ServicePlanId to select one."
+            }
+
+            $ServicePlanId = [string]$ServicePlan[0].id
             Write-Verbose "Resolved service plan '$ServicePlanName' to id: $ServicePlanId"
         }
 

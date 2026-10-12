@@ -13,7 +13,7 @@ function Set-CPCProvisioningPolicyAssignment {
     .PARAMETER ProvisioningType
     Provisioning Type of the Cloud PC Provisioning Policy. Valid values are: dedicated, sharedByUser, sharedByEntraGroup (Default: dedicated), if sharedByEntraGroup or sharedByUser is selected, only the provided group will be assigned, existing assignments will be removed
     .PARAMETER ServicePlanName
-    Name of the Service Plan to assign the policy to (required if ProvisioningType is sharedByEntraGroup or sharedByUser)
+    Exact display name of the Service Plan to assign the policy to (required if ProvisioningType is sharedByEntraGroup or sharedByUser, ignored for dedicated). The name must match exactly one Service Plan
     .PARAMETER AllotmentLicensesCount
     Number of licenses to allot for the Service Plan (default: 1)
     .EXAMPLE
@@ -22,6 +22,10 @@ function Set-CPCProvisioningPolicyAssignment {
     Set-CPCProvisioningPolicyAssignment -Name "MyUserSettingsPolicy" -GroupName "MyGroup" -Force (Removes existing assignments)
     .EXAMPLE
     Set-CPCProvisioningPolicyAssignment -Name "MyUserSettingsPolicy" -GroupName "MyGroup" -ProvisioningType "sharedByEntraGroup" -ServicePlanName "Cloud PC Frontline 2vCPU/8GB/128GB"
+    .NOTES
+    Required permission: CloudPC.ReadWrite.All
+    https://learn.microsoft.com/graph/api/cloudpcprovisioningpolicy-assign?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpcmanagementgroupassignmenttarget?view=graph-rest-beta
     #>
     [CmdletBinding(DefaultParameterSetName = 'Name')]
     param (
@@ -34,6 +38,7 @@ function Set-CPCProvisioningPolicyAssignment {
         [ValidateSet('dedicated', 'sharedByUser', 'sharedByEntraGroup')]
         [string]$ProvisioningType = "dedicated",
         [parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
         [string]$ServicePlanName,
         [parameter(Mandatory = $false)]
         [Int64]$AllotmentLicensesCount = 1
@@ -46,14 +51,13 @@ function Set-CPCProvisioningPolicyAssignment {
         Get-AzureADGroupID -GroupName $GroupName
 
         If ($null -eq $script:GroupID) {
-            Throw "No group found with name $GroupName"
-            return
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No group found with name $GroupName" -Category ObjectNotFound
         }
 
         $Policy = Get-CPCProvisioningPolicy -name $Name
 
         If ($null -eq $Policy) {
-            Throw "No Provisioning Policy found with name $Name"
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No Provisioning Policy found with name $Name" -Category ObjectNotFound
             return
         }
 
@@ -62,18 +66,32 @@ function Set-CPCProvisioningPolicyAssignment {
         Write-Verbose "Assignment url: $($url)"
 
         If ($ProvisioningType -ne $Policy.provisioningType) {
-            Throw "Provisioning Type mismatch. Policy Provisioning Type is $($Policy.provisioningType), provided Provisioning Type is $($ProvisioningType)"
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Provisioning Type mismatch. Policy Provisioning Type is $($Policy.provisioningType), provided Provisioning Type is $($ProvisioningType)"
         }
 
-        If ($ServicePlanName) {
-            $ServicePlan = Get-CPCServicePlan -ServicePlanName $ServicePlanName
-
-            If ($null -eq $ServicePlan) {
-                Throw "No Service Plan found with name $ServicePlanName"
+        If ($ProvisioningType -ne "dedicated") {
+            # Shared provisioning types need exactly one servicePlanId; null is only valid for dedicated
+            # https://learn.microsoft.com/graph/api/resources/cloudpcmanagementgroupassignmenttarget?view=graph-rest-beta
+            If ([string]::IsNullOrWhiteSpace($ServicePlanName)) {
+                Stop-CPCCommand -Cmdlet $PSCmdlet -Message "ServicePlanName is required when ProvisioningType is $($ProvisioningType)"
             }
+
+            $ServicePlan = @(Get-CPCServicePlan -ServicePlanName $ServicePlanName)
+
+            If ($ServicePlan.Count -eq 0) {
+                Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No Service Plan found with name $ServicePlanName" -Category ObjectNotFound
+            }
+
+            If ($ServicePlan.Count -gt 1) {
+                Stop-CPCCommand -Cmdlet $PSCmdlet -Message "$($ServicePlan.Count) Service Plans found with name $ServicePlanName ($($ServicePlan.id -join ', ')). The name must match exactly one Service Plan"
+            }
+
+            $ServicePlanId = [string]$ServicePlan[0].id
+            Write-Verbose "Resolved Service Plan $($ServicePlanName) to id $($ServicePlanId)"
         }
-
-
+        ElseIf ($ServicePlanName) {
+            Write-Warning "ServicePlanName is ignored for dedicated provisioning policies"
+        }
 
     }
 
@@ -132,7 +150,7 @@ function Set-CPCProvisioningPolicyAssignment {
             }
         }
         else {
-            Write-Verbose "Provisioning Type is $($ProvisioningType). Creating single assignment for GroupID $($script:GroupID) and ServicePlanName $($ServicePlanName) with $($ServicePlan.id)"
+            Write-Verbose "Provisioning Type is $($ProvisioningType). Creating single assignment for GroupID $($script:GroupID) and ServicePlanName $($ServicePlanName) with $($ServicePlanId)"
 
             $params = @{
                 Assignments = @(
@@ -140,7 +158,7 @@ function Set-CPCProvisioningPolicyAssignment {
                         Target = @{
                             "@odata.type"          = "#microsoft.graph.cloudPcManagementGroupAssignmentTarget"
                             GroupId                = $script:GroupID
-                            ServicePlanId          = $ServicePlan.id
+                            ServicePlanId          = $ServicePlanId
                             AllotmentDisplayName   = "FrontlineAssignment"
                             AllotmentLicensesCount = $AllotmentLicensesCount
                         }
