@@ -3,20 +3,36 @@ function Update-CPCOrganizationSetting {
     .SYNOPSIS
     Update the Cloud PC organization settings
     .DESCRIPTION
-    Update the Cloud PC organization settings. A tenant has only one cloudPcOrganizationSettings object.
-    .PARAMETER osVersion
+    Update the Cloud PC organization settings. A tenant has only one cloudPcOrganizationSettings object,
+    so a change applies to the whole tenant and the command asks for confirmation (ConfirmImpact High).
+    Use -Confirm:$false to skip the prompt.
+
+    Only the properties you pass are sent; the documented PATCH keeps the values of properties that
+    aren't in the request body. Booleans are sent as JSON booleans and windowsSettings as an object.
+    The command stops when no setting is passed.
+    .PARAMETER OSVersion
+    The version of the operating system (OS) to provision on Cloud PCs. The possible values are: windows10, windows11
+    .PARAMETER UserAccountType
     The account type of the user on provisioned Cloud PCs. The possible values are: standardUser, administrator
-    .PARAMETER userAccountType
-    The account type of the user on provisioned Cloud PCs. The possible values are: standardUser, administrator
-    .PARAMETER enableMEMAutoEnroll
+    .PARAMETER EnableMEMAutoEnroll
     Specifies whether new Cloud PCs will be automatically enrolled in Microsoft Intune. The default value is false.
-    .PARAMETER enableSingleSignOn
-    Specifies wether single sign-on is enabled for new Cloud PCs. The default value is false.
+    .PARAMETER EnableSingleSignOn
+    Specifies whether single sign-on is enabled for new Cloud PCs. The default value is false.
+    .PARAMETER WindowsSettings
+    The Windows language/region tag to use for new Cloud PCs, for example en-US. Sent as windowsSettings.language.
     .EXAMPLE
-    Update-CPCOrganizationSetting -osVersion windows10 -userAccountType administrator -enableMEMAutoEnroll $true -enableSingleSignOn $true    
+    Update-CPCOrganizationSetting -OSVersion windows11 -UserAccountType standardUser -EnableMEMAutoEnroll $true -EnableSingleSignOn $true
+    .EXAMPLE
+    Update-CPCOrganizationSetting -EnableSingleSignOn $false -WhatIf
+    .EXAMPLE
+    Update-CPCOrganizationSetting -WindowsSettings "en-US" -Confirm:$false
     .NOTES
+    Required permission: CloudPC.ReadWrite.All
+    https://learn.microsoft.com/graph/api/cloudpcorganizationsettings-update?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpcorganizationsettings?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpcwindowssettings?view=graph-rest-beta
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = "High")]
     param (
         [parameter(Mandatory = $false)]
         [ValidateSet("windows10", "windows11")]
@@ -28,51 +44,58 @@ function Update-CPCOrganizationSetting {
         [bool]$EnableMEMAutoEnroll,
         [parameter(Mandatory = $false)]
         [bool]$EnableSingleSignOn,
-        [parameter(Mandatory = $false)][string]$WindowsSettings
+        [parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$WindowsSettings
     )
     Begin {
         Get-TokenValidity
-        
+
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/organizationSettings"
         Write-Verbose "Update url: $($url)"
         $params = @{}
-        
-        If ($osVersion) {
-            $params.Add("osVersion", "$OSVersion")
+
+        If ($PSBoundParameters.ContainsKey("OSVersion")) {
+            $params.Add("osVersion", $OSVersion)
             Write-Verbose "osVersion: $($OSVersion)"
         }
-        If ($userAccountType) {
-            if ($userAccountType -eq "administrator") {
+        If ($PSBoundParameters.ContainsKey("UserAccountType")) {
+            if ($UserAccountType -eq "administrator") {
                 Write-Warning "The administrator account type is not recommended for production use."
             }
-            $params.Add("userAccountType", "$UserAccountType")
+            $params.Add("userAccountType", $UserAccountType)
             Write-Verbose "userAccountType: $($UserAccountType)"
         }
-        If ($psboundparameters.ContainsKey("enableMEMAutoEnroll")) {
-            $params.Add("enableMEMAutoEnroll", "$EnableMEMAutoEnroll")
+        If ($PSBoundParameters.ContainsKey("EnableMEMAutoEnroll")) {
+            $params.Add("enableMEMAutoEnroll", $EnableMEMAutoEnroll)
             Write-Verbose "enableMEMAutoEnroll: $($EnableMEMAutoEnroll)"
         }
-        If ($PSBoundParameters.ContainsKey("enableSingleSignOn")) {
-            $params.Add("enableSingleSignOn", "$EnableSingleSignOn")
+        If ($PSBoundParameters.ContainsKey("EnableSingleSignOn")) {
+            $params.Add("enableSingleSignOn", $EnableSingleSignOn)
             Write-Verbose "enableSingleSignOn: $($EnableSingleSignOn)"
         }
-        If ($windowsSettings) {
-            $params += @{windowsSettings = @{"language" = "$WindowsSettings" } }
-            Write-Verbose "windowsSettings: $($WindowsSettings)"
-            
+        If ($PSBoundParameters.ContainsKey("WindowsSettings")) {
+            $params.Add("windowsSettings", @{ language = $WindowsSettings })
+            Write-Verbose "windowsSettings.language: $($WindowsSettings)"
+        }
+
+        If ($params.Count -eq 0) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No organization settings were specified. Provide at least one of: OSVersion, UserAccountType, EnableMEMAutoEnroll, EnableSingleSignOn, WindowsSettings"
         }
     }
     Process {
         $body = $params | ConvertTo-Json -Depth 10
+        Write-Verbose "Request: PATCH $url"
         Write-Verbose "Body: $($body)"
-        try {
-            Write-Verbose "Updating Organization Settings "
-            $result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json"
-            return $result
-            
-        }
-        catch {
-            Throw (Get-GraphErrorMessage $_)
+
+        If ($PSCmdlet.ShouldProcess("Cloud PC organization settings (tenant-wide)", "Update $(@($params.Keys | Sort-Object) -join ', ')")) {
+            try {
+                Write-Verbose "Updating Organization Settings"
+                Invoke-RestMethod -Uri $url -Method PATCH -Headers $script:Authheader -Body $body -ContentType "application/json" -ErrorAction Stop
+            }
+            catch {
+                Throw (Get-GraphErrorMessage $_)
+            }
         }
     }
 }

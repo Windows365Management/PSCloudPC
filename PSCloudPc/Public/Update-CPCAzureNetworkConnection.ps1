@@ -4,11 +4,16 @@ function Update-CPCAzureNetworkConnection {
     Updates an existing Azure Network Connection
     .DESCRIPTION
     Updates an existing Azure Network Connection (cloudPcOnPremisesConnection) in the
-    Cloud PC service via the Microsoft Graph v1.0 API. Only the properties you supply
+    Cloud PC service via the Microsoft Graph API. Only the properties you supply
     are changed; omitted properties retain their current values.
 
     Target the connection by its display name (looked up via Get-CPCAzureNetworkConnection)
-    or by its object ID directly via -ConnectionId.
+    or by its object ID directly via -ConnectionId. -Name must match exactly one connection;
+    the command stops when it matches zero or more than one.
+
+    The AD domain password is converted to plain text only while the request body is built and
+    is never written to verbose output. The command stops when no update property is passed.
+    The updated connection is returned without an adDomainPassword property.
     .PARAMETER Name
     Display name of the Azure Network Connection to update.
     Mutually exclusive with -ConnectionId.
@@ -42,10 +47,11 @@ function Update-CPCAzureNetworkConnection {
     .EXAMPLE
     Update-CPCAzureNetworkConnection -ConnectionId "00000000-0000-0000-0000-000000000000" -DisplayName "Contoso Network Updated"
     .EXAMPLE
-    Update-CPCAzureNetworkConnection -Name "Contoso Hybrid Network" -AdDomainUserName "newadmin@contoso.com" -AdDomainPassword (ConvertTo-SecureString "P@ssw0rd!" -AsPlainText -Force) -WhatIf
+    Update-CPCAzureNetworkConnection -Name "Contoso Hybrid Network" -AdDomainUserName "newadmin@contoso.com" -AdDomainPassword (Read-Host -AsSecureString -Prompt "Domain join password") -WhatIf
     .NOTES
-    Requires CloudPC.ReadWrite.All permission (delegated or application).
-    API reference: https://learn.microsoft.com/en-us/graph/api/cloudpconpremisesconnection-update
+    Required permission: CloudPC.ReadWrite.All (delegated; application permissions aren't supported)
+    https://learn.microsoft.com/graph/api/cloudpconpremisesconnection-update?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpconpremisesconnection?view=graph-rest-beta
     #>
     [CmdletBinding(DefaultParameterSetName = 'Name', SupportsShouldProcess = $true)]
     param (
@@ -89,22 +95,41 @@ function Update-CPCAzureNetworkConnection {
     Begin {
         Get-TokenValidity
 
-        if ($PSCmdlet.ParameterSetName -eq 'Name') {
-            $connection = Get-CPCAzureNetworkConnection -Name $Name
+        $updateParameters = @('DisplayName', 'SubscriptionId', 'ResourceGroupId', 'VirtualNetworkId', 'SubnetId', 'AdDomainName', 'AdDomainUserName', 'AdDomainPassword', 'OrganizationalUnit')
+        $boundParameters = @($PSBoundParameters.Keys)
+        if (-not ($updateParameters | Where-Object { $_ -in $boundParameters })) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No update properties were specified. Provide at least one of: $($updateParameters -join ', ')"
+        }
 
-            if ($null -eq $connection) {
-                Throw "No Azure Network Connection found with name '$Name'. Use Get-CPCAzureNetworkConnection to verify the display name."
+        if ($PSCmdlet.ParameterSetName -eq 'Name') {
+            try {
+                $connection = @(Get-CPCAzureNetworkConnection -Name $Name -ErrorAction Stop | Where-Object { $_.displayName -eq $Name })
+            }
+            catch {
+                Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Could not look up Azure Network Connection '$Name': $(Get-GraphErrorMessage $_)" -Category InvalidOperation
             }
 
-            $targetId   = $connection.id
-            $targetName = $connection.displayName
+            if ($connection.Count -eq 0) {
+                Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No Azure Network Connection found with name '$Name'. Use Get-CPCAzureNetworkConnection to verify the display name." -Category ObjectNotFound
+            }
+
+            if ($connection.Count -gt 1) {
+                Stop-CPCCommand -Cmdlet $PSCmdlet -Message "$($connection.Count) Azure Network Connections found with name '$Name' ($($connection.id -join ', ')). Use -ConnectionId to select one"
+            }
+
+            $targetId   = [string]$connection[0].id
+            $targetName = $connection[0].displayName
         }
         else {
             $targetId   = $ConnectionId
             $targetName = $ConnectionId
         }
 
-        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/onPremisesConnections/$targetId"
+        if ([string]::IsNullOrWhiteSpace($targetId)) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "The Azure Network Connection '$targetName' has no id" -Category ObjectNotFound
+        }
+
+        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/onPremisesConnections/$([uri]::EscapeDataString($targetId))"
         Write-Verbose "Update url: $url"
     }
 
@@ -132,30 +157,35 @@ function Update-CPCAzureNetworkConnection {
         if ($PSBoundParameters.ContainsKey('AdDomainUserName')) {
             $params['adDomainUsername'] = $AdDomainUserName
         }
-        if ($PSBoundParameters.ContainsKey('AdDomainPassword')) {
-            $params['adDomainPassword'] = $($AdDomainPassword | ConvertFrom-SecureString)
-        }
         if ($PSBoundParameters.ContainsKey('OrganizationalUnit')) {
             $params['organizationalUnit'] = $OrganizationalUnit
         }
 
-        if ($params.Count -eq 0) {
-            Write-Warning "No update properties were specified. Provide at least one parameter to update."
-            return
-        }
-
-        $body = $params | ConvertTo-Json -Depth 10
-        Write-Verbose "Body: $body"
+        # Log the body before the password is added, so the password never reaches verbose output
+        Write-Verbose "Body (adDomainPassword not shown): $($params | ConvertTo-Json -Depth 10)"
 
         if ($PSCmdlet.ShouldProcess($targetName, 'Update Azure Network Connection')) {
             try {
+                if ($PSBoundParameters.ContainsKey('AdDomainPassword')) {
+                    # Graph expects the password in plain text; convert it only while building the body
+                    $params['adDomainPassword'] = ConvertFrom-SecureString -SecureString $AdDomainPassword -AsPlainText
+                }
+                $body = $params | ConvertTo-Json -Depth 10
+
                 Write-Verbose "Updating Azure Network Connection '$targetName'"
-                $result = Invoke-WebRequest -Uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json"
-                Write-Verbose "Result: $($result.Content)"
-                return $result
+                $result = Invoke-RestMethod -Uri $url -Method PATCH -Headers $script:Authheader -Body $body -ContentType "application/json" -ErrorAction Stop
+
+                # Never pass the password on, in case Graph ever returns it
+                if ($null -ne $result -and $result -isnot [string]) {
+                    $result | Select-Object -Property * -ExcludeProperty adDomainPassword
+                }
             }
             catch {
                 Throw (Get-GraphErrorMessage $_)
+            }
+            finally {
+                $params.Remove('adDomainPassword')
+                $body = $null
             }
         }
     }
