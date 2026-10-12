@@ -3,62 +3,64 @@ function Get-CPCUserSettingsPolicy {
     .SYNOPSIS
     Returns all User Setting Policy's or User Setting Policy's with a specific name
     .DESCRIPTION
-    The function will return all User Setting Policy's or User Setting Policy's with a specific name
+    The function will return all User Setting Policy's or User Setting Policy's with a specific name.
+    The name must match exactly, but is not case-sensitive. When no policy matches, nothing is returned.
     .PARAMETER name
     Enter the name of the User Setting Policy
     .EXAMPLE
     Get-CPCUserSettingsPolicy -name "UserSettingPolicy01"
+    .EXAMPLE
+    Get-CPCUserSettingsPolicy
+    .NOTES
+    Required permission: CloudPC.Read.All
+    https://learn.microsoft.com/graph/api/virtualendpoint-list-usersettings?view=graph-rest-beta
 
 #>
 
     [CmdletBinding()]
     param (
         [parameter(ParameterSetName = "Name")]
-        [string]$Name 
+        [string]$Name
     )
-    
+
     Begin {
         Get-TokenValidity
 
-        switch ($PsCmdlet.ParameterSetName) {
-            Name {
-                Write-Verbose "Name parameter provided"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/userSettings?`$filter=displayName+eq+'$($Name)'"
-            }
-            default {
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/userSettings"
-            }
-        }
+        # Graph's displayName eq filter on userSettings is case-sensitive, so all policies are read
+        # (Invoke-APIRequest follows every page) and the name is matched on the client instead
+        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/userSettings"
     }
-    
+
     Process {
-        write-verbose $url
-        $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
-    
-        if ($null -eq $result) {
-            Write-Error "No User Setting Policy's returned"
-            break
+        try {
+            $policies = @(Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET -ErrorAction Stop)
+        }
+        catch {
+            Throw (Get-GraphErrorMessage $_)
         }
 
-        $resultnew = $result.content | ConvertFrom-Json
-        $returnResults = @()
-        $resultnew.value | ForEach-Object {
-    
-            $Info = [PSCustomObject]@{
-                id                              = $_.id
-                displayName                     = $_.displayName
-                selfServiceEnabled              = $_.selfServiceEnabled
-                localAdminEnabled               = $_.localAdminEnabled
-                resetEnabled                    = $_.resetEnabled
-                createdDateTime                 = $_.createdDateTime
-                lastModifiedDateTime            = $_.lastModifiedDateTime
-                restorePointSetting             = $_.restorePointSetting
-                crossRegionDisasterRecoverySetting = $_.crossRegionDisasterRecoverySetting
-            }
-            $returnResults += $Info
+        If ($PSBoundParameters.ContainsKey("Name")) {
+            $policies = @($policies | Where-Object { $_.displayName -eq $Name })
         }
-        return $returnResults
-    
+
+        If ($policies.Count -eq 0) {
+            Write-Verbose "No User Setting Policy's found"
+            return
+        }
+
+        foreach ($policy in $policies) {
+            [PSCustomObject]@{
+                id                                 = $policy.id
+                displayName                        = $policy.displayName
+                selfServiceEnabled                 = $policy.selfServiceEnabled
+                localAdminEnabled                  = $policy.localAdminEnabled
+                resetEnabled                       = $policy.resetEnabled
+                createdDateTime                    = $policy.createdDateTime
+                lastModifiedDateTime               = $policy.lastModifiedDateTime
+                restorePointSetting                = $policy.restorePointSetting
+                crossRegionDisasterRecoverySetting = $policy.crossRegionDisasterRecoverySetting
+            }
+        }
     }
-    
+
 }
