@@ -197,3 +197,20 @@ function Get-GraphErrorMessage {
 
     return "$message $details"
 }
+
+#Function to stop the calling cmdlet with a terminating error that -ErrorAction can't suppress
+#A Throw in a begin block is skipped with -ErrorAction SilentlyContinue, after which process still runs
+function Stop-CPCCommand {
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCmdlet]$Cmdlet,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+
+        [System.Management.Automation.ErrorCategory]$Category = 'InvalidArgument'
+    )
+
+    $errorRecord = [System.Management.Automation.ErrorRecord]::new([System.Exception]::new($Message), 'PSCloudPC.Guard', $Category, $null)
+    $Cmdlet.ThrowTerminatingError($errorRecord)
+}
