@@ -38,6 +38,23 @@ Describe 'Invoke-APIRequest' {
         }
     }
 
+    It 'Sends additional headers on the first and every next page request' {
+        InModuleScope PSCloudPC {
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test' } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"1"}],"@odata.nextLink":"https://graph.microsoft.com/beta/test?page=2"}' }
+            }
+            Mock Invoke-WebRequest -ParameterFilter { $Uri -eq 'https://graph.microsoft.com/beta/test?page=2' } {
+                [PSCustomObject]@{ Content = '{"value":[{"id":"2"}]}' }
+            }
+
+            $null = Invoke-APIRequest -uri 'https://graph.microsoft.com/beta/test' -Token 'token' -AdditionalHeaders @{ Prefer = 'include-unknown-enum-members' }
+
+            Should -Invoke Invoke-WebRequest -Times 2 -Exactly -ParameterFilter {
+                $Headers.Prefer -eq 'include-unknown-enum-members' -and $Headers.Authorization -eq 'Bearer token'
+            }
+        }
+    }
+
     It 'Returns an empty result for an empty collection' {
         InModuleScope PSCloudPC {
             Mock Invoke-WebRequest { [PSCustomObject]@{ Content = '{"value":[]}' } }

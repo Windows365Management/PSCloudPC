@@ -49,10 +49,21 @@ function Invoke-APIRequest {
     param (
         [Parameter()][string]$uri,
         [Parameter()][string]$Token,
-        [Parameter()][string]$Method = 'Get'
+        [Parameter()][string]$Method = 'Get',
+        #Extra request headers, for example @{ Prefer = "include-unknown-enum-members" }; also sent for every next page
+        [Parameter()][hashtable]$AdditionalHeaders
     )
     #Perform initial Graph Request
     $Headers = @{Authorization = "Bearer $($Token)" }
+
+    #Extra request headers (for example Prefer: include-unknown-enum-members), sent on every page; never replaces Authorization
+    if ($AdditionalHeaders) {
+        foreach ($key in $AdditionalHeaders.Keys) {
+            if ($key -ne "Authorization") {
+                $Headers[$key] = $AdditionalHeaders[$key]
+            }
+        }
+    }
 
     $params = @{
         uri     = $uri
@@ -314,4 +325,111 @@ function ConvertTo-CPCRequestValue {
     }
 
     return $Value
+}
+
+#Function to turn Azure network connections (by exact name or by id) into provisioning policy domainJoinConfigurations
+#Reads connectionType from Graph (the type property is retired) and stops the calling cmdlet on a failed check
+#https://learn.microsoft.com/graph/api/resources/cloudpconpremisesconnection?view=graph-rest-beta
+#https://learn.microsoft.com/graph/api/resources/cloudpcdomainjoinconfiguration?view=graph-rest-beta
+function Resolve-CPCAzureNetworkConnection {
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCmdlet]$Cmdlet,
+
+        [string[]]$Name,
+
+        [string[]]$Id,
+
+        #Requested domain join type; when empty, the connectionType of the connections is used
+        [string]$DomainJoinType
+    )
+
+    $baseUrl = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/onPremisesConnections"
+    $select = "`$select=id,displayName,connectionType,healthCheckStatus"
+
+    if ($Name) {
+        #displayName is matched exactly on the client, so names with quotes work and similar names don't match
+        Write-Verbose "Looking up Azure Network Connection(s): $($Name -join ', ')"
+        try {
+            $allConnections = @(Invoke-APIRequest -uri "$($baseUrl)?$select" -Token $script:Authtoken -Method GET)
+        }
+        catch {
+            Stop-CPCCommand -Cmdlet $Cmdlet -Message (Get-GraphErrorMessage $_) -Category InvalidOperation
+        }
+
+        $connections = @(
+            foreach ($connectionName in $Name) {
+                $match = @($allConnections | Where-Object { $_.displayName -eq $connectionName })
+
+                if ($match.Count -eq 0) {
+                    Stop-CPCCommand -Cmdlet $Cmdlet -Message "No Azure Network Connection found with name '$connectionName'" -Category ObjectNotFound
+                }
+
+                if ($match.Count -gt 1) {
+                    Stop-CPCCommand -Cmdlet $Cmdlet -Message "$($match.Count) Azure Network Connections found with name '$connectionName' ($($match.id -join ', ')). The name must match exactly one connection"
+                }
+
+                $match[0]
+            }
+        )
+    }
+    else {
+        $connections = @(
+            foreach ($connectionId in $Id) {
+                if ([string]::IsNullOrWhiteSpace($connectionId)) {
+                    Stop-CPCCommand -Cmdlet $Cmdlet -Message "An Azure Network Connection id can't be empty"
+                }
+
+                Write-Verbose "Looking up Azure Network Connection id: $connectionId"
+                try {
+                    Invoke-APIRequest -uri "$baseUrl/$([uri]::EscapeDataString($connectionId))?$select" -Token $script:Authtoken -Method GET
+                }
+                catch {
+                    Stop-CPCCommand -Cmdlet $Cmdlet -Message "Azure Network Connection with id '$connectionId' was not found: $(Get-GraphErrorMessage $_)" -Category ObjectNotFound
+                }
+            }
+        )
+    }
+
+    $joinConfigurations = @(
+        foreach ($connection in $connections) {
+            $label = "'$($connection.displayName)' ($($connection.id))"
+
+            #warning and informational don't affect provisioning; failed does; pending/running have no result yet
+            if ($connection.healthCheckStatus -in @('passed', 'informational')) {
+                Write-Verbose "Azure Network Connection $label health check: $($connection.healthCheckStatus)"
+            }
+            elseif ($connection.healthCheckStatus -eq 'warning') {
+                Write-Warning "Azure Network Connection $label has health check status 'warning'. Provisioning works, but the user experience might be affected."
+            }
+            elseif ($connection.healthCheckStatus -in @('pending', 'running')) {
+                Stop-CPCCommand -Cmdlet $Cmdlet -Message "The health check of Azure Network Connection $label hasn't finished (healthCheckStatus: $($connection.healthCheckStatus)). Try again when it has passed"
+            }
+            else {
+                Stop-CPCCommand -Cmdlet $Cmdlet -Message "Azure Network Connection $label is not healthy (healthCheckStatus: $($connection.healthCheckStatus))"
+            }
+
+            $connectionType = $connection.connectionType
+            if ($connectionType -notin @('azureADJoin', 'hybridAzureADJoin')) {
+                Stop-CPCCommand -Cmdlet $Cmdlet -Message "Azure Network Connection $label has no supported connectionType ('$connectionType')"
+            }
+
+            if (-not [string]::IsNullOrWhiteSpace($DomainJoinType) -and $connectionType -ne $DomainJoinType) {
+                Stop-CPCCommand -Cmdlet $Cmdlet -Message "Azure Network Connection $label is of type $connectionType and can't be used with -DomainJoinType $DomainJoinType"
+            }
+
+            [ordered]@{
+                domainJoinType         = $connectionType
+                onPremisesConnectionId = $connection.id
+            }
+        }
+    )
+
+    $joinTypes = @($joinConfigurations | ForEach-Object { $_["domainJoinType"] })
+    if (@($joinTypes | Sort-Object -Unique).Count -gt 1) {
+        Stop-CPCCommand -Cmdlet $Cmdlet -Message "The Azure Network Connections have different connection types ($($joinTypes -join ', ')). Use connections of one type"
+    }
+
+    #Callers wrap the result in @() so one configuration is still sent as an array
+    $joinConfigurations
 }
