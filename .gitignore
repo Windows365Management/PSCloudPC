@@ -1,4 +1,7 @@
-# generated site
-Docs/site
+# local tooling
 .claude
+.codex
 .vscode
+
+# macOS
+.DS_Store
