@@ -1,10 +1,10 @@
 function New-CPCAzureNetworkConnection {
     <#
     .SYNOPSIS
-    Adds a new Azure Network Connection
+    Adds a new Provisioning Policy
     .DESCRIPTION
-    The function will add a new Azure Network Connection
-    .PARAMETER DisplayName
+    The function will add a new Provisioning Policy
+    .PARAMETER name
     Enter the name of the Azure Network Connection
     .PARAMETER resourceGroupId
     Enter the Resource Group Id. Required format: /subscriptions/{subscription-id}/resourceGroups/{resourceGroupName}
@@ -23,9 +23,9 @@ function New-CPCAzureNetworkConnection {
     .PARAMETER OrganizationalUnit
     Enter the Organizational Unit (OU) that you want to join the computer to. Required format: OU=OUName,DC=DomainName,DC=com
     .EXAMPLE
-    New-CPCAzureNetworkConnection -DisplayName "AzureADJoin" -resourceGroupId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01" -VirtualNetworkId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01/providers/Microsoft.Network/virtualNetworks/VirtualNetwork01" -subnetId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01/providers/Microsoft.Network/virtualNetworks/VirtualNetwork01/subnets/Subnet01" -subscriptionId "00000000-0000-0000-0000-000000000000"
+    New-CPCAzureNetworkConnection -name "AzureADJoin" -resourceGroupId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01" -VirtualNetworkId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01/providers/Microsoft.Network/virtualNetworks/VirtualNetwork01" -subnetId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01/providers/Microsoft.Network/virtualNetworks/VirtualNetwork01/subnets/Subnet01" -subscriptionId "00000000-0000-0000-0000-000000000000"
     .EXAMPLE
-    New-CPCAzureNetworkConnection -DisplayName "HybridAzureADJoin" -resourceGroupId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01" -VirtualNetworkId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01/providers/Microsoft.Network/virtualNetworks/VirtualNetwork01" -subnetId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01/providers/Microsoft.Network/virtualNetworks/VirtualNetwork01/subnets/Subnet01" -subscriptionId "00000000-0000-0000-0000-000000000000" -AdDomainName "contoso.com" -AdDomainUserName "admin@contoso.com" -AdDomainPassword (Read-Host -AsSecureString) -OrganizationalUnit "OU=OUName,DC=DomainName,DC=com"
+    New-CPCAzureNetworkConnection -name "HybridAzureADJoin" -resourceGroupId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01" -VirtualNetworkId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01/providers/Microsoft.Network/virtualNetworks/VirtualNetwork01" -subnetId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01/providers/Microsoft.Network/virtualNetworks/VirtualNetwork01/subnets/Subnet01" -subscriptionId "00000000-0000-0000-0000-000000000000" -AdDomainName "contoso.com" -AdDomainUserName "admin@contoso.com" -AdDomainPassword "Password01" -OrganizationalUnit "OU=OUName,DC=DomainName,DC=com"
     #>
     [CmdletBinding(DefaultParameterSetName = 'AzureADJoin')]
     param (
