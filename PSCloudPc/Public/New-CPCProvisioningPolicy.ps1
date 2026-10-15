@@ -16,10 +16,10 @@ function New-CPCProvisioningPolicy {
     Enter the image type of the Provisioning Policy (Custom or Gallery)
     .PARAMETER ImageId
     Enter the Image Id of the Provisioning Policy (Info: Get-CPCGalleryImage or Get-CPCCustomImage)
-    .PARAMETER EnableSignleSignOn
-    Enter the Enable Signle Sign On for the Provisioning Policy
+    .PARAMETER EnableSingleSignOn
+    Enable or disable single sign-on for the Cloud PCs ($true or $false). $true is only supported with DomainJoinType azureADJoin
     .PARAMETER DomainJoinType
-    Enter the Domain Join Type for the Provisioning Policy (AzureADJoin or AzureADDomainJoin) (Default: AzureADJoin)
+    Enter the Domain Join Type for the Provisioning Policy (azureADJoin or hybridAzureADJoin) (Default: azureADJoin)
     .PARAMETER RegionName
     Enter the Region Name for the Provisioning Policy
     .PARAMETER RegionGroup

@@ -30,7 +30,7 @@ function Get-CPCRemoteActionResult {
     .EXAMPLE
     Get-CPCRemoteActionResult -Name "CPC-User-XXXX" | Where-Object { $_.actionState -eq 'failed' }
     .NOTES
-    Requires CloudPC.Read.All or CloudPC.ReadWrite.All permission (delegated or application).
+    Requires CloudPC.ReadWrite.All permission (delegated or application).
     This function uses the Microsoft Graph beta endpoint.
     API reference: https://learn.microsoft.com/en-us/graph/api/cloudpc-retrievecloudpcremoteactionresults
     #>
