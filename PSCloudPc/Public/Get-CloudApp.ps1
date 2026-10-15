@@ -32,7 +32,7 @@ function Get-CloudApp {
         switch ($PsCmdlet.ParameterSetName) {
             'Name' {
                 Write-Verbose "Name parameter provided: $Name"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudApps?`$filter=displayName+eq+'$($Name.Replace("'", "''"))'"
+                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudApps?`$filter=displayName+eq+'$($Name)'"
             }
             'Id' {
                 Write-Verbose "Id parameter provided: $Id"

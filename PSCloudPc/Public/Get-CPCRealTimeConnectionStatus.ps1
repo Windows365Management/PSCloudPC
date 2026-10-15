@@ -75,13 +75,7 @@ function Get-CPCRealTimeConnectionStatus {
                 return
             }
 
-            foreach ($row in $result.Values) {
-                $info = [ordered]@{}
-                for ($i = 0; $i -lt $result.Schema.Count; $i++) {
-                    $info[$result.Schema[$i].Column] = $row[$i]
-                }
-                [PSCustomObject]$info
-            }
+            $result.Values
         }
         catch {
             Throw (Get-GraphErrorMessage $_)

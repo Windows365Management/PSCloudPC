@@ -22,7 +22,7 @@ function Get-CPCSupportedRegion {
         switch ($PsCmdlet.ParameterSetName) {
             Region {
                 Write-Verbose "Name parameter provided"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/supportedRegions?`$filter=displayName+eq+'$($Name.Replace("'", "''"))'"
+                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/supportedRegions?`$filter=displayName+eq+'$($Name)'"
             }
             default {
                 $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/supportedRegions"

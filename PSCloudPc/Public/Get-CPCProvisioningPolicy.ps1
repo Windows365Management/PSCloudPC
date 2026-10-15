@@ -22,7 +22,7 @@ function Get-CPCProvisioningPolicy {
         switch ($PsCmdlet.ParameterSetName) {
             Name {
                 Write-Verbose "Name parameter provided"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies?`$filter=displayName+eq+'$($Name.Replace("'", "''"))'"
+                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies?`$filter=displayName+eq+'$($Name)'"
             }
             default {
                 $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies"

@@ -21,7 +21,7 @@ function Get-CloudPC {
         switch ($PsCmdlet.ParameterSetName) {
             Name {
                 Write-Verbose "Name parameter provided"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/CloudPCs?`$filter=managedDeviceName+eq+'$($Name.Replace("'", "''"))'"
+                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/CloudPCs?`$filter=managedDeviceName+eq+'$Name'"
             }
             default {
                 Write-Verbose "No name parameter provided"
