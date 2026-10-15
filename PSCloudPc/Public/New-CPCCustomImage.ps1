@@ -44,7 +44,7 @@ function New-CPCCustomImage {
     Process {
 
         $params = @{
-            DisplayName = $DisplayName
+            DisplayName = $Name
             Version = $Version
             SourceImageResourceId = $SourceImageResourceId
         } | ConvertTo-Json -Depth 10

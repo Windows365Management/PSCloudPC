@@ -87,10 +87,10 @@ function Invoke-CPCUnpublishCloudApp {
             'Name' {
                 Write-Verbose "Processing by Name: $Name"
                 # Find the app by display name in published apps
-                $App = $PublishedApps | Where-Object { $_.displayName -like "*$Name*" }
+                $App = $PublishedApps | Where-Object { $_.displayName -eq $Name }
                 if ($null -eq $App) {
                     # Check if app exists but is not published
-                    $AppExists = $AllApps | Where-Object { $_.displayName -like "*$Name*" }
+                    $AppExists = $AllApps | Where-Object { $_.displayName -eq $Name }
                     if ($AppExists) {
                         Write-Warning "App matching '$Name' exists but is not currently published. App: '$($AppExists.displayName)' Status: $($AppExists.appStatus)"
                     } else {

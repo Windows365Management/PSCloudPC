@@ -75,16 +75,7 @@ function Get-CPCRealTimeConnectionStatus {
                 return
             }
 
-            [PSCustomObject]@{
-                CloudPCName       = $targetName
-                CloudPCId         = $targetId
-                signInStatus      = $result.signInStatus
-                daysSinceLastUse  = $result.daysSinceLastUse
-                signInDateTime    = $result.signInDateTime
-                signOutDateTime   = $result.signOutDateTime
-                durationInSeconds = $result.durationInSeconds
-                usageStatus       = $result.usageStatus
-            }
+            $result.Values
         }
         catch {
             Throw (Get-GraphErrorMessage $_)

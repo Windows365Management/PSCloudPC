@@ -118,7 +118,7 @@ function New-CPCProvisioningPolicy {
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies"
 
         # Validate if DomainJoinType is azureADJoin, then EnableSingleSignOn can be used, otherwise throw an error.
-        if ($DomainJoinType -ne 'azureADJoin' -and $PSBoundParameters.ContainsKey('EnableSingleSignOn')) {
+        if ($DomainJoinType -ne 'azureADJoin' -and $EnableSingleSignOn) {
             Write-Error "The parameter -EnableSingleSignOn can only be used with -DomainJoinType 'azureADJoin'."
             break
         }

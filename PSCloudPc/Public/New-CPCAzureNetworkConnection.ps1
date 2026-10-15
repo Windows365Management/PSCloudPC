@@ -85,7 +85,7 @@ function New-CPCAzureNetworkConnection {
                 SubscriptionName   = $SubscriptionName
                 AdDomainName       = $AdDomainName
                 AdDomainUsername   = $AdDomainUsername
-                AdDomainPassword   = $($AdDomainPassword | ConvertFrom-SecureString)
+                AdDomainPassword   = $($AdDomainPassword | ConvertFrom-SecureString -AsPlainText)
                 OrganizationalUnit = $OrganizationalUnit
                 ResourceGroupId    = $ResourceGroupId
                 VirtualNetworkId   = $VirtualNetworkId

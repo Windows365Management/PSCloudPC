@@ -23,7 +23,7 @@ function Get-CPCGalleryImage {
         switch ($PsCmdlet.ParameterSetName) {
             Name {
                 Write-Verbose "Name parameter provided"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/galleryImages?`$filter=offerDisplayName+eq+'$($Name)'"
+                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/galleryImages?`$filter=displayName+eq+'$($Name)'"
             }
             default {
                 $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/galleryImages"

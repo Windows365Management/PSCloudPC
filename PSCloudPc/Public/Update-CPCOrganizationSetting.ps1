@@ -49,11 +49,11 @@ function Update-CPCOrganizationSetting {
             Write-Verbose "userAccountType: $($UserAccountType)"
         }
         If ($psboundparameters.ContainsKey("enableMEMAutoEnroll")) {
-            $params.Add("enableMEMAutoEnroll", "$EnableMEMAutoEnroll")
+            $params.Add("enableMEMAutoEnroll", $EnableMEMAutoEnroll)
             Write-Verbose "enableMEMAutoEnroll: $($EnableMEMAutoEnroll)"
         }
         If ($PSBoundParameters.ContainsKey("enableSingleSignOn")) {
-            $params.Add("enableSingleSignOn", "$EnableSingleSignOn")
+            $params.Add("enableSingleSignOn", $EnableSingleSignOn)
             Write-Verbose "enableSingleSignOn: $($EnableSingleSignOn)"
         }
         If ($windowsSettings) {
