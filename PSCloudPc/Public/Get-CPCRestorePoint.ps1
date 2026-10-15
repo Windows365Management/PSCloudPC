@@ -12,7 +12,7 @@ function Get-CPCRestorePoint {
     Get-CPCRestorePoint -Name "CloudPC01"
     .NOTES
     API reference: https://learn.microsoft.com/en-us/graph/api/cloudpc-retrievesnapshots
-    Required permission: CloudPC.Read.All
+    Required permission: CloudPC.ReadWrite.All
     #>
     [CmdletBinding()]
     param (

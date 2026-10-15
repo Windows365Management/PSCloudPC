@@ -16,6 +16,8 @@ function Update-CPCProvisioningPolicy {
     Naming template for the Cloud PC
     .PARAMETER AzureNetworkConnection
     Azure Network Connection to use for the Cloud PC (It will replace current Azure Network Connection)
+    .PARAMETER DomainJoinType
+    Not used by this cmdlet; it has no effect
     .EXAMPLE
     Update-CPCProvisioningPolicy -Name "Test-AzureADJoin" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" 
     .EXAMPLE

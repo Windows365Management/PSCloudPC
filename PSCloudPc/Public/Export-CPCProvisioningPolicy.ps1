@@ -1,11 +1,13 @@
 function Export-CPCProvisioningPolicy {
     <#
     .SYNOPSIS
-    Returns all Provisioning Policy's or Provisioning Policy's with a specific name
+    Exports a Cloud PC Provisioning Policy to a JSON file
     .DESCRIPTION
-    The function will return all Provisioning Policy's or Provisioning Policy's with a specific name
+    The function will export the Provisioning Policy with the specified name to a JSON file named after the policy. Use Import-CPCProvisioningPolicy to import it.
     .PARAMETER name
     Enter the name of the Provisioning Policy
+    .PARAMETER OutputFolder
+    Enter the folder to save the JSON file in
     .EXAMPLE
     Export-CPCProvisioningPolicy -name "ProvisioningPolicy01" -OutputFolder "C:\Temp"
 #>

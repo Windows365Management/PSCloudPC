@@ -4,7 +4,7 @@ function New-CPCUserSettingsPolicy {
     Creates new Cloud PC User Settings Policy
     .DESCRIPTION
     The function will create a new Cloud PC User Settings Policy
-    .PARAMETER DisplayName
+    .PARAMETER Name
     Enter the Cloud PC User Settings Policy display name
     .PARAMETER LocalAdminEnabled
     Enable or disable local admin permissions

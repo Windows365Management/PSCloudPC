@@ -6,8 +6,10 @@ function Invoke-CPCEndGracePeriod {
         Function to end the grace period of a CloudPC
         .PARAMETER name
         Name of the CloudPC to end the grace period of
+        .PARAMETER All
+        End the grace period of every CloudPC that is in its grace period
         .PARAMETER Force
-        Force parameter to end the grace period of all CloudPCs
+        End the grace period without asking for confirmation
         .EXAMPLE
         Invoke-CPCEndGracePeriod -Name "CloudPC01"
         .EXAMPLE
