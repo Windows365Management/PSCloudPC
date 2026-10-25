@@ -9,14 +9,19 @@ function Invoke-CPCEndGracePeriod {
         .PARAMETER All
         End the grace period of every CloudPC that is in its grace period
         .PARAMETER Force
-        End the grace period without asking for confirmation
+        End the grace period without asking for confirmation (same as -Confirm:$false)
         .EXAMPLE
         Invoke-CPCEndGracePeriod -Name "CloudPC01"
         .EXAMPLE
         Invoke-CPCEndGracePeriod -All -Force
+        .EXAMPLE
+        Invoke-CPCEndGracePeriod -All -WhatIf
+        .NOTES
+        Required permission: CloudPC.ReadWrite.All
+        https://learn.microsoft.com/graph/api/cloudpc-endgraceperiod?view=graph-rest-beta
     #>
 
-    [CmdletBinding(DefaultParameterSetName = 'Name')]
+    [CmdletBinding(DefaultParameterSetName = 'Name', SupportsShouldProcess = $true, ConfirmImpact = 'High')]
     param (
         [parameter(Mandatory, ParameterSetName = 'Name')]
         [ValidateNotNullOrEmpty()]
@@ -30,77 +35,52 @@ function Invoke-CPCEndGracePeriod {
         
     Begin {
         Get-TokenValidity
-    
+
+        # -Force skips the confirmation prompt, as before; -WhatIf still works
+        if ($Force -and -not $PSBoundParameters.ContainsKey('Confirm')) {
+            $ConfirmPreference = 'None'
+        }
     }
         
     Process {
         switch ($PsCmdlet.ParameterSetName) {
             Name {  
-                $CloudPCs = Get-CloudPC -name $Name | Where-Object { $_.status -eq "inGracePeriod" }
+                $CloudPCs = @(Get-CloudPC -name $Name | Where-Object { $_.status -eq "inGracePeriod" })
                 Write-Verbose "Getting Single CloudPC inGracePeriod: $($CloudPCs.managedDeviceName)"
 
-                If ($null -eq $CloudPCs) {
-                    Throw "No CloudPC found in grace period with name $Name"
-                    return
+                If ($CloudPCs.Count -eq 0) {
+                    Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No CloudPC found in grace period with name $Name" -Category ObjectNotFound
                 }
-                
             }
 
             All {
-                $CloudPCs = Get-CloudPC | Where-Object { $_.status -eq "inGracePeriod" }
+                $CloudPCs = @(Get-CloudPC | Where-Object { $_.status -eq "inGracePeriod" })
                 Write-Verbose "Getting every CloudPC inGracePeriod: $($CloudPCs.managedDeviceName)"
 
-                If ($null -eq $CloudPCs) {
-                    Throw "No CloudPC found in grace period with name"
-                    return
-                }
-
-            }
-        }
-
-        $Count = $CloudPCs.count
-
-        if ($Force){
-            $CloudPCs | ForEach-Object {
-                try {
-                    $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudPCs/$($_.id)/endGracePeriod"
-                    
-                    Write-Verbose "End Grace Period $($_.managedDeviceName) url: $($url)"
-
-                    Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST 
-
-                    Write-Output "End Grace Period $($_.managedDeviceName)"
-                }                                       
-                catch {
-                    Throw (Get-GraphErrorMessage $_)
+                If ($CloudPCs.Count -eq 0) {
+                    Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No CloudPC found in grace period" -Category ObjectNotFound
                 }
             }
         }
-        else {
 
-            Write-Output "$($Count) CloudPC(s) found in grace period"
-            $choice = Read-Host "Are you sure you want to end the grace period for CloudPC(s)? (y/n)"
-            if ($choice -ne "y") {
-                Write-Output "Exiting script"
-                return
-            }
-            
-            $CloudPCs | ForEach-Object {
+        Write-Verbose "$($CloudPCs.Count) CloudPC(s) found in grace period"
+
+        foreach ($CloudPC in $CloudPCs) {
+            $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/endGracePeriod"
+
+            Write-Verbose "End Grace Period $($CloudPC.managedDeviceName) url: $($url)"
+
+            if ($PSCmdlet.ShouldProcess($CloudPC.managedDeviceName, "End grace period (the Cloud PC is deprovisioned or reprovisioned)")) {
                 try {
-                    $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudPCs/$($_.id)/endGracePeriod"
-    
-                    Write-Verbose "End Grace Period $($_.displayName) url: $($url)"
-    
-                    Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST
+                    # Graph returns 204 No Content
+                    $null = Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST
 
-                    Write-Output "End Grace Period $($_.managedDeviceName)"
+                    Write-Output "End Grace Period $($CloudPC.managedDeviceName)"
                 }
                 catch {
                     Throw (Get-GraphErrorMessage $_)
                 }
             }
         }
-
     }
 }
-        

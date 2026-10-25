@@ -24,12 +24,7 @@ function Get-CPCRestorePoint {
     begin {
         Get-TokenValidity
 
-        $CloudPC = Get-CloudPC -name $Name
-
-        if ($null -eq $CloudPC) {
-            Throw "No Cloud PC found with name '$Name'"
-            return
-        }
+        $CloudPC = Resolve-CPCCloudPC -Cmdlet $PSCmdlet -Name $Name
 
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/retrieveSnapshots"
 
@@ -55,6 +50,7 @@ function Get-CPCRestorePoint {
                     lastRestoredDateTime = $_.lastRestoredDateTime
                     expirationDateTime   = $_.expirationDateTime
                     snapshotType         = $_.snapshotType
+                    healthCheckStatus    = $_.healthCheckStatus
                 }
                 $returnResults += $Info
             }

@@ -8,7 +8,10 @@ function Get-CPCSupportedRegion {
     Enter the name of the region
     .EXAMPLE
     Get-CPCSupportedRegion -name "westeurope"
-
+    .NOTES
+    Required permission: CloudPC.Read.All
+    https://learn.microsoft.com/graph/api/virtualendpoint-list-supportedregions?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpcsupportedregion?view=graph-rest-beta
 #>
     [CmdletBinding()]
     param (
@@ -22,7 +25,7 @@ function Get-CPCSupportedRegion {
         switch ($PsCmdlet.ParameterSetName) {
             Region {
                 Write-Verbose "Name parameter provided"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/supportedRegions?`$filter=displayName+eq+'$($Name)'"
+                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/supportedRegions?`$filter=displayName+eq+'$(ConvertTo-CPCODataString $Name)'"
             }
             default {
                 $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/supportedRegions"
@@ -32,25 +35,21 @@ function Get-CPCSupportedRegion {
     
     Process {
         write-verbose "Retrieving supported regions"
-        try {
-            $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
-            $regions = $result.content | convertfrom-json
-            write-verbose "Regions retrieved"
-            $support = $regions.value
-            $support | ForEach-Object {
-                $Info = [PSCustomObject]@{
-                    'displayName'  = $_.displayName
-                    'regionGroup'  = $_.regionGroup
-                    'regionStatus' = $_.regionStatus
-                }
-                $Info
+        $regions = @(Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET)
+        write-verbose "Regions retrieved"
+
+        $regions | ForEach-Object {
+            $Info = [PSCustomObject]@{
+                'id'                      = $_.id
+                'displayName'             = $_.displayName
+                'regionGroup'             = $_.regionGroup
+                'regionStatus'            = $_.regionStatus
+                'geographicLocationType'  = $_.geographicLocationType
+                'supportedSolution'       = $_.supportedSolution
+                'regionRestrictionDetail' = $_.regionRestrictionDetail
             }
-        
+            $Info
         }
-        catch {
-            Throw (Get-GraphErrorMessage $_)
-        }
-    
     }
     
 }

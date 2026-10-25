@@ -19,7 +19,7 @@ function New-CPCProvisioningPolicy {
     .PARAMETER EnableSingleSignOn
     Enable or disable single sign-on for the Cloud PCs ($true or $false). $true is only supported with DomainJoinType azureADJoin
     .PARAMETER DomainJoinType
-    Enter the Domain Join Type for the Provisioning Policy (azureADJoin or hybridAzureADJoin) (Default: azureADJoin)
+    Enter the Domain Join Type for the Provisioning Policy (azureADJoin or hybridAzureADJoin) (Default: azureADJoin). With a Microsoft hosted network (RegionName/RegionGroup) only azureADJoin is supported. With -AzureNetworkConnection the join type follows the connectionType of the connection.
     .PARAMETER RegionName
     Enter the Region Name for the Provisioning Policy
     .PARAMETER RegionGroup
@@ -36,8 +36,6 @@ function New-CPCProvisioningPolicy {
     Enter the Windows Autopatch Group Id for the Provisioning Policy (Info: Get-CPCWindowsAutopatchGroup)
     .PARAMETER userExperience
     Enter the User Experience for the Provisioning Policy (cloudPc or cloudApp) (Default: cloudPc)
-    .PARAMETER userSettingsPersistenceEnabled
-    Enable user settings persistence for the Provisioning Policy (Default: $false)
     .EXAMPLE
     New-CPCProvisioningPolicy -Name "Test-AzureADJoin" -Description "Test-AzureADJoin" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -DomainJoinType "AzureADJoin" -EnableSingleSignOn $true -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US"
     .EXAMPLE
@@ -48,8 +46,13 @@ function New-CPCProvisioningPolicy {
     New-CPCProvisioningPolicy -Name "Test-NamingTemplate" -Description "Test-NamingTemplate" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -WindowsAutopatch "starterManaged" -DomainJoinType "AzureADJoin" -RegionName "westeurope" -RegionGroup "europeUnion" -Language "en-US" -EnableSingleSignOn $true -NamingTemplate "%USERNAME:5%-%RAND:5%"
     .EXAMPLE
     New-CPCProvisioningPolicy -Name "Test-CloudApps" -Description "Test-AzureADJoin" -imageType "Gallery" -ImageId "microsoftwindowsdesktop_windows-ent-cpc_win11-25h2-ent-cpc" -DomainJoinType "AzureADJoin" -EnableSingleSignOn $true -RegionName "northeurope" -RegionGroup "europeUnion" -Language "en-US" -ProvisioningType sharedByEntraGroup -userExperience cloudApp
+    .NOTES
+    Required permission: CloudPC.ReadWrite.All
+    https://learn.microsoft.com/graph/api/virtualendpoint-post-provisioningpolicies?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpcprovisioningpolicy?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpcdomainjoinconfiguration?view=graph-rest-beta
     #>
-    [CmdletBinding(DefaultParameterSetName = 'AzureADJoin')]
+    [CmdletBinding(DefaultParameterSetName = 'MicrosoftHosted', SupportsShouldProcess = $true)]
     param (
         [parameter(Mandatory = $true)]
         [string]$Name,
@@ -63,8 +66,8 @@ function New-CPCProvisioningPolicy {
         [parameter(Mandatory = $false)]
         [string]$NamingTemplate,
 
-        [parameter(Mandatory = $true, ParameterSetName = 'MicrosoftHosted')]
-        [parameter(Mandatory = $true, ParameterSetName = 'AzureNetwork')]
+        [parameter(ParameterSetName = 'MicrosoftHosted')]
+        [parameter(ParameterSetName = 'AzureNetwork')]
         [ValidateSet('azureADJoin', 'hybridAzureADJoin')]
         [string]$DomainJoinType = 'azureADJoin',
 
@@ -111,98 +114,111 @@ function New-CPCProvisioningPolicy {
         $Policy = Get-CPCProvisioningPolicy -Name $Name -ErrorAction SilentlyContinue
 
         if ($Policy) {
-            Write-Error "Provisioning Policy with name $Name already exists"
-            break
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Provisioning Policy with name $Name already exists" -Category ResourceExists
         }
 
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies"
 
-        # Validate if DomainJoinType is azureADJoin, then EnableSingleSignOn can be used, otherwise throw an error.
+        # Single sign-on is only supported for Microsoft Entra joined Cloud PCs
         if ($DomainJoinType -ne 'azureADJoin' -and $EnableSingleSignOn) {
-            Write-Error "The parameter -EnableSingleSignOn can only be used with -DomainJoinType 'azureADJoin'."
-            break
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "The parameter -EnableSingleSignOn can only be used with -DomainJoinType 'azureADJoin'."
         }
 
-        If (($ProvisioningType -ne "sharedByEntraGroup") -and ($userExperience -eq "cloudApp")) {
-            Write-Error "The parameter provisioning type must be 'sharedByEntraGroup' when user experience is 'cloudApp'."
-            break
+        # A Microsoft hosted network (regionName) can only be used with azureADJoin; hybridAzureADJoin needs an Azure Network Connection
+        if ($PSCmdlet.ParameterSetName -eq 'MicrosoftHosted' -and $DomainJoinType -ne 'azureADJoin') {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "DomainJoinType 'hybridAzureADJoin' requires -AzureNetworkConnection; a Microsoft hosted network (RegionName/RegionGroup) only supports 'azureADJoin'."
+        }
+
+        If (($ProvisioningType -ne "sharedByEntraGroup") -and ($UserExperience -eq "cloudApp")) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "The parameter provisioning type must be 'sharedByEntraGroup' when user experience is 'cloudApp'."
+        }
+
+        If ($WindowsAutopatch -eq "starterManaged" -and [string]::IsNullOrWhiteSpace($WindowsAutopatchGroupId)) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "The parameter -WindowsAutopatchGroupId is required when -WindowsAutopatch is 'starterManaged'."
         }
     }
 
     Process {
 
+        $domainJoinConfigurations = @()
 
         If ($AzureNetworkConnection) {
-            $domainJoinConfigurations = @()
             foreach ($Network in $AzureNetworkConnection) {
 
-                $AzureNetworkInfo = Get-CPCAzureNetworkConnection -Name $Network
+                $AzureNetworkInfo = @(Get-CPCAzureNetworkConnection -Name $Network)
 
-                If ($null -eq $AzureNetworkInfo) {
-                    Throw "No Azure Network Connection found with name $Network"
+                If ($AzureNetworkInfo.Count -eq 0) {
+                    Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No Azure Network Connection found with name $Network" -Category ObjectNotFound
                 }
 
-                if ($AzureNetworkInfo.healthCheckStatus -ne "passed") {
-                    Throw "Azure Network Connection $Network is not healthy"
+                If ($AzureNetworkInfo.Count -gt 1) {
+                    Stop-CPCCommand -Cmdlet $PSCmdlet -Message "$($AzureNetworkInfo.Count) Azure Network Connections found with name $Network ($($AzureNetworkInfo.id -join ', ')). The name must match exactly one connection."
                 }
 
-                Write-Verbose "AzureNetworkConnection ID: $($AzureNetworkInfo.Id)"
-                $domainJoinConfig = @(
-                    @{
-                        Type                   = $AzureNetworkInfo.Type
-                        OnPremisesConnectionId = $AzureNetworkInfo.Id
-                    }
-                )
-                $domainJoinConfigurations += $domainJoinConfig
+                $AzureNetworkInfo = $AzureNetworkInfo[0]
+
+                # Cloud PCs can be provisioned when the health check passed, or passed with a warning or informational result
+                # https://learn.microsoft.com/graph/api/resources/cloudpconpremisesconnection?view=graph-rest-beta#cloudpconpremisesconnectionstatus-values
+                if ($AzureNetworkInfo.healthCheckStatus -notin @("passed", "warning", "informational")) {
+                    Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Azure Network Connection $Network is not healthy (healthCheckStatus: $($AzureNetworkInfo.healthCheckStatus))" -Category InvalidOperation
+                }
+
+                # The join type of the policy follows the connectionType of the connection (type stopped returning data on January 31, 2024)
+                $JoinType = $AzureNetworkInfo.connectionType
+                If ([string]::IsNullOrWhiteSpace($JoinType)) {
+                    $JoinType = $DomainJoinType
+                }
+
+                if ($JoinType -ne 'azureADJoin' -and $EnableSingleSignOn) {
+                    Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Azure Network Connection $Network is of type '$JoinType'; -EnableSingleSignOn `$true is only supported with 'azureADJoin' connections."
+                }
+
+                Write-Verbose "AzureNetworkConnection ID: $($AzureNetworkInfo.Id), join type: $JoinType"
+                $domainJoinConfigurations += @{
+                    domainJoinType         = $JoinType
+                    type                   = $JoinType
+                    onPremisesConnectionId = $AzureNetworkInfo.Id
+                }
             }
         }
-
         else {
-            $domainJoinConfig = @(
-                @{
-                    domainJoinType = "$DomainJoinType"
-                    Type           = "$DomainJoinType"
-                    RegionName     = $RegionName
-                    RegionGroup    = $RegionGroup
-                }
-            )
-            $domainJoinConfigurations += $domainJoinConfig
+            $domainJoinConfigurations += @{
+                domainJoinType = $DomainJoinType
+                type           = $DomainJoinType
+                regionName     = $RegionName
+                regionGroup    = $RegionGroup
+            }
         }
 
         $params = @{
-            DisplayName                    = $Name
-            Description                    = $Description
-            ProvisioningType               = $ProvisioningType
-            ManagedBy                      = $ManagedBy
-            ImageId                        = $ImageId
-            ImageType                      = $ImageType
-            enableSingleSignOn             = $EnableSingleSignOn
-            DomainJoinConfigurations       = $domainJoinConfigurations
-            MicrosoftManagedDesktop        = @{
+            displayName              = $Name
+            description              = $Description
+            provisioningType         = $ProvisioningType
+            managedBy                = $ManagedBy
+            imageId                  = $ImageId
+            imageType                = $ImageType
+            enableSingleSignOn       = $EnableSingleSignOn
+            domainJoinConfigurations = $domainJoinConfigurations
+            microsoftManagedDesktop  = @{
                 managedType = $WindowsAutopatch
-                type        = $WindowsAutopatch
-                profile     = ""
+                profile     = $null
             }
-            WindowsSettings                = @{
-                Language = $Language
+            windowsSettings          = @{
+                language = $Language
             }
-            WindowsSetting                 = @{
+            windowsSetting           = @{
                 locale = $Language
             }
-            cloudPcNamingTemplate          = $NamingTemplate
-            autopatch                      = @()
-            autopilotConfiguration         = $null
-            userExperienceType             = $userExperience
-            userSettingsPersistenceEnabled = $false
+            cloudPcNamingTemplate    = $NamingTemplate
+            autopatch                = $null
+            autopilotConfiguration   = $null
+            userExperienceType       = $UserExperience
         }
 
         If ($WindowsAutopatch -eq "starterManaged") {
             $params.autopatch = @{
                 autopatchGroupId = $WindowsAutopatchGroupId
             }
-        }
-        Else {
-            $params.autopatch = $null
         }
 
         if ($NamingTemplate) {
@@ -211,7 +227,7 @@ function New-CPCProvisioningPolicy {
         }
         Else {
             if ($ProvisioningType -eq "sharedByEntraGroup") {
-                Write-Verbose "A cloudApp provisioning type can't use a naming template."
+                Write-Verbose "A sharedByEntraGroup provisioning policy can't use a naming template."
                 $params.cloudPcNamingTemplate = $null
             }
             else {
@@ -222,19 +238,21 @@ function New-CPCProvisioningPolicy {
 
         $body = $params | ConvertTo-Json -Depth 10
 
-
         Write-Verbose $body
 
-        try {
-            $Result = Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body
+        if ($PSCmdlet.ShouldProcess($Name, "Create Provisioning Policy")) {
+            try {
+                $Result = Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body
+            }
+            catch {
+                Throw (Get-GraphErrorMessage $_)
+            }
+
+            $NewPolicy = $Result.Content | ConvertFrom-Json
+
+            Write-Verbose "Policy ID: $($NewPolicy.id)"
+
+            return $NewPolicy
         }
-        catch {
-            Throw (Get-GraphErrorMessage $_)
-        }
-
-        $PolicyId = ($Result.Content | ConvertFrom-Json).id
-
-        Write-Verbose "Policy ID: $($PolicyId)"
-
     }
 }

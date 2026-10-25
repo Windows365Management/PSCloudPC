@@ -8,6 +8,10 @@ function Get-CloudPC {
         Enter the name of the CloudPC
         .EXAMPLE
         Get-CloudPC -name "CloudPC01"
+        .NOTES
+        Required permission: CloudPC.Read.All
+        https://learn.microsoft.com/graph/api/virtualendpoint-list-cloudpcs?view=graph-rest-beta
+        https://learn.microsoft.com/graph/api/resources/cloudpc?view=graph-rest-beta
     #>
     [CmdletBinding()]
     param (
@@ -21,7 +25,7 @@ function Get-CloudPC {
         switch ($PsCmdlet.ParameterSetName) {
             Name {
                 Write-Verbose "Name parameter provided"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/CloudPCs?`$filter=managedDeviceName+eq+'$Name'"
+                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/CloudPCs?`$filter=managedDeviceName+eq+'$(ConvertTo-CPCODataString $Name)'"
             }
             default {
                 Write-Verbose "No name parameter provided"
@@ -32,10 +36,10 @@ function Get-CloudPC {
     Process {
         write-verbose $url
 
-        $Result = Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET
+        $Result = @(Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET)
     
-        if ($null -eq $result) {
-            Write-Error "No CloudPC's returned"
+        if ($Result.Count -eq 0) {
+            Write-Verbose "No CloudPC's found"
             return
         }
 
@@ -46,15 +50,27 @@ function Get-CloudPC {
                 id                     = $_.id
                 managedDeviceName      = $_.managedDeviceName
                 managedDeviceId        = $_.managedDeviceId
+                aadDeviceId            = $_.aadDeviceId
                 displayName            = $_.displayName
                 userPrincipalName      = $_.userPrincipalName
                 status                 = $_.status
+                statusDetail           = $_.statusDetail
+                powerState             = $_.powerState
+                productType            = $_.productType
+                provisioningType       = $_.provisioningType
+                provisioningPolicyId   = $_.provisioningPolicyId
                 provisioningPolicyName = $_.provisioningPolicyName
+                onPremisesConnectionName = $_.onPremisesConnectionName
+                deviceRegionName       = $_.deviceRegionName
                 imageDisplayName       = $_.imageDisplayName
-                lastmodifiedDateTime   = $_.lastmodifiedDateTime
+                osVersion              = $_.osVersion
+                userAccountType        = $_.userAccountType
+                lastmodifiedDateTime   = $_.lastModifiedDateTime
+                provisionedDateTime    = $_.provisionedDateTime
+                gracePeriodEndDateTime = $_.gracePeriodEndDateTime
+                servicePlanId          = $_.servicePlanId
                 serviceplanType        = $_.servicePlanType
                 servicePlanName        = $_.servicePlanName
-                
             }
             $PSObjectResults += $Info
         }

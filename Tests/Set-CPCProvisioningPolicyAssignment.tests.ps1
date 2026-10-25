@@ -30,11 +30,10 @@ Describe 'Set-CPCProvisioningPolicyAssignment' {
             $script:Authtoken = 'token'
             $script:Authheader = @{ Authorization = 'Bearer token' }
             $script:MSGraphVersion = 'beta'
-            $script:GroupID = '00000000-0000-0000-0000-0000000000a1'
         }
 
-        # Group lookup is not under test: Get-AzureADGroupID only sets $script:GroupID, set above.
-        Mock -ModuleName PSCloudPC Get-AzureADGroupID -MockWith { }
+        # Group lookup is not under test: Get-AzureADGroupID returns the id of the group.
+        Mock -ModuleName PSCloudPC Get-AzureADGroupID -MockWith { '00000000-0000-0000-0000-0000000000a1' }
         Mock -ModuleName PSCloudPC Invoke-RestMethod -MockWith { }
     }
 
@@ -119,7 +118,7 @@ Describe 'Set-CPCProvisioningPolicyAssignment' {
         }
 
         It 'still throws and sends no request with -ErrorAction SilentlyContinue when the group is not found' {
-            InModuleScope PSCloudPC { $script:GroupID = $null }
+            Mock -ModuleName PSCloudPC Get-AzureADGroupID -MockWith { $null }
             Mock -ModuleName PSCloudPC Get-CPCServicePlan -MockWith {
                 [pscustomobject]@{ id = $PlanId; displayName = $PlanName; provisioningType = 'shared' }
             }

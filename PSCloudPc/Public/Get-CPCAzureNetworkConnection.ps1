@@ -10,6 +10,10 @@ function Get-CPCAzureNetworkConnection {
     Get-CPCAzureNetworkConnection
     .EXAMPLE
     Get-CPCAzureNetworkConnection -Name "Your Azure Network Connection"
+    .NOTES
+    Required permission: CloudPC.Read.All
+    https://learn.microsoft.com/graph/api/virtualendpoint-list-onpremisesconnections?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpconpremisesconnection?view=graph-rest-beta
 #>
     [CmdletBinding()]
     param (
@@ -22,7 +26,7 @@ function Get-CPCAzureNetworkConnection {
         switch ($PsCmdlet.ParameterSetName) {
             DisplayName {
                 Write-Verbose "DisplayName parameter provided"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/onPremisesConnections?`$filter=displayName+eq+'$($Name)'"
+                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/onPremisesConnections?`$filter=displayName+eq+'$(ConvertTo-CPCODataString $Name)'"
             }
             default {
                 $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/onPremisesConnections"
@@ -32,26 +36,23 @@ function Get-CPCAzureNetworkConnection {
     
     Process {
         write-verbose $url
-        try {
-            $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
-        }
-        catch {
-            Throw (Get-GraphErrorMessage $_)
+        $result = @(Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET)
+
+        if ($result.Count -eq 0) {
+            Write-Verbose "No Azure Network Connection found"
+            return
         }
 
-        if ($null -eq $result) {
-            Write-Error "No Azure Network Connection found"
-            break
-        }
-        $resultnew = $result.content | ConvertFrom-Json
         $returnResults = @()
-        $resultnew.value | ForEach-Object {
-    
+        $result | ForEach-Object {
+            # type stopped returning data on January 31, 2024; connectionType replaces it.
+            # type is still populated from connectionType for scripts that read it.
             $Info = [PSCustomObject]@{
                 id                     = $_.id
                 displayName            = $_.displayName
                 subscriptionId         = $_.subscriptionId
-                type                   = $_.type
+                connectionType         = $_.connectionType
+                type                   = $_.connectionType
                 subscriptionName       = $_.subscriptionName
                 adDomainName           = $_.adDomainName
                 adDomainUsername       = $_.adDomainUsername
@@ -61,6 +62,9 @@ function Get-CPCAzureNetworkConnection {
                 virtualNetworkId       = $_.virtualNetworkId
                 subnetId               = $_.subnetId
                 healthCheckStatus      = $_.healthCheckStatus
+                healthCheckPaused      = $_.healthCheckPaused
+                inUse                  = $_.inUse
+                managedBy              = $_.managedBy
             }
             $returnResults += $Info
         }

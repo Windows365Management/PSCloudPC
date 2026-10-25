@@ -92,7 +92,8 @@ function Get-CPCRemoteActionResult {
                     startDateTime       = $_.startDateTime
                     lastUpdatedDateTime = $_.lastUpdatedDateTime
                     managedDeviceId     = $_.managedDeviceId
-                    statusDetails       = $_.statusDetails
+                    # statusDetails is deprecated since August 31, 2024; statusDetail replaces it
+                    statusDetail        = if ($null -ne $_.statusDetail) { $_.statusDetail } else { $_.statusDetails }
                 }
                 $PSObjectResults += $entry
             }

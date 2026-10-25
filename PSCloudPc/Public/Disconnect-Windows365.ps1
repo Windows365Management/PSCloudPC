@@ -11,14 +11,16 @@ Function Disconnect-Windows365 {
     param()
 
     begin {
-        $Context = Get-MGContext
+        $Context = Get-MgContext -ErrorAction SilentlyContinue
         Write-Verbose "MGContext: $($Context)"
     }
     process {
-        Disconnect-MgGraph -ErrorAction SilentlyContinue
-        $script:Authtime = $null
-        $script:Authtoken = $null
-        $script:Authheader = $null
-        Write-Verbose "Disconnected from Windows 365"
+        if ($PSCmdlet.ShouldProcess("Windows 365", "Disconnect and clear the token cache")) {
+            Disconnect-MgGraph -ErrorAction SilentlyContinue
+            $script:Authtime = $null
+            $script:Authtoken = $null
+            $script:Authheader = $null
+            Write-Verbose "Disconnected from Windows 365"
+        }
     }
 }

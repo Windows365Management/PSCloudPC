@@ -127,14 +127,7 @@ function Update-CPCUserSettingsPolicy {
 
             If ($PSBoundParameters.ContainsKey('UserRestoreFrequency')) {
                 # frequencyType replaces the deprecated frequencyInHours
-                $frequencyTypes = @{
-                    "4"  = "fourHours"
-                    "6"  = "sixHours"
-                    "12" = "twelveHours"
-                    "16" = "sixteenHours"
-                    "24" = "twentyFourHours"
-                }
-                $params['restorePointSetting']['frequencyType'] = $frequencyTypes[$UserRestoreFrequency]
+                $params['restorePointSetting']['frequencyType'] = ConvertTo-CPCRestorePointFrequencyType -FrequencyInHours $UserRestoreFrequency
             }
         }
 

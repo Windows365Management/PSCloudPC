@@ -21,13 +21,17 @@ function New-CPCAzureNetworkConnection {
     .PARAMETER AdDomainPassword
     Enter the password of the account that has permission to join computers to the domain.
     .PARAMETER OrganizationalUnit
-    Enter the Organizational Unit (OU) that you want to join the computer to. Required format: OU=OUName,DC=DomainName,DC=com
+    Enter the Organizational Unit (OU) that you want to join the computer to. Required format: OU=OUName,DC=DomainName,DC=com. Optional; when omitted the computer account is created in the default OU of the domain.
     .EXAMPLE
     New-CPCAzureNetworkConnection -Name "AzureADJoin" -resourceGroupId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01" -VirtualNetworkId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01/providers/Microsoft.Network/virtualNetworks/VirtualNetwork01" -subnetId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01/providers/Microsoft.Network/virtualNetworks/VirtualNetwork01/subnets/Subnet01" -subscriptionId "00000000-0000-0000-0000-000000000000"
     .EXAMPLE
     New-CPCAzureNetworkConnection -Name "HybridAzureADJoin" -resourceGroupId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01" -VirtualNetworkId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01/providers/Microsoft.Network/virtualNetworks/VirtualNetwork01" -subnetId "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/ResourceGroup01/providers/Microsoft.Network/virtualNetworks/VirtualNetwork01/subnets/Subnet01" -subscriptionId "00000000-0000-0000-0000-000000000000" -AdDomainName "contoso.com" -AdDomainUserName "admin@contoso.com" -AdDomainPassword (Read-Host -AsSecureString) -OrganizationalUnit "OU=OUName,DC=DomainName,DC=com"
+    .NOTES
+    Required permission: CloudPC.ReadWrite.All
+    https://learn.microsoft.com/graph/api/virtualendpoint-post-onpremisesconnections?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpconpremisesconnection?view=graph-rest-beta
     #>
-    [CmdletBinding(DefaultParameterSetName = 'AzureADJoin')]
+    [CmdletBinding(DefaultParameterSetName = 'AzureADJoin', SupportsShouldProcess = $true)]
     param (
         
         [parameter(Mandatory, ParameterSetName = "AzureADJoin")]
@@ -52,7 +56,7 @@ function New-CPCAzureNetworkConnection {
         [string]$AdDomainUserName,
         [Parameter(Mandatory, ParameterSetName = "HybridAzureADJoin")]
         [securestring]$AdDomainPassword,
-        [Parameter(Mandatory, ParameterSetName = "HybridAzureADJoin")]
+        [Parameter(ParameterSetName = "HybridAzureADJoin")]
         [string]$OrganizationalUnit
     )
     
@@ -60,15 +64,14 @@ function New-CPCAzureNetworkConnection {
         Get-TokenValidity
         $CPCAzureNetworkConnection = Get-CPCAzureNetworkConnection -Name $Name -ErrorAction SilentlyContinue
         if ($CPCAzureNetworkConnection) {
-            Write-Error "Azure Network Connection with name $Name already exists"
-            break
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Azure Network Connection with name $Name already exists" -Category ResourceExists
         }
         switch ($PSCmdlet.ParameterSetName) {
             "AzureADJoin" {
-                $DomainJoinType = "AzureADJoin"
+                $ConnectionType = "azureADJoin"
             }
             "HybridAzureADJoin" {
-                $DomainJoinType = "HybridAzureADJoin"
+                $ConnectionType = "hybridAzureADJoin"
             }
         }
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/onPremisesConnections"
@@ -77,44 +80,39 @@ function New-CPCAzureNetworkConnection {
 
         Write-Verbose "Parameterset: $($PSCmdlet.ParameterSetName)"
 
-        If ($($PSCmdlet.ParameterSetName) -eq 'HybridAzureADJoin') {
-            Write-Verbose "Creating Hybrid Azure AD Join Azure Network Connection, creating parameters"
-            $params = @{
-                DisplayName        = $Name
-                SubscriptionId     = $SubscriptionId
-                Type               = $DomainJoinType
-                SubscriptionName   = $SubscriptionName
-                AdDomainName       = $AdDomainName
-                AdDomainUsername   = $AdDomainUsername
-                AdDomainPassword   = $($AdDomainPassword | ConvertFrom-SecureString -AsPlainText)
-                OrganizationalUnit = $OrganizationalUnit
-                ResourceGroupId    = $ResourceGroupId
-                VirtualNetworkId   = $VirtualNetworkId
-                SubnetId           = $SubnetId
-            }
+        # type is deprecated and stopped returning data on January 31, 2024; connectionType replaces it
+        $params = @{
+            displayName      = $Name
+            connectionType   = $ConnectionType
+            subscriptionId   = $SubscriptionId
+            resourceGroupId  = $ResourceGroupId
+            virtualNetworkId = $VirtualNetworkId
+            subnetId         = $SubnetId
         }
-        Else {
-            Write-Verbose "Creating Azure AD Join Azure Network Connection, creating parameters"
-            $params = @{
-                DisplayName        = $Name
-                Type               = $DomainJoinType
-                SubscriptionId     = $SubscriptionId
-                ResourceGroupId    = $ResourceGroupId
-                VirtualNetworkId   = $VirtualNetworkId
-                SubnetId           = $SubnetId
+
+        If ($PSCmdlet.ParameterSetName -eq 'HybridAzureADJoin') {
+            Write-Verbose "Creating Hybrid Azure AD Join Azure Network Connection, adding domain join parameters"
+            $params.adDomainName = $AdDomainName
+            $params.adDomainUsername = $AdDomainUserName
+            $params.adDomainPassword = $($AdDomainPassword | ConvertFrom-SecureString -AsPlainText)
+            if ($PSBoundParameters.ContainsKey('OrganizationalUnit')) {
+                $params.organizationalUnit = $OrganizationalUnit
             }
         }
 
-        Write-verbose $params
         $body = $params | ConvertTo-Json -Depth 20
-        
-        Write-Verbose $body
-        try {
-            $result = Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body
-            $result
+
+        # The body holds the domain join password, so it is not written to the verbose stream
+        Write-Verbose "Creating Azure Network Connection '$Name' ($ConnectionType)"
+
+        if ($PSCmdlet.ShouldProcess($Name, "Create Azure Network Connection ($ConnectionType)")) {
+            try {
+                $result = Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body
+                $result
+            }
+            catch {
+                Throw (Get-GraphErrorMessage $_)
+            }
         }
-        catch {
-            Throw (Get-GraphErrorMessage $_)
-        }        
     }
 }

@@ -10,35 +10,47 @@ function Set-CPCUserSettingsPolicyAssignment {
     Name of the group to assign the policy to
     .EXAMPLE
     Set-CPCUserSettingsPolicyAssignment -Name "MyUserSettingsPolicy" -GroupName "MyGroup"
+    .PARAMETER Force
+    If set, existing assignments will be removed and only the provided group will be assigned
     .EXAMPLE
     Set-CPCUserSettingsPolicyAssignment -Name "MyUserSettingsPolicy" -GroupName "MyGroup" -Force (Removes existing assignments)
+    .NOTES
+    Required permission: CloudPC.ReadWrite.All
+    https://learn.microsoft.com/graph/api/cloudpcusersetting-assign?view=graph-rest-beta
     #>
-    [CmdletBinding(DefaultParameterSetName = 'Name')]
+    [CmdletBinding(DefaultParameterSetName = 'Name', SupportsShouldProcess = $true)]
     param (
         [parameter(Mandatory = $true, ParameterSetName = 'Name')]
         [string]$Name,
-        [Parameter(mandatory = $false)][string]$GroupName,
+        [Parameter(mandatory = $true)][ValidateNotNullOrEmpty()][string]$GroupName,
         [Parameter(mandatory = $false)][switch]$Force
-        # TODO: Add SupportsShouldProcess 
-
     )
     
     begin {
         Get-TokenValidity
 
-        Get-AzureADGroupID -GroupName $GroupName
-
-        If ($null -eq $script:GroupID) {
-            Throw "No group found with name $GroupName"
-            return
+        try {
+            $TargetGroupID = Get-AzureADGroupID -GroupName $GroupName
+        }
+        catch {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message $_.Exception.Message -Category InvalidOperation
         }
 
-        $Policy = Get-CPCUserSettingsPolicy -name $Name
-
-        If ($null -eq $Policy) {
-            Throw "No User Settings Policy found with name $Name"
-            return
+        If ([string]::IsNullOrWhiteSpace($TargetGroupID)) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No group found with name $GroupName" -Category ObjectNotFound
         }
+
+        $Policy = @(Get-CPCUserSettingsPolicy -name $Name)
+
+        If ($Policy.Count -eq 0) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No User Settings Policy found with name $Name" -Category ObjectNotFound
+        }
+
+        If ($Policy.Count -gt 1) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "$($Policy.Count) User Settings Policies found with name $Name ($($Policy.id -join ', ')). The name must match exactly one policy."
+        }
+
+        $Policy = $Policy[0]
 
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/userSettings/$($Policy.id)/assign"
 
@@ -49,8 +61,8 @@ function Set-CPCUserSettingsPolicyAssignment {
     Process {
 
         If ($Force) {
-            Write-Verbose "Force parameter is set. Not adding existing assignments to body, using GroupID $($script:GroupID)"
-            $GroupID = $script:GroupID
+            Write-Verbose "Force parameter is set. Not adding existing assignments to body, using GroupID $($TargetGroupID)"
+            $GroupID = $TargetGroupID
         }
         Else {
 
@@ -68,16 +80,16 @@ function Set-CPCUserSettingsPolicyAssignment {
 
             If ($null -eq $currentassignments) {
                 Write-Verbose "No assignments found"
-                $GroupID = $script:GroupID
+                $GroupID = $TargetGroupID
                 Write-Verbose "GroupID Value: $($GroupID)"
 
             }
             Else {
                 Write-Verbose "Assignments found"
                 $GroupID = New-Object System.Collections.Generic.List[System.Object]
-                $GroupID.Add($script:GroupID)
+                $GroupID.Add($TargetGroupID)
                 $currentassignments | ForEach-Object {
-                    if ($_ -ne $script:GroupID) { $GroupID.Add($_) }
+                    if ($_ -ne $TargetGroupID) { $GroupID.Add($_) }
                 }
                 Write-Verbose "GroupID Value: $($GroupID)"
 
@@ -101,11 +113,16 @@ function Set-CPCUserSettingsPolicyAssignment {
 
         $body = $params | ConvertTo-Json -Depth 100
 
-        try {
-            Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method Post -ContentType "application/json" -Body $body
-        }
-        catch {
-            Throw (Get-GraphErrorMessage $_)
+        Write-Verbose "Request Body: $($body)"
+
+        if ($PSCmdlet.ShouldProcess($Policy.displayName, "Assign User Settings Policy to group '$GroupName'")) {
+            try {
+                # Graph returns 204 No Content
+                $null = Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method Post -ContentType "application/json" -Body $body
+            }
+            catch {
+                Throw (Get-GraphErrorMessage $_)
+            }
         }
         
     }

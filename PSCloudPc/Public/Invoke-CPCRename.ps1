@@ -4,7 +4,7 @@ function Invoke-CPCRename {
         Renames a Cloud PC
         .DESCRIPTION
         The function will rename a Cloud PC by updating its displayName via the
-        Microsoft Graph Windows 365 rename API (v1.0).
+        Microsoft Graph Windows 365 rename API.
         .PARAMETER Name
         Enter the current name (managedDeviceName or displayName) of the Cloud PC to rename
         .PARAMETER NewDisplayName
@@ -15,13 +15,15 @@ function Invoke-CPCRename {
         Requires CloudPC.ReadWrite.All permission (delegated or application).
         API reference: https://learn.microsoft.com/en-us/graph/api/cloudpc-rename
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $Name,
 
         [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $NewDisplayName
     )
@@ -29,12 +31,7 @@ function Invoke-CPCRename {
 
         Get-TokenValidity
 
-        $CloudPC = Get-CloudPC -Name $Name
-
-        if ($null -eq $CloudPC) {
-            Write-Error "No Cloud PC found with name '$Name'"
-            return
-        }
+        $CloudPC = Resolve-CPCCloudPC -Cmdlet $PSCmdlet -Name $Name
 
     }
     Process {
@@ -47,12 +44,14 @@ function Invoke-CPCRename {
             displayName = $NewDisplayName
         } | ConvertTo-Json -Depth 10
 
-        try {
-            Invoke-RestMethod -Uri $url -Method POST -Headers $script:Authheader -Body $params -ContentType "application/json"
-            Write-Verbose "Cloud PC '$($CloudPC.displayName)' successfully renamed to '$NewDisplayName'"
-        }
-        catch {
-            Throw (Get-GraphErrorMessage $_)
+        if ($PSCmdlet.ShouldProcess($CloudPC.displayName, "Rename Cloud PC to '$NewDisplayName'")) {
+            try {
+                $null = Invoke-RestMethod -Uri $url -Method POST -Headers $script:Authheader -Body $params -ContentType "application/json"
+                Write-Verbose "Cloud PC '$($CloudPC.displayName)' successfully renamed to '$NewDisplayName'"
+            }
+            catch {
+                Throw (Get-GraphErrorMessage $_)
+            }
         }
 
     }

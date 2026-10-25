@@ -58,12 +58,7 @@ function Invoke-CPCCreateSnapshot {
     begin {
         Get-TokenValidity
 
-        $CloudPC = Get-CloudPC -Name $Name
-
-        if ($null -eq $CloudPC) {
-            Write-Error "No Cloud PC found with name '$Name'"
-            return
-        }
+        $CloudPC = Resolve-CPCCloudPC -Cmdlet $PSCmdlet -Name $Name
     }
 
     Process {
