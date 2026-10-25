@@ -31,7 +31,8 @@ function Set-CPCProvisioningPolicyAssignment {
     param (
         [parameter(Mandatory = $true, ParameterSetName = 'Name')]
         [string]$Name,
-        [Parameter(mandatory = $false)]
+        [Parameter(mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]$GroupName,
         [Parameter(mandatory = $false)]
         [switch]$Force,
@@ -48,18 +49,28 @@ function Set-CPCProvisioningPolicyAssignment {
     begin {
         Get-TokenValidity
 
-        Get-AzureADGroupID -GroupName $GroupName
+        try {
+            $TargetGroupID = Get-AzureADGroupID -GroupName $GroupName
+        }
+        catch {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message $_.Exception.Message -Category InvalidOperation
+        }
 
-        If ($null -eq $script:GroupID) {
+        If ([string]::IsNullOrWhiteSpace($TargetGroupID)) {
             Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No group found with name $GroupName" -Category ObjectNotFound
         }
 
-        $Policy = Get-CPCProvisioningPolicy -name $Name
+        $Policy = @(Get-CPCProvisioningPolicy -name $Name)
 
-        If ($null -eq $Policy) {
+        If ($Policy.Count -eq 0) {
             Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No Provisioning Policy found with name $Name" -Category ObjectNotFound
-            return
         }
+
+        If ($Policy.Count -gt 1) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "$($Policy.Count) Provisioning Policies found with name $Name ($($Policy.id -join ', ')). The name must match exactly one policy."
+        }
+
+        $Policy = $Policy[0]
 
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies/$($Policy.id)/assign"
 
@@ -99,8 +110,8 @@ function Set-CPCProvisioningPolicyAssignment {
 
         If ($ProvisioningType -eq "dedicated") {
             If ($Force) {
-                Write-Verbose "Force parameter is set. Not adding existing assignments to body, using GroupID $($script:GroupID)"
-                $GroupID = $script:GroupID
+                Write-Verbose "Force parameter is set. Not adding existing assignments to body, using GroupID $($TargetGroupID)"
+                $GroupID = $TargetGroupID
             }
             Else {
 
@@ -118,16 +129,16 @@ function Set-CPCProvisioningPolicyAssignment {
 
                 If ($null -eq $currentassignments) {
                     Write-Verbose "No assignments found"
-                    $GroupID = $script:GroupID
+                    $GroupID = $TargetGroupID
                     Write-Verbose "GroupID Value: $($GroupID)"
 
                 }
                 Else {
                     Write-Verbose "Assignments found"
                     $GroupID = New-Object System.Collections.Generic.List[System.Object]
-                    $GroupID.Add($script:GroupID)
+                    $GroupID.Add($TargetGroupID)
                     $currentassignments | ForEach-Object {
-                        if ($_ -ne $script:GroupID) { $GroupID.Add($_) }
+                        if ($_ -ne $TargetGroupID) { $GroupID.Add($_) }
                     }
                     Write-Verbose "GroupID Value: $($GroupID)"
 
@@ -150,14 +161,14 @@ function Set-CPCProvisioningPolicyAssignment {
             }
         }
         else {
-            Write-Verbose "Provisioning Type is $($ProvisioningType). Creating single assignment for GroupID $($script:GroupID) and ServicePlanName $($ServicePlanName) with $($ServicePlanId)"
+            Write-Verbose "Provisioning Type is $($ProvisioningType). Creating single assignment for GroupID $($TargetGroupID) and ServicePlanName $($ServicePlanName) with $($ServicePlanId)"
 
             $params = @{
                 Assignments = @(
                     @{
                         Target = @{
                             "@odata.type"          = "#microsoft.graph.cloudPcManagementGroupAssignmentTarget"
-                            GroupId                = $script:GroupID
+                            GroupId                = $TargetGroupID
                             ServicePlanId          = $ServicePlanId
                             AllotmentDisplayName   = "FrontlineAssignment"
                             AllotmentLicensesCount = $AllotmentLicensesCount

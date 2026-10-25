@@ -48,18 +48,18 @@ function Invoke-CPCUnpublishCloudApp {
         $AppsToUnpublish = @()
 
         # Flag to track if we should proceed
-        $script:ShouldProceed = $true
+        $ShouldProceed = $true
 
         # Check if there are published apps available
         if ($null -eq $PublishedApps -or $PublishedApps.Count -eq 0) {
             Write-Warning "No published apps available to unpublish"
-            $script:ShouldProceed = $false
+            $ShouldProceed = $false
         }
     }
 
     process {
         # Skip processing if we shouldn't proceed
-        if (-not $script:ShouldProceed) {
+        if (-not $ShouldProceed) {
             return
         }
 
@@ -94,7 +94,7 @@ function Invoke-CPCUnpublishCloudApp {
                     if ($AppExists) {
                         Write-Warning "App matching '$Name' exists but is not currently published. App: '$($AppExists.displayName)' Status: $($AppExists.appStatus)"
                     } else {
-                        Write-Error "No app found with name containing: $Name"
+                        Write-Error "No app found with name: $Name"
                     }
                     return
                 }
@@ -133,8 +133,8 @@ function Invoke-CPCUnpublishCloudApp {
 
     end {
         # Only proceed if we should and have apps to unpublish
-        if (-not $script:ShouldProceed -or $AppsToUnpublish.Count -eq 0) {
-            if ($script:ShouldProceed -and $AppsToUnpublish.Count -eq 0) {
+        if (-not $ShouldProceed -or $AppsToUnpublish.Count -eq 0) {
+            if ($ShouldProceed -and $AppsToUnpublish.Count -eq 0) {
                 Write-Warning "No apps to unpublish"
             }
             return

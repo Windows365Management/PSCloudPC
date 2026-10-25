@@ -17,6 +17,9 @@ function Invoke-CPCRestore {
     .EXAMPLE
     Invoke-CPCRestore -Name "CloudPC01"
     # Interactive: opens a restore-point picker GUI.
+    .EXAMPLE
+    Invoke-CPCRestore -Name "CloudPC01" -SnapshotId "CPC_d4cfdeb2-d409-4e97-87ce-618b704d75f1_d95c0bde-485d-400e-9bef-083905e1b768"
+    # Non-interactive: restores to the given snapshot.
     .NOTES
     API reference: https://learn.microsoft.com/en-us/graph/api/cloudpc-restore
     Required permission: CloudPC.ReadWrite.All
@@ -34,18 +37,19 @@ function Invoke-CPCRestore {
     begin {
         Get-TokenValidity
 
-        $CloudPC = Get-CloudPC -name $Name
-
-        If ($null -eq $CloudPC) {
-            Throw "No Cloud PC found with name '$Name'"
-            return
-        }
+        $CloudPC = Resolve-CPCCloudPC -Cmdlet $PSCmdlet -Name $Name
 
         $url = "https://graph.microsoft.com/beta/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/restore"
         Write-Verbose "Restore URL: $url"
 
         If (-not $PSBoundParameters.ContainsKey('SnapshotId')) {
-            $RestorePoints = Get-CPCRestorePoint -name $Name
+            If (-not (Get-Command -Name Out-GridView -ErrorAction SilentlyContinue)) {
+                Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Out-GridView is not available in this session. Pass -SnapshotId (see Get-CPCRestorePoint) to restore without the interactive selector." -Category NotImplemented
+            }
+            $RestorePoints = @(Get-CPCRestorePoint -name $Name)
+            If ($RestorePoints.Count -eq 0) {
+                Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No restore points found for Cloud PC '$Name'" -Category ObjectNotFound
+            }
         }
     }
 

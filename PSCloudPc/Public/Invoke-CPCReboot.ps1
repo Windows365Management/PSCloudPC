@@ -8,10 +8,14 @@ function Invoke-CPCReboot {
         Enter the name of the CloudPC
         .EXAMPLE
         Invoke-CPCReboot -Name "CloudPC01"
+        .NOTES
+        Required permission: CloudPC.ReadWrite.All
+        https://learn.microsoft.com/graph/api/cloudpc-reboot?view=graph-rest-beta
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $Name
     )
@@ -19,15 +23,24 @@ function Invoke-CPCReboot {
 
         Get-TokenValidity
 
-        $CloudPC = Get-CloudPC -Name $Name
+        $CloudPC = Resolve-CPCCloudPC -Cmdlet $PSCmdlet -Name $Name
+
+        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/reboot"
         
     }
     Process {
 
-        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPc.id)/reboot"
-
         Write-Verbose "Rebooting CloudPC $($CloudPC.displayName) with id: $($CloudPC.id)"
 
-        $response = Invoke-RestMethod -Uri $url -Method POST -Headers $script:Authheader
+        if ($PSCmdlet.ShouldProcess($CloudPC.displayName, "Reboot Cloud PC")) {
+            try {
+                # Graph returns 204 No Content
+                $null = Invoke-RestMethod -Uri $url -Method POST -Headers $script:Authheader
+                Write-Output "Reboot initiated for Cloud PC '$($CloudPC.displayName)'"
+            }
+            catch {
+                Throw (Get-GraphErrorMessage $_)
+            }
+        }
     }
 }

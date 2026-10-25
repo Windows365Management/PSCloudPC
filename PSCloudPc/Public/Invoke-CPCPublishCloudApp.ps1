@@ -67,7 +67,7 @@ function Invoke-CPCPublishCloudApp {
                 # Find the app by display name (case-insensitive)
                 $App = $AvailableApps | Where-Object { $_.displayName -eq $Name }
                 if ($null -eq $App) {
-                    Write-Error "No app found with name containing: $Name"
+                    Write-Error "No app found with name: $Name"
                     return
                 }
                 if ($App.Count -gt 1) {

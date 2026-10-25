@@ -3,7 +3,7 @@ function Invoke-CPCReprovision {
     .SYNOPSIS
     Reprovision a Cloud PC
     .DESCRIPTION
-    The function will reprovision a Cloud PC using the Microsoft Graph v1.0 API.
+    The function will reprovision a Cloud PC using the Microsoft Graph API.
     Optionally override the OS version (Windows 10 or 11) and the user account type
     (standard user or local administrator) for the reprovisioned Cloud PC.
     .PARAMETER Name
@@ -40,12 +40,7 @@ function Invoke-CPCReprovision {
     begin {
         Get-TokenValidity
         
-        $CloudPC = Get-CloudPC -name $Name
-
-        if ($null -eq $CloudPC) {
-            Throw "No Cloud PC found with name $Name"
-            return
-        }
+        $CloudPC = Resolve-CPCCloudPC -Cmdlet $PSCmdlet -Name $Name
 
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/reprovision"
 

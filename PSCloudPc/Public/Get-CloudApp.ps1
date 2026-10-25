@@ -16,6 +16,10 @@ function Get-CloudApp {
     Get-CloudApp
     .EXAMPLE
     Get-CloudApp | Where-Object { $_.appStatus -eq "published" }
+    .NOTES
+    Required permission: CloudPC.Read.All
+    https://learn.microsoft.com/graph/api/virtualendpoint-list-cloudapps?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpccloudapp?view=graph-rest-beta
     #>
     [CmdletBinding(DefaultParameterSetName = 'All')]
     param (
@@ -32,7 +36,7 @@ function Get-CloudApp {
         switch ($PsCmdlet.ParameterSetName) {
             'Name' {
                 Write-Verbose "Name parameter provided: $Name"
-                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudApps?`$filter=displayName+eq+'$($Name)'"
+                $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudApps?`$filter=displayName+eq+'$(ConvertTo-CPCODataString $Name)'"
             }
             'Id' {
                 Write-Verbose "Id parameter provided: $Id"
@@ -49,36 +53,28 @@ function Get-CloudApp {
     
     process {
         try {
-            $result = Invoke-RestMethod -Uri $url -Method GET -Headers $script:authHeader
-            
-            if ($null -eq $result) {
-                Write-Warning "No Cloud Apps returned"
+            # Invoke-APIRequest returns a single app as-is and follows every page of a collection
+            $apps = @(Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET)
+
+            if ($apps.Count -eq 0) {
+                Write-Warning "No Cloud Apps found"
                 return
             }
 
             $returnResults = @()
-            
-            # Handle single item response (when getting by ID)
-            if ($PsCmdlet.ParameterSetName -eq 'Id') {
-                $apps = @($result)
-            }
-            else {
-                $apps = $result.value
-            }
-            
-            if ($null -eq $apps -or $apps.Count -eq 0) {
-                Write-Warning "No Cloud Apps found"
-                return
-            }
 
             $apps | ForEach-Object {
                 $Info = [PSCustomObject]@{
                     id                    = $_.id
                     discoveredAppName     = $_.discoveredAppName
                     displayName           = $_.displayName
+                    description           = $_.description
                     appStatus             = $_.appStatus
                     availableToUser       = $_.availableToUser
+                    provisioningPolicyId  = $_.provisioningPolicyId
+                    addedDateTime         = $_.addedDateTime
                     lastPublishedDateTime = $_.lastPublishedDateTime
+                    actionFailedErrorCode = $_.actionFailedErrorCode
                 }
                 $returnResults += $Info
             }
@@ -86,7 +82,7 @@ function Get-CloudApp {
             return $returnResults
         }
         catch {
-            Write-Error "Failed to retrieve Cloud Apps: $(Get-GraphErrorMessage $_)"
+            Write-Error "Failed to retrieve Cloud Apps: $($_.Exception.Message)"
             throw
         }
     }

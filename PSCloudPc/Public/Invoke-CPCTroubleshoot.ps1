@@ -13,6 +13,9 @@ function Invoke-CPCTroubleshoot {
         Invoke-CPCTroubleshoot -Name "CloudPC01"
         .EXAMPLE
         Invoke-CPCTroubleshoot -Name "CloudPC01" -WhatIf
+        .NOTES
+        Required permission: CloudPC.ReadWrite.All
+        https://learn.microsoft.com/graph/api/cloudpc-troubleshoot?view=graph-rest-beta
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     param (
@@ -24,12 +27,7 @@ function Invoke-CPCTroubleshoot {
     Begin {
         Get-TokenValidity
 
-        $CloudPC = Get-CloudPC -Name $Name
-
-        if ($null -eq $CloudPC) {
-            Write-Error "Cloud PC '$Name' not found"
-            return
-        }
+        $CloudPC = Resolve-CPCCloudPC -Cmdlet $PSCmdlet -Name $Name
 
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/cloudPCs/$($CloudPC.id)/troubleshoot"
         Write-Verbose "Troubleshoot URL: $url"

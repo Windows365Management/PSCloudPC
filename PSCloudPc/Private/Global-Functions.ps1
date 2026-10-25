@@ -26,23 +26,46 @@ function Get-TokenValidity {
     }
 }
 
+#Function to escape a value for use inside single quotes in an OData $filter
+#https://learn.microsoft.com/graph/query-parameters#escaping-single-quotes
+function ConvertTo-CPCODataString {
+    param (
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [string]$Value
+    )
+
+    return [uri]::EscapeDataString($Value.Replace("'", "''"))
+}
+
+#Function to look up the id of an Entra ID group by its display name
+#Returns the id of the group, or $null when no group has that name. Throws when more than one group has that name,
+#because an assignment needs exactly one group id.
+#https://learn.microsoft.com/graph/api/group-list?view=graph-rest-beta
 function Get-AzureADGroupID {
     param (
         [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]$GroupName
     )
 
-    $url = "https://graph.microsoft.com/$script:MSGraphVersion/groups?`$filter=displayName+eq+'$GroupName'"
+    $url = "https://graph.microsoft.com/$script:MSGraphVersion/groups?`$filter=displayName+eq+'$(ConvertTo-CPCODataString $GroupName)'&`$select=id,displayName"
 
-    $result = Invoke-RestMethod -Uri $url -Headers $script:Authheader -Method GET
+    $groups = @(Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET)
 
-    if ($null -eq $result) {
-        Write-Error "No groups returned"
-        break
+    if ($groups.Count -eq 0) {
+        Write-Verbose "No group found with name '$GroupName'"
+        $script:GroupID = $null
+        return $null
     }
-    
-    $script:GroupID = $result.value.id
 
+    if ($groups.Count -gt 1) {
+        Throw "$($groups.Count) groups found with name '$GroupName' ($($groups.id -join ', ')). The name must match exactly one group."
+    }
+
+    #Kept for callers that still read the script variable
+    $script:GroupID = [string]$groups[0].id
+    return $script:GroupID
 }
 
 function Invoke-APIRequest {
@@ -213,6 +236,53 @@ function Stop-CPCCommand {
 
     $errorRecord = [System.Management.Automation.ErrorRecord]::new([System.Exception]::new($Message), 'PSCloudPC.Guard', $Category, $null)
     $Cmdlet.ThrowTerminatingError($errorRecord)
+}
+
+#Function to find the Cloud PC a cmdlet works on by its managed device name
+#Stops the calling cmdlet with a terminating error when no Cloud PC has that name, so the cmdlet never sends a
+#request with an empty id. When several Cloud PCs share the name the first one is used, with a warning.
+function Resolve-CPCCloudPC {
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCmdlet]$Cmdlet,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Name
+    )
+
+    $CloudPCs = @(Get-CloudPC -Name $Name | Where-Object { $null -ne $_ })
+
+    if ($CloudPCs.Count -eq 0) {
+        Stop-CPCCommand -Cmdlet $Cmdlet -Message "No Cloud PC found with name '$Name'. Use Get-CloudPC to verify the managed device name." -Category ObjectNotFound
+    }
+
+    if ($CloudPCs.Count -gt 1) {
+        Write-Warning "$($CloudPCs.Count) Cloud PCs found with name '$Name'. Using the first one: $($CloudPCs[0].id)"
+    }
+
+    return $CloudPCs[0]
+}
+
+#Function to map a restore point frequency in hours to the cloudPcRestorePointFrequencyType enum
+#frequencyType replaces the deprecated frequencyInHours
+#https://learn.microsoft.com/graph/api/resources/cloudpcrestorepointsetting?view=graph-rest-beta
+function ConvertTo-CPCRestorePointFrequencyType {
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('4', '6', '12', '16', '24')]
+        [string]$FrequencyInHours
+    )
+
+    $frequencyTypes = @{
+        "4"  = "fourHours"
+        "6"  = "sixHours"
+        "12" = "twelveHours"
+        "16" = "sixteenHours"
+        "24" = "twentyFourHours"
+    }
+
+    return $frequencyTypes[$FrequencyInHours]
 }
 
 #Function to read a Cloud PC user setting and return its writable properties as a hashtable for a PATCH body

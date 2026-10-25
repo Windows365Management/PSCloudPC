@@ -12,28 +12,31 @@ function New-CPCCustomImage {
     Enter the Source Image Resource Id from Azure
     .EXAMPLE
     New-CPCCustomImage -Name "CustomImage01" -Version "1.0" -SourceImageResourceId "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/rg-azw365/providers/Microsoft.Compute/images/azw365-2021-03-01-01-00-00"
+    .NOTES
+    Required permission: CloudPC.ReadWrite.All
+    https://learn.microsoft.com/graph/api/virtualendpoint-post-deviceimages?view=graph-rest-beta
     #>
 
-    # TODO: Add SupportsShouldProcess 
-    [CmdletBinding(DefaultParameterSetName = 'Name')]
+    [CmdletBinding(DefaultParameterSetName = 'Name', SupportsShouldProcess = $true)]
     param (
-        [parameter(Mandatory = $false, ParameterSetName = 'Name')]
+        [parameter(Mandatory = $true, ParameterSetName = 'Name')]
+        [ValidateNotNullOrEmpty()]
         [string]$Name,
 
-        [Parameter(mandatory = $true)][string]$Version,
+        [Parameter(mandatory = $true)][ValidateNotNullOrEmpty()][string]$Version,
 
-        [Parameter(mandatory = $true)][string]$SourceImageResourceId
+        [Parameter(mandatory = $true)][ValidateNotNullOrEmpty()][string]$SourceImageResourceId
         
     )
     
     begin {
         Get-TokenValidity
 
-        $Image = Get-CPCCustomImage -Name $Name -ErrorAction SilentlyContinue
+        # displayName and version together identify an image, so the same name with another version is allowed
+        $Image = @(Get-CPCCustomImage -Name $Name -ErrorAction SilentlyContinue | Where-Object { $_.version -eq $Version })
 
-        if ($Image) {
-            Write-Error "Custom Image with name $Name already exists"
-            Break
+        if ($Image.Count -gt 0) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Custom Image with name $Name and version $Version already exists" -Category ResourceExists
         }
 
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/deviceImages"
@@ -44,18 +47,20 @@ function New-CPCCustomImage {
     Process {
 
         $params = @{
-            DisplayName = $Name
-            Version = $Version
-            SourceImageResourceId = $SourceImageResourceId
+            displayName           = $Name
+            version               = $Version
+            sourceImageResourceId = $SourceImageResourceId
         } | ConvertTo-Json -Depth 10
 
         Write-Verbose $params
 
-        try {
-            Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $params
-        }
-        catch {
-            Throw (Get-GraphErrorMessage $_)
+        if ($PSCmdlet.ShouldProcess("$Name (version $Version)", "Create Custom Image")) {
+            try {
+                Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $params
+            }
+            catch {
+                Throw (Get-GraphErrorMessage $_)
+            }
         }
         
     }

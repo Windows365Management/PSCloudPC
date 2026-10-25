@@ -70,12 +70,27 @@ function Get-CPCRealTimeConnectionStatus {
         try {
             $result = Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method GET -ContentType "application/json"
 
-            if ($null -eq $result) {
+            # Graph returns this report as application/octet-stream; parse it when it comes back as text
+            if ($result -is [string] -and -not [string]::IsNullOrWhiteSpace($result)) {
+                $result = $result | ConvertFrom-Json
+            }
+
+            if ($null -eq $result -or $null -eq $result.Values -or @($result.Values).Count -eq 0) {
                 Write-Output "No real-time connection status returned for Cloud PC '$targetName'."
                 return
             }
 
-            $result.Values
+            # The report comes back as a table: Schema lists the columns, Values holds one array per row
+            $columns = @($result.Schema | ForEach-Object { $_.Column })
+
+            foreach ($row in $result.Values) {
+                $values = @($row)
+                $entry = [ordered]@{}
+                for ($i = 0; $i -lt $columns.Count; $i++) {
+                    $entry[$columns[$i]] = if ($i -lt $values.Count) { $values[$i] } else { $null }
+                }
+                [PSCustomObject]$entry
+            }
         }
         catch {
             Throw (Get-GraphErrorMessage $_)

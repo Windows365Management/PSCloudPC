@@ -48,7 +48,7 @@ function Get-CPCAuditEvent {
         switch ($PsCmdlet.ParameterSetName) {
             ActivityType {
                 Write-Verbose "ActivityType filter provided: $ActivityType"
-                $queryParams += "`$filter=activityType+eq+'$($ActivityType)'"
+                $queryParams += "`$filter=activityType+eq+'$(ConvertTo-CPCODataString $ActivityType)'"
             }
         }
 
@@ -67,22 +67,29 @@ function Get-CPCAuditEvent {
     Process {
         Write-Verbose $url
 
-        try {
-            $result = Invoke-WebRequest -Uri $url -Method GET -Headers $script:authHeader
+        if ($PSBoundParameters.ContainsKey('Top')) {
+            # Only the first page is wanted, so the nextLink is not followed
+            try {
+                $result = Invoke-WebRequest -Uri $url -Method GET -Headers $script:authHeader
+            }
+            catch {
+                Throw (Get-GraphErrorMessage $_)
+            }
+            $events = @(($result.Content | ConvertFrom-Json).value)
         }
-        catch {
-            Throw (Get-GraphErrorMessage $_)
+        else {
+            # Without -Top every page is read
+            $events = @(Invoke-APIRequest -uri $url -Token $script:Authtoken -Method GET)
         }
 
-        if ($null -eq $result) {
-            Write-Error "No audit events returned"
+        if ($events.Count -eq 0) {
+            Write-Verbose "No audit events found"
             return
         }
 
-        $resultnew = $result.content | ConvertFrom-Json
         $returnResults = @()
 
-        $resultnew.value | ForEach-Object {
+        $events | ForEach-Object {
 
             $Info = [PSCustomObject]@{
                 id                    = $_.id

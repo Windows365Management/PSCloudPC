@@ -13,9 +13,14 @@ function New-CPCUserSettingsPolicy {
     .PARAMETER UserRestoreEnabled
     Enable or disable user restore
     .PARAMETER FrequencyInHours
-    Set the frequency of restore points in hours
+    Set the frequency of restore points in hours. Valid values: 4, 6, 12, 16, 24 (Default: 6).
+    Sent as the restorePointSetting frequencyType (fourHours, sixHours, twelveHours, sixteenHours, twentyFourHours).
     .EXAMPLE
     New-CPCUserSettingsPolicy -Name "Cloud PC User Settings Policy" -LocalAdminEnabled $true -ResetEnabled $true -UserRestoreEnabled $true -FrequencyInHours 6
+    .NOTES
+    Required permission: CloudPC.ReadWrite.All
+    https://learn.microsoft.com/graph/api/virtualendpoint-post-usersettings?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpcrestorepointsetting?view=graph-rest-beta
     #>
     [CmdletBinding(DefaultParameterSetName = 'Name', SupportsShouldProcess = $true)]
     param (
@@ -24,7 +29,8 @@ function New-CPCUserSettingsPolicy {
         [Parameter(mandatory = $false)][bool]$LocalAdminEnabled = $false,
         [Parameter(mandatory = $false)][bool]$ResetEnabled = $false,
         [Parameter(mandatory = $false)][bool]$UserRestoreEnabled = $false,
-        [ValidateSet('4', '6', '12', '16', '24')]$FrequencyInHours = 6
+        [ValidateSet('4', '6', '12', '16', '24')]
+        [string]$FrequencyInHours = '6'
     )
     
     begin {
@@ -36,9 +42,7 @@ function New-CPCUserSettingsPolicy {
         $Policy = Get-CPCUserSettingsPolicy -Name $Name -ErrorAction SilentlyContinue 
 
         if ($Policy) {
-            Write-Verbose "Cloud PC User Settings Policy $Name already exists. Aborting operation."
-            Write-Error "Cloud PC User Settings Policy $Name already exists"
-            Break
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Cloud PC User Settings Policy $Name already exists" -Category ResourceExists
         }
         Write-Verbose "Cloud PC User Settings Policy $Name does not exist. Proceeding with creation."
         
@@ -46,13 +50,14 @@ function New-CPCUserSettingsPolicy {
 
     Process {
 
+        # frequencyType replaces the deprecated frequencyInHours, which stopped returning data on January 31, 2024
         $params = @{
-            DisplayName         = $Name
-            LocalAdminEnabled   = $LocalAdminEnabled
+            displayName         = $Name
+            localAdminEnabled   = $LocalAdminEnabled
             resetEnabled        = $ResetEnabled
-            RestorePointSetting = @{
-                UserRestoreEnabled = $UserRestoreEnabled
-                FrequencyInHours   = $FrequencyInHours
+            restorePointSetting = @{
+                userRestoreEnabled = $UserRestoreEnabled
+                frequencyType      = ConvertTo-CPCRestorePointFrequencyType -FrequencyInHours $FrequencyInHours
             }
         } | ConvertTo-Json -Depth 10
 

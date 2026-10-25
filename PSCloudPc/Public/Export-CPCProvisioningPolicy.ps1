@@ -22,37 +22,46 @@ function Export-CPCProvisioningPolicy {
     Begin {
         Get-TokenValidity
 
-        $Policy = Get-CPCProvisioningPolicy -Name $Name
+        $Policy = @(Get-CPCProvisioningPolicy -Name $Name)
 
-        if ($null -eq $Policy) {
-            Write-Error "No Provisioning Policy's returned"
-            break
+        if ($Policy.Count -eq 0) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No Provisioning Policy found with name '$Name'" -Category ObjectNotFound
+        }
+
+        if ($Policy.Count -gt 1) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "$($Policy.Count) Provisioning Policies found with name '$Name' ($($Policy.id -join ', ')). The name must match exactly one policy."
+        }
+
+        $Policy = $Policy[0]
+
+        if (-not (Test-Path -Path $OutputFolder -PathType Container)) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "Output folder '$OutputFolder' does not exist" -Category ObjectNotFound
         }
     }
 
     Process {
 
-        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies/$($Policy.id)/"
+        $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies/$($Policy.id)"
 
         write-verbose $url
 
         try {
             $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
-
-            if ($null -eq $result) {
-                Write-Error "No Provisioning Policy returned"
-                break
-            }
-
-            $Convert = ConvertFrom-Json $result.Content
-
-            $JSON = ConvertTo-Json @($Convert) -Depth 100
-
-            $JSON | Set-Content -Path "$($OutputFolder)\$($Policy.displayName).json"
         }
         catch {
             Throw (Get-GraphErrorMessage $_)
         }
+
+        $Convert = ConvertFrom-Json $result.Content
+
+        $JSON = ConvertTo-Json @($Convert) -Depth 100
+
+        # Join-Path builds a path that is valid on Windows, macOS and Linux
+        $OutputFile = Join-Path -Path $OutputFolder -ChildPath "$($Policy.displayName).json"
+        Write-Verbose "Writing policy to $OutputFile"
+        $JSON | Set-Content -Path $OutputFile
+
+        Get-Item -Path $OutputFile
     }
 
 }

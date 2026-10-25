@@ -40,12 +40,7 @@ function Invoke-CPCResize {
     begin {
         Get-TokenValidity
 
-        $CloudPC = Get-CloudPC -Name $Name
-
-        if ($null -eq $CloudPC) {
-            Write-Error "Cloud PC '$Name' not found"
-            break
-        }
+        $CloudPC = Resolve-CPCCloudPC -Cmdlet $PSCmdlet -Name $Name
 
         if ($PsCmdlet.ParameterSetName -eq 'ByName') {
             Write-Verbose "Looking up service plan by name: $ServicePlanName"
