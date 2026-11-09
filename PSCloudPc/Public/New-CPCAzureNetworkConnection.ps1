@@ -108,7 +108,6 @@ function New-CPCAzureNetworkConnection {
         Write-verbose $params
         $body = $params | ConvertTo-Json -Depth 20
         
-        Write-Verbose $body
         try {
             $result = Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body
             $result
