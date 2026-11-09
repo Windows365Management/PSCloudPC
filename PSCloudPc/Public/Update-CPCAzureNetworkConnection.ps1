@@ -133,7 +133,7 @@ function Update-CPCAzureNetworkConnection {
             $params['adDomainUsername'] = $AdDomainUserName
         }
         if ($PSBoundParameters.ContainsKey('AdDomainPassword')) {
-            $params['adDomainPassword'] = $($AdDomainPassword | ConvertFrom-SecureString)
+            $params['adDomainPassword'] = $($AdDomainPassword | ConvertFrom-SecureString -AsPlainText)
         }
         if ($PSBoundParameters.ContainsKey('OrganizationalUnit')) {
             $params['organizationalUnit'] = $OrganizationalUnit
@@ -145,7 +145,6 @@ function Update-CPCAzureNetworkConnection {
         }
 
         $body = $params | ConvertTo-Json -Depth 10
-        Write-Verbose "Body: $body"
 
         if ($PSCmdlet.ShouldProcess($targetName, 'Update Azure Network Connection')) {
             try {
