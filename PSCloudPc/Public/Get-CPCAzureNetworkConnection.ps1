@@ -52,6 +52,7 @@ function Get-CPCAzureNetworkConnection {
                 displayName            = $_.displayName
                 subscriptionId         = $_.subscriptionId
                 type                   = $_.type
+                connectionType         = $_.connectionType
                 subscriptionName       = $_.subscriptionName
                 adDomainName           = $_.adDomainName
                 adDomainUsername       = $_.adDomainUsername

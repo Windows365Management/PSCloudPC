@@ -149,7 +149,7 @@ function New-CPCProvisioningPolicy {
                 Write-Verbose "AzureNetworkConnection ID: $($AzureNetworkInfo.Id)"
                 $domainJoinConfig = @(
                     @{
-                        Type                   = $AzureNetworkInfo.Type
+                        domainJoinType         = $AzureNetworkInfo.connectionType
                         OnPremisesConnectionId = $AzureNetworkInfo.Id
                     }
                 )
