@@ -3,54 +3,54 @@ This file contains all the changes to this Windows 365 PowerShell module.
 
 ## 1.0.18
 ### Breaking Changes
-- Remove-CPCAzureNetworkConnection, Remove-CPCCustomImage, Remove-CPCProvisioningPolicy and Remove-CPCUserSettingsPolicy match the name exactly (not case-sensitive) instead of a partial match. When no object or more than one object matches, nothing is deleted. They ask for confirmation by default; use -Confirm:$false in scripts (#133)
-- Update-CPCUserSettingsPolicy and Set-CPCCrossRegionDisasterRecovery no longer return output (#156)
-- Update-CPCUserSettingsPolicy: -DisableRestartPrompts and -SelfServiceEnabled have no effect, because Microsoft retired these settings. They write a warning and are not sent (#156)
-- Set-CPCCrossRegionDisasterRecovery requires -RegionName and -RegionGroup when -DisasterRecoveryType is crossRegion or premium (#139)
+- Remove-CPCAzureNetworkConnection, Remove-CPCCustomImage, Remove-CPCProvisioningPolicy and Remove-CPCUserSettingsPolicy only delete an object whose name matches exactly (upper and lower case don't matter). Before, part of the name was enough, so the wrong object could be deleted. When no object or more than one object matches, nothing is deleted. These cmdlets now ask for confirmation; add -Confirm:$false to run them in a script (#133)
+- Update-CPCUserSettingsPolicy and Set-CPCCrossRegionDisasterRecovery no longer return the policy. Use Get-CPCUserSettingsPolicy to see the result (#156)
+- Update-CPCUserSettingsPolicy: Microsoft retired the restart prompt and self-service settings. -DisableRestartPrompts and -SelfServiceEnabled now only show a warning (#156)
+- Set-CPCCrossRegionDisasterRecovery: -RegionName and -RegionGroup are required when you turn on crossRegion or premium disaster recovery (#139)
 
 ### Added commands
-- Get-CPCAuditEvent: returns Cloud PC audit events
-- Get-CPCConnectivityHistory: returns the connection history of a Cloud PC
-- Get-CPCRealTimeConnectionStatus: returns the current sign-in status of a Cloud PC
-- Get-CPCRemoteActionResult: returns the remote actions run on a Cloud PC and their result
-- Invoke-CPCChangeUserAccountType: changes the local account type (standard user or administrator) of a Cloud PC
-- Invoke-CPCCreateSnapshot: creates a snapshot of a Cloud PC
-- Invoke-CPCPowerOn and Invoke-CPCPowerOff: power a Windows 365 Frontline Cloud PC on or off
+- Get-CPCAuditEvent: shows the Windows 365 audit log
+- Get-CPCConnectivityHistory: shows the connection history of a Cloud PC
+- Get-CPCRealTimeConnectionStatus: shows whether a user is signed in to a Cloud PC right now
+- Get-CPCRemoteActionResult: shows the remote actions run on a Cloud PC and their result
+- Invoke-CPCChangeUserAccountType: makes the user of a Cloud PC a standard user or a local administrator
+- Invoke-CPCCreateSnapshot: creates a restore point of a Cloud PC
+- Invoke-CPCPowerOn and Invoke-CPCPowerOff: start or shut down a Windows 365 Frontline Cloud PC
 - Invoke-CPCRetryPartnerAgentInstallation: retries a failed partner agent installation on a Cloud PC
-- Invoke-CPCTroubleshoot: runs the troubleshooter on a Cloud PC
-- Update-CPCAzureNetworkConnection: updates an Azure network connection
+- Invoke-CPCTroubleshoot: runs the Windows 365 troubleshooter on a Cloud PC
+- Update-CPCAzureNetworkConnection: changes an existing Azure network connection
 
 ### Changes
-- Invoke-CPCRestore: new -SnapshotId parameter to restore without the interactive picker
+- Invoke-CPCRestore: new -SnapshotId parameter, so you can restore a Cloud PC from a script without the selection window
 - Invoke-CPCReprovision: new -OsVersion and -UserAccountType parameters
-- Remove-CPCCustomImage: new -Version parameter for images that share a name (#133)
-- New-CPCAzureNetworkConnection uses -Name like the other cmdlets; -DisplayName still works as an alias
-- Get-CPCServicePlan returns provisioningType (#141)
-- Error messages include the error code and message from Microsoft Graph (#132)
-- Every parameter has a description, and wrong synopses and permissions in the help are corrected (#144)
+- Remove-CPCCustomImage: new -Version parameter, for images that share a name (#133)
+- New-CPCAzureNetworkConnection uses -Name like the other cmdlets; -DisplayName still works
+- Get-CPCServicePlan also returns the provisioning type of each plan (#141)
+- Error messages now include the reason given by Microsoft Graph, which makes failures easier to solve (#132)
+- The help of every cmdlet is complete: each parameter has a description, and wrong descriptions and permissions are corrected (#144)
 
 ### Bugfixes
-- Connect-Windows365: certificate authentication sent an empty token (#128), and device code sign-in didn't request the Cloud PC permissions (#129)
-- Get-CloudPC only returned the first page of Cloud PCs (#130)
-- Failed changes were reported as success (#131)
-- Update-CPCUserSettingsPolicy and Set-CPCCrossRegionDisasterRecovery reset every setting that wasn't passed (#156)
-- Set-CPCCrossRegionDisasterRecovery couldn't turn disaster recovery off and sent deprecated properties (#139)
-- Get-CPCServicePlan -ServicePlanName failed. Invoke-CPCResize and Set-CPCProvisioningPolicyAssignment now stop when a service plan name matches no plan or more than one plan (#141)
-- Policy assignments sent an already assigned group twice, which Graph rejected (#142)
-- New-CPCProvisioningPolicy couldn't create hybrid join policies, and New-CPCProvisioningPolicy and Update-CPCProvisioningPolicy sent an empty join type for an Azure network connection (#135)
-- New-CPCAzureNetworkConnection sent the AD password encrypted instead of as plain text (#137)
+- Connect-Windows365: signing in with a certificate didn't work (#128), and signing in with a device code didn't ask for the Cloud PC permissions (#129)
+- Get-CloudPC didn't return all Cloud PCs in larger tenants (#130)
+- Some cmdlets reported success while the change had failed (#131)
+- Update-CPCUserSettingsPolicy and Set-CPCCrossRegionDisasterRecovery reset every setting you didn't pass to its default value (#156)
+- Set-CPCCrossRegionDisasterRecovery couldn't turn disaster recovery off (#139)
+- Get-CPCServicePlan -ServicePlanName didn't work. Invoke-CPCResize and Set-CPCProvisioningPolicyAssignment stop when the service plan name is unknown or matches more than one plan (#141)
+- Set-CPCProvisioningPolicyAssignment and Set-CPCUserSettingsPolicyAssignment failed when the group was already assigned (#142)
+- New-CPCProvisioningPolicy couldn't create a hybrid join policy, and New-CPCProvisioningPolicy and Update-CPCProvisioningPolicy didn't pass on the join type of the Azure network connection (#135)
+- New-CPCAzureNetworkConnection sent the AD domain password in an encrypted form that Windows 365 can't use (#137)
 - New-CPCCustomImage created images without a name (#136)
-- Update-CPCOrganizationSetting sent "True"/"False" strings instead of booleans (#140)
-- Invoke-CPCPublishCloudApp and Invoke-CPCUnpublishCloudApp could act on another app with a similar name (#134)
-- Invoke-CPCEndGracePeriod failed when it asked for confirmation (#138)
-- Invoke-CPCRestore and Invoke-CPCReprovision used an outdated endpoint
+- Update-CPCOrganizationSetting sent its on/off settings in the wrong format (#140)
+- Invoke-CPCPublishCloudApp and Invoke-CPCUnpublishCloudApp could act on another app whose name contained the name you entered (#134)
+- Invoke-CPCEndGracePeriod stopped with an error when it asked for confirmation (#138)
+- Invoke-CPCRestore and Invoke-CPCReprovision use the current Windows 365 restore and reprovision actions
 - Get-CPCRestorePoint returned no restore points (#98)
-- Get-CPCGalleryImage -Name filtered on the deprecated offerDisplayName instead of displayName
-- Checks on input and lookups now stop the command, also with -ErrorAction SilentlyContinue, so no request is sent (#139, #141)
+- Get-CPCGalleryImage -Name searched on the offer name instead of the image name
+- When a name isn't found or a value isn't valid, the cmdlet now stops before it changes anything, also with -ErrorAction SilentlyContinue (#139, #141)
 
 ### Known issues
-- Invoke-CPCChangeUserAccountType returns an error from Microsoft Graph (#104)
-- Invoke-CPCPowerOn and Invoke-CPCPowerOff are not yet tested against a Frontline Cloud PC (#107)
+- Invoke-CPCChangeUserAccountType doesn't work yet: Microsoft Graph returns an error (#104)
+- Invoke-CPCPowerOn and Invoke-CPCPowerOff haven't been tested on a Frontline Cloud PC yet (#107)
 
 ## 1.0.17 [18-03-2026]
 ### Breaking Changes
