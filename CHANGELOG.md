@@ -1,14 +1,15 @@
 # Changelog
-This file contains all the changes to this Windows 365 PowerShell module.
+This file contains all the changes to this Windows 365 PowerShell module. From 1.0.17 on, the format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## Unreleased
 
 ## 1.0.18
-### Breaking Changes
-- Remove-CPCAzureNetworkConnection, Remove-CPCCustomImage, Remove-CPCProvisioningPolicy and Remove-CPCUserSettingsPolicy only delete an object whose name matches exactly (upper and lower case don't matter). Before, part of the name was enough, so the wrong object could be deleted. When no object or more than one object matches, nothing is deleted. These cmdlets now ask for confirmation; add -Confirm:$false to run them in a script (#133)
-- Update-CPCUserSettingsPolicy and Set-CPCCrossRegionDisasterRecovery no longer return the policy. Use Get-CPCUserSettingsPolicy to see the result (#156)
-- Update-CPCUserSettingsPolicy: Microsoft retired the restart prompt and self-service settings. -DisableRestartPrompts and -SelfServiceEnabled now only show a warning (#156)
-- Set-CPCCrossRegionDisasterRecovery: -RegionName and -RegionGroup are required when you turn on crossRegion or premium disaster recovery (#139)
+### Breaking changes
+- Remove-CPCAzureNetworkConnection, Remove-CPCCustomImage, Remove-CPCProvisioningPolicy and Remove-CPCUserSettingsPolicy only delete an object whose name matches exactly (upper and lower case don't matter). Before, part of the name was enough, so the wrong object could be deleted. When no object or more than one object matches, nothing is deleted. These cmdlets now ask for confirmation. **What to do:** pass the full name, and add -Confirm:$false when you run them in a script (#133)
+- Update-CPCUserSettingsPolicy and Set-CPCCrossRegionDisasterRecovery no longer return the policy. **What to do:** if your script uses the output, run Get-CPCUserSettingsPolicy after the change (#156)
+- Set-CPCCrossRegionDisasterRecovery: -RegionName and -RegionGroup are now required when you turn on crossRegion or premium disaster recovery (#139)
 
-### Added commands
+### Added
 - Get-CPCAuditEvent: shows the Windows 365 audit log
 - Get-CPCConnectivityHistory: shows the connection history of a Cloud PC
 - Get-CPCRealTimeConnectionStatus: shows whether a user is signed in to a Cloud PC right now
@@ -19,17 +20,20 @@ This file contains all the changes to this Windows 365 PowerShell module.
 - Invoke-CPCRetryPartnerAgentInstallation: retries a failed partner agent installation on a Cloud PC
 - Invoke-CPCTroubleshoot: runs the Windows 365 troubleshooter on a Cloud PC
 - Update-CPCAzureNetworkConnection: changes an existing Azure network connection
-
-### Changes
 - Invoke-CPCRestore: new -SnapshotId parameter, so you can restore a Cloud PC from a script without the selection window
 - Invoke-CPCReprovision: new -OsVersion and -UserAccountType parameters
 - Remove-CPCCustomImage: new -Version parameter, for images that share a name (#133)
+
+### Changed
 - New-CPCAzureNetworkConnection uses -Name like the other cmdlets; -DisplayName still works
 - Get-CPCServicePlan also returns the provisioning type of each plan (#141)
 - Error messages now include the reason given by Microsoft Graph, which makes failures easier to solve (#132)
 - The help of every cmdlet is complete: each parameter has a description, and wrong descriptions and permissions are corrected (#144)
 
-### Bugfixes
+### Deprecated
+- Update-CPCUserSettingsPolicy: -DisableRestartPrompts and -SelfServiceEnabled have no effect, because Microsoft retired these settings. They show a warning and will be removed in a later version (#156)
+
+### Fixed
 - Connect-Windows365: signing in with a certificate didn't work (#128), and signing in with a device code didn't ask for the Cloud PC permissions (#129)
 - Get-CloudPC didn't return all Cloud PCs in larger tenants (#130)
 - Some cmdlets reported success while the change had failed (#131)
@@ -51,23 +55,24 @@ This file contains all the changes to this Windows 365 PowerShell module.
 ### Known issues
 - Invoke-CPCChangeUserAccountType doesn't work yet: Microsoft Graph returns an error (#104)
 - Invoke-CPCPowerOn and Invoke-CPCPowerOff haven't been tested on a Frontline Cloud PC yet (#107)
+- Microsoft removes the AD domain user name and password of Azure network connections on December 31, 2026. New-CPCAzureNetworkConnection and Update-CPCAzureNetworkConnection will be updated before then (#175)
 
-## 1.0.17 [18-03-2026]
-### Breaking Changes
-- Set-CPCCloudAppAssignment has been removed. Cloud Apps are made available through the provisioning policy assignment instead
-
-### Added commands
+## 1.0.17 - 2026-03-18
+### Added
 - Invoke-CPCRename: renames a Cloud PC (#51)
-- Invoke-CPCResize: resizes a Cloud PC to another service plan (#64)
+- Invoke-CPCResize: moves a Cloud PC to another service plan (#64)
 - Set-CPCCrossRegionDisasterRecovery: configures cross-region disaster recovery on a user settings policy (#49)
-
-### Changes
 - Update-CPCUserSettingsPolicy: new -DisableRestartPrompts parameter
-- Get-CPCUserSettingsPolicy returns crossRegionDisasterRecoverySetting
 
-### Bugfixes
-- Update-CPCUserSettingsPolicy: -LocalAdminEnabled was ignored
-- Corrected the help examples of Invoke-CPCPublishCloudApp and Invoke-CPCUnpublishCloudApp
+### Changed
+- Get-CPCUserSettingsPolicy also returns the cross-region disaster recovery settings
+
+### Removed
+- Set-CPCCloudAppAssignment. Cloud Apps are now made available through the provisioning policy assignment
+
+### Fixed
+- Update-CPCUserSettingsPolicy ignored -LocalAdminEnabled
+- The examples in the help of Invoke-CPCPublishCloudApp and Invoke-CPCUnpublishCloudApp were wrong
 
 ## 1.0.16
 ### Breaking Changes
