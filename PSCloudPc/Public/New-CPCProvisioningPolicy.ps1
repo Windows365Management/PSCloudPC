@@ -16,10 +16,10 @@ function New-CPCProvisioningPolicy {
     Enter the image type of the Provisioning Policy (Custom or Gallery)
     .PARAMETER ImageId
     Enter the Image Id of the Provisioning Policy (Info: Get-CPCGalleryImage or Get-CPCCustomImage)
-    .PARAMETER EnableSignleSignOn
-    Enter the Enable Signle Sign On for the Provisioning Policy
+    .PARAMETER EnableSingleSignOn
+    Enable or disable single sign-on for the Cloud PCs ($true or $false). $true is only supported with DomainJoinType azureADJoin
     .PARAMETER DomainJoinType
-    Enter the Domain Join Type for the Provisioning Policy (AzureADJoin or AzureADDomainJoin) (Default: AzureADJoin)
+    Enter the Domain Join Type for the Provisioning Policy (azureADJoin or hybridAzureADJoin) (Default: azureADJoin)
     .PARAMETER RegionName
     Enter the Region Name for the Provisioning Policy
     .PARAMETER RegionGroup
@@ -118,7 +118,7 @@ function New-CPCProvisioningPolicy {
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/provisioningPolicies"
 
         # Validate if DomainJoinType is azureADJoin, then EnableSingleSignOn can be used, otherwise throw an error.
-        if ($DomainJoinType -ne 'azureADJoin' -and $PSBoundParameters.ContainsKey('EnableSingleSignOn')) {
+        if ($DomainJoinType -ne 'azureADJoin' -and $EnableSingleSignOn) {
             Write-Error "The parameter -EnableSingleSignOn can only be used with -DomainJoinType 'azureADJoin'."
             break
         }
@@ -149,7 +149,7 @@ function New-CPCProvisioningPolicy {
                 Write-Verbose "AzureNetworkConnection ID: $($AzureNetworkInfo.Id)"
                 $domainJoinConfig = @(
                     @{
-                        Type                   = $AzureNetworkInfo.Type
+                        domainJoinType         = $AzureNetworkInfo.connectionType
                         OnPremisesConnectionId = $AzureNetworkInfo.Id
                     }
                 )
@@ -229,7 +229,7 @@ function New-CPCProvisioningPolicy {
             $Result = Invoke-WebRequest -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $body
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
 
         $PolicyId = ($Result.Content | ConvertFrom-Json).id

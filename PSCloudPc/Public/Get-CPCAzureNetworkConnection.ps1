@@ -32,8 +32,13 @@ function Get-CPCAzureNetworkConnection {
     
     Process {
         write-verbose $url
-        $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader -SkiphttpErrorCheck
-    
+        try {
+            $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
+        }
+        catch {
+            Throw (Get-GraphErrorMessage $_)
+        }
+
         if ($null -eq $result) {
             Write-Error "No Azure Network Connection found"
             break
@@ -47,6 +52,7 @@ function Get-CPCAzureNetworkConnection {
                 displayName            = $_.displayName
                 subscriptionId         = $_.subscriptionId
                 type                   = $_.type
+                connectionType         = $_.connectionType
                 subscriptionName       = $_.subscriptionName
                 adDomainName           = $_.adDomainName
                 adDomainUsername       = $_.adDomainUsername

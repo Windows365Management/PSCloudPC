@@ -16,6 +16,8 @@ function Update-CPCProvisioningPolicy {
     Naming template for the Cloud PC
     .PARAMETER AzureNetworkConnection
     Azure Network Connection to use for the Cloud PC (It will replace current Azure Network Connection)
+    .PARAMETER DomainJoinType
+    Not used by this cmdlet; it has no effect
     .EXAMPLE
     Update-CPCProvisioningPolicy -Name "Test-AzureADJoin" -imageType "Gallery" -ImageId "MicrosoftWindowsDesktop_windows-ent-cpc_win11-22h2-ent-cpc-m365" 
     .EXAMPLE
@@ -95,7 +97,7 @@ function Update-CPCProvisioningPolicy {
 
                 Write-Verbose "AzureNetworkConnection ID: $($AzureNetworkInfo.Id)"
                 $domainJoinConfig = @{
-                    Type                   = $AzureNetworkInfo.Type
+                    domainJoinType         = $AzureNetworkInfo.connectionType
                     OnPremisesConnectionId = $AzureNetworkInfo.Id
                 }
                 $domainJoinConfigurations += $domainJoinConfig
@@ -111,11 +113,11 @@ function Update-CPCProvisioningPolicy {
 
         try {
             Write-Verbose "Updating User Settings Policy $($Name)"
-            $Result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
+            $Result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json"
             Write-Verbose "Result: $($Result.Content)"
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
     }
 }

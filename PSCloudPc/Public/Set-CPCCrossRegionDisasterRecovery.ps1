@@ -14,32 +14,58 @@ function Set-CPCCrossRegionDisasterRecovery {
     - premium       : Premium DR — adds user-initiated failover capability on top of
                       cross-region standby
 
+    Only the crossRegionDisasterRecoverySetting of the policy is changed, and within it only
+    what you pass: -MaintainCrossRegionRestorePointEnabled and -UserInitiatedDisasterRecoveryAllowed
+    keep their current value when they are not passed. Graph replaces the
+    whole policy on an update, so the cmdlet reads the current policy and sends all other
+    settings (local admin, reset, restore point settings and so on) back unchanged. Changes
+    someone else makes to the policy between that read and the update are overwritten. The
+    deprecated restorePointSetting frequencyInHours and the retired selfServiceEnabled and
+    notificationSetting are never sent.
+
+    crossRegionDisasterRecoveryEnabled is deprecated in the Graph docs, but Graph still rejects
+    a crossRegion setting without it, so it is sent as $true for crossRegion and premium and as
+    $false for notConfigured.
+
     This function requires the Graph API beta endpoint and the CloudPC.ReadWrite.All permission.
     .PARAMETER Name
-    The display name of the Cloud PC User Settings Policy to update.
+    The exact display name of the Cloud PC User Settings Policy to update. The name must match
+    exactly one policy.
     .PARAMETER DisasterRecoveryType
     The disaster recovery mode to configure. Valid values: notConfigured, crossRegion, premium.
     .PARAMETER MaintainCrossRegionRestorePointEnabled
     When $true, Windows 365 continuously maintains cross-region restore points that can be
-    used during failover. When $false (default), only the initial provisioning image is
-    available after a disaster, which may result in data loss.
+    used during failover. When $false, only the initial provisioning image is available
+    after a disaster, which may result in data loss. When not passed, the current value of
+    the policy is kept (Graph's default for a new setting is $false).
     .PARAMETER UserInitiatedDisasterRecoveryAllowed
     When $true, end users can activate disaster recovery themselves from the Windows 365
-    portal. Only applicable when DisasterRecoveryType is 'premium'. Default is $false.
+    portal. Only applicable when DisasterRecoveryType is 'premium'; for the other types it is
+    always sent as $false. When not passed with premium, the current value of the policy is
+    kept (Graph's default for a new setting is $false).
     .PARAMETER RegionName
     The Azure region name to use as the disaster recovery target (e.g. 'westus',
     'northeurope', 'eastasia'). Required when DisasterRecoveryType is 'crossRegion' or
     'premium'.
     .PARAMETER RegionGroup
-    The region group for disaster recovery routing (e.g. 'usEast', 'usWest',
-    'europeNorth', 'europeWest', 'asiaPacific'). Required when DisasterRecoveryType is
-    'crossRegion' or 'premium'.
+    The cloudPcRegionGroup that the disaster recovery region belongs to (e.g. 'usEast',
+    'usWest', 'europeUnion', 'unitedKingdom', 'asia'). Required when DisasterRecoveryType is
+    'crossRegion' or 'premium'. The value is passed to Graph as is, so region groups that
+    Microsoft adds later work without a module update; Graph rejects an unknown value.
+    See https://learn.microsoft.com/graph/api/resources/cloudpcregiongroup?view=graph-rest-beta
     .EXAMPLE
     Set-CPCCrossRegionDisasterRecovery -Name "UserSettings01" -DisasterRecoveryType crossRegion -RegionName "westus" -RegionGroup "usWest" -MaintainCrossRegionRestorePointEnabled $true
     .EXAMPLE
-    Set-CPCCrossRegionDisasterRecovery -Name "UserSettings01" -DisasterRecoveryType premium -RegionName "northeurope" -RegionGroup "europeNorth" -MaintainCrossRegionRestorePointEnabled $true -UserInitiatedDisasterRecoveryAllowed $true
+    Set-CPCCrossRegionDisasterRecovery -Name "UserSettings01" -DisasterRecoveryType premium -RegionName "northeurope" -RegionGroup "europeUnion" -MaintainCrossRegionRestorePointEnabled $true -UserInitiatedDisasterRecoveryAllowed $true
     .EXAMPLE
     Set-CPCCrossRegionDisasterRecovery -Name "UserSettings01" -DisasterRecoveryType notConfigured
+    .NOTES
+    Required permission: CloudPC.ReadWrite.All
+    https://learn.microsoft.com/graph/api/cloudpcusersetting-update?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/cloudpcusersetting-get?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpccrossregiondisasterrecoverysetting?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpcregiongroup?view=graph-rest-beta
+    https://learn.microsoft.com/graph/api/resources/cloudpcrestorepointsetting?view=graph-rest-beta
     #>
 
     [CmdletBinding(SupportsShouldProcess = $true)]
@@ -52,10 +78,10 @@ function Set-CPCCrossRegionDisasterRecovery {
         [string]$DisasterRecoveryType,
 
         [Parameter(Mandatory = $false)]
-        [bool]$MaintainCrossRegionRestorePointEnabled = $false,
+        [bool]$MaintainCrossRegionRestorePointEnabled,
 
         [Parameter(Mandatory = $false)]
-        [bool]$UserInitiatedDisasterRecoveryAllowed = $false,
+        [bool]$UserInitiatedDisasterRecoveryAllowed,
 
         [Parameter(Mandatory = $false)]
         [string]$RegionName,
@@ -67,65 +93,91 @@ function Set-CPCCrossRegionDisasterRecovery {
     begin {
         Get-TokenValidity
 
-        Write-Verbose "Looking up User Settings Policy: $Name"
-        $Policy = Get-CPCUserSettingsPolicy -Name $Name
-
-        If ($null -eq $Policy) {
-            Throw "No User Settings Policy found with name '$Name'"
-            return
+        If ($DisasterRecoveryType -in @('crossRegion', 'premium')) {
+            If ([string]::IsNullOrWhiteSpace($RegionName) -or [string]::IsNullOrWhiteSpace($RegionGroup)) {
+                Stop-CPCCommand -Cmdlet $PSCmdlet -Message "RegionName and RegionGroup are required when DisasterRecoveryType is '$DisasterRecoveryType'"
+            }
         }
+
+        If ($UserInitiatedDisasterRecoveryAllowed -and $DisasterRecoveryType -ne 'premium') {
+            Write-Warning "UserInitiatedDisasterRecoveryAllowed is only supported for premium disaster recovery and is sent as false"
+        }
+
+        Write-Verbose "Looking up User Settings Policy: $Name"
+        $Policy = @(Get-CPCUserSettingsPolicy -Name $Name | Where-Object { $_.displayName -eq $Name })
+
+        If ($Policy.Count -eq 0) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "No User Settings Policy found with name '$Name'" -Category ObjectNotFound
+        }
+
+        If ($Policy.Count -gt 1) {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message "$($Policy.Count) User Settings Policies found with name '$Name' ($($Policy.id -join ', ')). The name must match exactly one policy"
+        }
+
+        $Policy = $Policy[0]
 
         $url = "https://graph.microsoft.com/$script:MSGraphVersion/deviceManagement/virtualEndpoint/userSettings/$($Policy.id)"
         Write-Verbose "PATCH URL: $url"
     }
 
     Process {
-        $body = @{
-            displayName                        = $Policy.displayName
-            localAdminEnabled                  = $Policy.localAdminEnabled
-            selfServiceEnabled                 = $Policy.selfServiceEnabled
-            resetEnabled                       = $Policy.resetEnabled
-            restorePointSetting                = @{
-                userRestoreEnabled = $Policy.restorePointSetting.userRestoreEnabled
-                frequencyInHours   = $Policy.restorePointSetting.frequencyInHours
-            }
-            notificationSetting                = @{
-                restartPromptsDisabled = $Policy.notificationSetting.restartPromptsDisabled
-            }
-            crossRegionDisasterRecoverySetting = @{}
+        # PATCH replaces the whole policy and resets every setting that is left out,
+        # so read the current settings and change only what was passed
+        try {
+            $body = Get-CPCUserSettingBody -Id $Policy.id -ErrorAction Stop
+        }
+        catch {
+            Stop-CPCCommand -Cmdlet $PSCmdlet -Message (Get-GraphErrorMessage $_) -Category InvalidOperation
         }
 
-        If ($DisasterRecoveryType -eq 'crossRegion') {
-            $body.crossRegionDisasterRecoverySetting = @{
-                crossRegionDisasterRecoveryEnabled       = $true
-                disasterRecoveryType                     = $DisasterRecoveryType
-                maintainCrossRegionRestorePointEnabled   = $MaintainCrossRegionRestorePointEnabled
-                userInitiatedDisasterRecoveryAllowed     = $false
-                disasterRecoveryNetworkSetting = @{
-                    regionName  = $RegionName
-                    regionGroup = $RegionGroup
-                }
-            }
+        # Start from the current disaster recovery setting, so options that weren't passed keep their value
+        $drSetting = @{}
+        If ($body["crossRegionDisasterRecoverySetting"] -is [hashtable]) {
+            $drSetting = $body["crossRegionDisasterRecoverySetting"]
         }
 
-        If ($DisasterRecoveryType -eq 'premium') {
-            $body.crossRegionDisasterRecoverySetting = @{
-                crossRegionDisasterRecoveryEnabled       = $false
-                disasterRecoveryType                     = $DisasterRecoveryType
-                maintainCrossRegionRestorePointEnabled   = $MaintainCrossRegionRestorePointEnabled
-                userInitiatedDisasterRecoveryAllowed     = $UserInitiatedDisasterRecoveryAllowed
-                disasterRecoveryNetworkSetting = @{
-                    regionName  = $RegionName
-                    regionGroup = $RegionGroup
-                }
+        $drSetting["disasterRecoveryType"] = $DisasterRecoveryType
+        # crossRegionDisasterRecoveryEnabled is deprecated, but Graph still rejects crossRegion unless it is true
+        $drSetting["crossRegionDisasterRecoveryEnabled"] = ($DisasterRecoveryType -ne "notConfigured")
+
+        If ($PSBoundParameters.ContainsKey('MaintainCrossRegionRestorePointEnabled')) {
+            $drSetting["maintainCrossRegionRestorePointEnabled"] = $MaintainCrossRegionRestorePointEnabled
+        }
+
+        # User-initiated failover is only supported for premium disaster recovery
+        If ($DisasterRecoveryType -ne 'premium') {
+            $drSetting["userInitiatedDisasterRecoveryAllowed"] = $false
+        }
+        ElseIf ($PSBoundParameters.ContainsKey('UserInitiatedDisasterRecoveryAllowed')) {
+            $drSetting["userInitiatedDisasterRecoveryAllowed"] = $UserInitiatedDisasterRecoveryAllowed
+        }
+
+        If ($DisasterRecoveryType -in @('crossRegion', 'premium')) {
+            # Abstract Graph type: name the Microsoft-hosted subtype that regionName/regionGroup belong to
+            $drSetting["disasterRecoveryNetworkSetting"] = @{
+                '@odata.type' = '#microsoft.graph.cloudPcDisasterRecoveryMicrosoftHostedNetworkSetting'
+                regionName    = $RegionName
+                regionGroup   = $RegionGroup
             }
         }
+        Else {
+            # No network setting with notConfigured, as before
+            $drSetting.Remove("disasterRecoveryNetworkSetting")
+        }
+
+        $body["crossRegionDisasterRecoverySetting"] = $drSetting
 
         $bodyJson = $body | ConvertTo-Json -Depth 10
         Write-Verbose "Request Body: $bodyJson"
 
-        If ($PSCmdlet.ShouldProcess($Name, "Set Cross-Region Disaster Recovery")) {
-            Invoke-RestMethod -Uri $url -Headers $script:AuthHeader -Method PATCH -Body $bodyJson -ContentType "application/json"
+        If ($PSCmdlet.ShouldProcess($Name, "Set Cross-Region Disaster Recovery to $DisasterRecoveryType")) {
+            try {
+                # Graph returns 204 No Content; nothing is written to the output
+                $null = Invoke-RestMethod -Uri $url -Headers $script:Authheader -Method PATCH -Body $bodyJson -ContentType "application/json" -ErrorAction Stop
+            }
+            catch {
+                Throw (Get-GraphErrorMessage $_)
+            }
         }
     }
 }

@@ -77,7 +77,7 @@ function Set-CPCUserSettingsPolicyAssignment {
                 $GroupID = New-Object System.Collections.Generic.List[System.Object]
                 $GroupID.Add($script:GroupID)
                 $currentassignments | ForEach-Object {
-                    $GroupID.Add($_)
+                    if ($_ -ne $script:GroupID) { $GroupID.Add($_) }
                 }
                 Write-Verbose "GroupID Value: $($GroupID)"
 
@@ -105,7 +105,7 @@ function Set-CPCUserSettingsPolicyAssignment {
             Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method Post -ContentType "application/json" -Body $body
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
         
     }

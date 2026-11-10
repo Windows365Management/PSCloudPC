@@ -6,8 +6,10 @@ function Invoke-CPCEndGracePeriod {
         Function to end the grace period of a CloudPC
         .PARAMETER name
         Name of the CloudPC to end the grace period of
+        .PARAMETER All
+        End the grace period of every CloudPC that is in its grace period
         .PARAMETER Force
-        Force parameter to end the grace period of all CloudPCs
+        End the grace period without asking for confirmation
         .EXAMPLE
         Invoke-CPCEndGracePeriod -Name "CloudPC01"
         .EXAMPLE
@@ -70,13 +72,13 @@ function Invoke-CPCEndGracePeriod {
                     Write-Output "End Grace Period $($_.managedDeviceName)"
                 }                                       
                 catch {
-                    Throw $_.Exception.Message
+                    Throw (Get-GraphErrorMessage $_)
                 }
             }
         }
         else {
 
-            Write-Output "$($Count) CloudPC(s) found in grace period" -ForegroundColor Yellow
+            Write-Output "$($Count) CloudPC(s) found in grace period"
             $choice = Read-Host "Are you sure you want to end the grace period for CloudPC(s)? (y/n)"
             if ($choice -ne "y") {
                 Write-Output "Exiting script"
@@ -94,7 +96,7 @@ function Invoke-CPCEndGracePeriod {
                     Write-Output "End Grace Period $($_.managedDeviceName)"
                 }
                 catch {
-                    Throw $_.Exception.Message
+                    Throw (Get-GraphErrorMessage $_)
                 }
             }
         }

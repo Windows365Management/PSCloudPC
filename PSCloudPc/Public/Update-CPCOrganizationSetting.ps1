@@ -5,13 +5,15 @@ function Update-CPCOrganizationSetting {
     .DESCRIPTION
     Update the Cloud PC organization settings. A tenant has only one cloudPcOrganizationSettings object.
     .PARAMETER osVersion
-    The account type of the user on provisioned Cloud PCs. The possible values are: standardUser, administrator
+    The version of the operating system (OS) to provision on Cloud PCs. The possible values are: windows10, windows11
     .PARAMETER userAccountType
     The account type of the user on provisioned Cloud PCs. The possible values are: standardUser, administrator
     .PARAMETER enableMEMAutoEnroll
     Specifies whether new Cloud PCs will be automatically enrolled in Microsoft Intune. The default value is false.
     .PARAMETER enableSingleSignOn
     Specifies wether single sign-on is enabled for new Cloud PCs. The default value is false.
+    .PARAMETER WindowsSettings
+    The Windows language for new Cloud PCs, for example en-US. The default value is en-US.
     .EXAMPLE
     Update-CPCOrganizationSetting -osVersion windows10 -userAccountType administrator -enableMEMAutoEnroll $true -enableSingleSignOn $true    
     .NOTES
@@ -49,11 +51,11 @@ function Update-CPCOrganizationSetting {
             Write-Verbose "userAccountType: $($UserAccountType)"
         }
         If ($psboundparameters.ContainsKey("enableMEMAutoEnroll")) {
-            $params.Add("enableMEMAutoEnroll", "$EnableMEMAutoEnroll")
+            $params.Add("enableMEMAutoEnroll", $EnableMEMAutoEnroll)
             Write-Verbose "enableMEMAutoEnroll: $($EnableMEMAutoEnroll)"
         }
         If ($PSBoundParameters.ContainsKey("enableSingleSignOn")) {
-            $params.Add("enableSingleSignOn", "$EnableSingleSignOn")
+            $params.Add("enableSingleSignOn", $EnableSingleSignOn)
             Write-Verbose "enableSingleSignOn: $($EnableSingleSignOn)"
         }
         If ($windowsSettings) {
@@ -67,12 +69,12 @@ function Update-CPCOrganizationSetting {
         Write-Verbose "Body: $($body)"
         try {
             Write-Verbose "Updating Organization Settings "
-            $result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json" -SkipHttpErrorCheck
+            $result = Invoke-WebRequest -uri $url -Method PATCH -Headers $script:authHeader -Body $body -ContentType "application/json"
             return $result
             
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
     }
 }

@@ -36,7 +36,7 @@ function Get-CloudPC {
     
         if ($null -eq $result) {
             Write-Error "No CloudPC's returned"
-            break
+            return
         }
 
         $PSObjectResults = @()

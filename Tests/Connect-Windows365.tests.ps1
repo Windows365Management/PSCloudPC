@@ -2,109 +2,152 @@
 This file tests the Connect-Windows365 function by using Pester
 #>
 
+BeforeAll {
+    Import-Module (Join-Path $PSScriptRoot '../PSCloudPc/PSCloudPC.psd1') -Force
+}
 
-# Tests/Connect-Windows365.Tests.ps1
-Import-Module Pester -MinimumVersion 5.0
+AfterAll {
+    Remove-Module PSCloudPC -Force -ErrorAction SilentlyContinue
+}
 
 Describe 'Connect-Windows365' {
-  BeforeAll {
-    # Load the script into the test session
-    . "./PSCloudPC/Src/Public/Connect-Windows365.ps1"
 
-    function Set-GraphVersion {
-      $script:MSGraphVersion = 'beta'
-    }
-
-    $script:mockconnectMgGraphdata = @{
-      RequestMessage = @{
-        Method     = "GET"
-        RequestUri = "https://graph.microsoft.com/v1.0/me"
-        Version    = 2.0
-        Content    = $null
-        Headers    = @{
-          "User-Agent"        = @(
-            "Mozilla/5.0",
-            "(Macintosh; Darwin 24.6.0 Darwin Kernel Version 24.6.0: Mon Jul 14 11:28:30 PDT 2025; root:xnu-11417.140.69~1/RELEASE_ARM64_T6030; en-US)",
-            "PowerShell/2025.2.0",
-            "Invoke-MgGraphRequest"
-          )
-          "FeatureFlag"       = "00000043"
-          "Cache-Control"     = "no-store, no-cache"
-          "Authorization"     = "Bearer eyJ0eXAiOiJKV1QiLCJub25jZSI6IlUtbmFOYTk1OThDWFllOTBucU1QY3dRelFKdmRYbkoyRENyMUcxS2p3SFkiLCJhbGciOiJSUzI1NiIsIng1dCI6IkpZaEFjVFBNWl9MWDZEQmxPV1E3SG4wTmVYRSIsImtpZCI6IkpZaEFjVFBNWl9MWDZEQmxPV1E3SG4wTmVYRSJ9..."
-          "Accept-Encoding"   = "gzip"
-          "SdkVersion"        = "graph-powershell/2.20.0"
-          "client-request-id" = "099d9abb-acb5-4470-b19b-232c65e24881"
+    BeforeAll {
+        # Mimics the HttpResponseMessage returned by Invoke-MgGraphRequest -OutputType HttpResponseMessage
+        $script:mockGraphResponse = [PSCustomObject]@{
+            RequestMessage = [PSCustomObject]@{
+                Headers = [PSCustomObject]@{
+                    Authorization = [PSCustomObject]@{ Parameter = 'delegated-token' }
+                }
+            }
         }
-      }
+
+        # Self-signed certificate with a private key, created in memory
+        $rsa = [System.Security.Cryptography.RSA]::Create(2048)
+        $request = [System.Security.Cryptography.X509Certificates.CertificateRequest]::new(
+            'CN=PSCloudPC Pester',
+            $rsa,
+            [System.Security.Cryptography.HashAlgorithmName]::SHA256,
+            [System.Security.Cryptography.RSASignaturePadding]::Pkcs1
+        )
+        $script:testCertificate = $request.CreateSelfSigned([DateTimeOffset]::UtcNow.AddDays(-1), [DateTimeOffset]::UtcNow.AddDays(1))
+
+        function ConvertFrom-Base64Url([string]$Value) {
+            $padded = $Value.Replace('-', '+').Replace('_', '/')
+            $padded = $padded.PadRight($padded.Length + (4 - $padded.Length % 4) % 4, '=')
+            [Convert]::FromBase64String($padded)
+        }
     }
 
-    $script:mockcertificateobject = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new()
+    Context 'Interactive Authentication' {
 
-  }
+        It 'Stores the token from the Microsoft Graph session' {
+            Mock -ModuleName PSCloudPC Connect-MgGraph { }
+            Mock -ModuleName PSCloudPC Invoke-MgGraphRequest { $script:mockGraphResponse }
 
-  Context "Interactive Authentication" {
+            Connect-Windows365
 
-    It 'Should not throw an error when connecting to Windows 365' {
-
-      Mock -CommandName Set-GraphVersion -Verifiable
-
-      Mock -CommandName Connect-MgGraph -MockWith { $null }
-
-      Mock -CommandName Invoke-MgGraphRequest -Verifiable -ParameterFilter { $script:mockconnectMgGraphdata }
-
-      { Connect-Windows365 } | Should -Not -Throw
-
+            InModuleScope PSCloudPC { $script:Authheader.Authorization } | Should -Be 'Bearer delegated-token'
+            Should -Invoke -ModuleName PSCloudPC Connect-MgGraph -Times 1 -ParameterFilter { $Scopes -contains 'https://graph.microsoft.com/CloudPC.ReadWrite.All' }
+        }
     }
-  }
 
-  Context "Client Secret Authentication" {
+    Context 'Device Code Authentication' {
 
-    It 'Should not throw an error when connecting to Windows 365' {
+        It 'Requests the Cloud PC scopes when signing in with a device code' {
+            Mock -ModuleName PSCloudPC Connect-MgGraph { }
+            Mock -ModuleName PSCloudPC Invoke-MgGraphRequest { $script:mockGraphResponse }
 
-      Mock -CommandName Set-GraphVersion -Verifiable
+            Connect-Windows365 -DeviceCode
 
-      Mock -CommandName Invoke-RestMethod -MockWith { $null }
-
-      { Connect-Windows365 -TenantID "dummy" -ClientID "dummy" -ClientSecret "dummy" } | Should -Not -Throw
-
+            Should -Invoke -ModuleName PSCloudPC Connect-MgGraph -Times 1 -ParameterFilter {
+                $UseDeviceCode -and $Scopes -contains 'https://graph.microsoft.com/CloudPC.ReadWrite.All'
+            }
+            InModuleScope PSCloudPC { $script:Authheader.Authorization } | Should -Be 'Bearer delegated-token'
+        }
     }
-  }
 
-  Context "Client Certificate Authentication" {
+    Context 'Client Secret Authentication' {
 
-    It 'Should not throw an error when connecting to Windows 365' {
+        It 'Requests a token with the client credentials grant' {
+            Mock -ModuleName PSCloudPC Invoke-RestMethod { [PSCustomObject]@{ access_token = 'secret-token' } }
 
-      Mock -CommandName Set-GraphVersion -Verifiable
+            Connect-Windows365 -TenantID 'contoso.onmicrosoft.com' -ClientID 'app-id' -ClientSecret 'secret'
 
-      Mock -CommandName Connect-MgGraph -MockWith { $null }
-
-      { Connect-Windows365 -TenantID "dummy" -ClientID "dummy" -ClientCertificate $script:mockcertificateobject } | Should -Not -Throw
-
+            InModuleScope PSCloudPC { $script:Authheader.Authorization } | Should -Be 'Bearer secret-token'
+            Should -Invoke -ModuleName PSCloudPC Invoke-RestMethod -Times 1 -ParameterFilter {
+                $Uri -eq 'https://login.microsoftonline.com/contoso.onmicrosoft.com/oauth2/v2.0/token' -and
+                $Body.Client_Secret -eq 'secret'
+            }
+        }
     }
-  }
 
-  Context "Device Code Authentication" {
+    Context 'Client Certificate Authentication' {
 
-    It 'Should not throw an error when connecting to Windows 365' {
+        BeforeEach {
+            Mock -ModuleName PSCloudPC Invoke-RestMethod {
+                $script:capturedBody = $Body
+                [PSCustomObject]@{ access_token = 'certificate-token' }
+            }
+        }
 
-      Mock -CommandName Set-GraphVersion -Verifiable
+        It 'Stores the token returned for the signed client assertion' {
+            Connect-Windows365 -TenantID 'contoso.onmicrosoft.com' -ClientID 'app-id' -ClientCertificate $script:testCertificate
 
-      Mock -CommandName Connect-MgGraph -MockWith { $null }
+            InModuleScope PSCloudPC { $script:Authheader.Authorization } | Should -Be 'Bearer certificate-token'
+            $script:capturedBody.Client_Assertion_Type | Should -Be 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
+            $script:capturedBody.Client_Id | Should -Be 'app-id'
+        }
 
-      Mock -CommandName Invoke-MgGraphRequest -Verifiable -ParameterFilter { $script:mockconnectMgGraphdata }
+        It 'Sends a client assertion with the correct claims and a valid signature' {
+            Connect-Windows365 -TenantID 'contoso.onmicrosoft.com' -ClientID 'app-id' -ClientCertificate $script:testCertificate
 
-      { Connect-Windows365 -DeviceCode } | Should -Not -Throw
+            $parts = $script:capturedBody.Client_Assertion.Split('.')
+            $parts.Count | Should -Be 3
 
+            $header = [Text.Encoding]::UTF8.GetString((ConvertFrom-Base64Url $parts[0])) | ConvertFrom-Json
+            $claims = [Text.Encoding]::UTF8.GetString((ConvertFrom-Base64Url $parts[1])) | ConvertFrom-Json
+
+            $header.alg | Should -Be 'RS256'
+            $claims.aud | Should -Be 'https://login.microsoftonline.com/contoso.onmicrosoft.com/oauth2/v2.0/token'
+            $claims.iss | Should -Be 'app-id'
+            $claims.sub | Should -Be 'app-id'
+            $claims.exp | Should -BeGreaterThan ([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())
+
+            $publicKey = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPublicKey($script:testCertificate)
+            $publicKey.VerifyData(
+                [Text.Encoding]::UTF8.GetBytes("$($parts[0]).$($parts[1])"),
+                (ConvertFrom-Base64Url $parts[2]),
+                [System.Security.Cryptography.HashAlgorithmName]::SHA256,
+                [System.Security.Cryptography.RSASignaturePadding]::Pkcs1
+            ) | Should -BeTrue
+        }
+
+        It 'Throws a clear error for a certificate without a private key' {
+            $publicOnly = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($script:testCertificate.RawData)
+
+            { Connect-Windows365 -TenantID 'contoso.onmicrosoft.com' -ClientID 'app-id' -ClientCertificate $publicOnly } |
+                Should -Throw '*private key*'
+        }
     }
-  }
-  Context "Token Authentication" {
 
-    It 'Should not throw an error when connecting to Windows 365' {
+    Context 'Token Authentication' {
 
-      Mock -CommandName Set-GraphVersion -Verifiable
+        It 'Stores the supplied access token' {
+            Connect-Windows365 -Token 'supplied-token'
 
-      { Connect-Windows365 -Token "dummy" } | Should -Not -Throw
-
+            InModuleScope PSCloudPC { $script:Authheader.Authorization } | Should -Be 'Bearer supplied-token'
+        }
     }
-  }
+
+    Context 'Missing token' {
+
+        It 'Throws and clears the session when no access token is returned' {
+            Mock -ModuleName PSCloudPC Invoke-RestMethod { [PSCustomObject]@{ access_token = $null } }
+
+            { Connect-Windows365 -TenantID 'contoso.onmicrosoft.com' -ClientID 'app-id' -ClientSecret 'secret' } |
+                Should -Throw '*No access token*'
+            InModuleScope PSCloudPC { $script:Authheader } | Should -BeNullOrEmpty
+        }
+    }
 }

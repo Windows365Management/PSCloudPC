@@ -44,7 +44,7 @@ function New-CPCCustomImage {
     Process {
 
         $params = @{
-            DisplayName = $DisplayName
+            DisplayName = $Name
             Version = $Version
             SourceImageResourceId = $SourceImageResourceId
         } | ConvertTo-Json -Depth 10
@@ -55,7 +55,7 @@ function New-CPCCustomImage {
             Invoke-RestMethod -Headers $script:Authheader -Uri $url -Method POST -ContentType "application/json" -Body $params
         }
         catch {
-            Throw $_.Exception.Message
+            Throw (Get-GraphErrorMessage $_)
         }
         
     }

@@ -65,7 +65,7 @@ function Invoke-CPCPublishCloudApp {
             'Name' {
                 Write-Verbose "Processing by Name: $Name"
                 # Find the app by display name (case-insensitive)
-                $App = $AvailableApps | Where-Object { $_.displayName -like "*$Name*" }
+                $App = $AvailableApps | Where-Object { $_.displayName -eq $Name }
                 if ($null -eq $App) {
                     Write-Error "No app found with name containing: $Name"
                     return
@@ -124,7 +124,7 @@ function Invoke-CPCPublishCloudApp {
             }
         }
         catch {
-            Write-Error "Failed to publish app(s): $($_.Exception.Message)"
+            Write-Error "Failed to publish app(s): $(Get-GraphErrorMessage $_)"
             throw
         }
     }

@@ -95,10 +95,10 @@ Get-Help Get-CloudPC -Full
 | Client certificate | `Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID <app-id> -ClientCertificate $cert` | Automation without storing secrets |
 | Access token | `Connect-Windows365 -Token $accessToken` | Reusing a token from another tool or pipeline |
 
-For certificate authentication, pass an `X509Certificate2` object, for example:
+For certificate authentication, pass an `X509Certificate2` object that includes the private key. `Get-PfxCertificate` loads one from a `.pfx` file on Windows, Linux and macOS, and asks for the password unless you pass `-Password`:
 
 ```powershell
-$cert = Get-Item "Cert:\CurrentUser\My\<THUMBPRINT>"
+$cert = Get-PfxCertificate -FilePath ./app.pfx
 Connect-Windows365 -TenantID contoso.onmicrosoft.com -ClientID <app-id> -ClientCertificate $cert
 ```
 

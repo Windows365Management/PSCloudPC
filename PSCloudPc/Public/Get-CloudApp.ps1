@@ -86,7 +86,7 @@ function Get-CloudApp {
             return $returnResults
         }
         catch {
-            Write-Error "Failed to retrieve Cloud Apps: $($_.Exception.Message)"
+            Write-Error "Failed to retrieve Cloud Apps: $(Get-GraphErrorMessage $_)"
             throw
         }
     }

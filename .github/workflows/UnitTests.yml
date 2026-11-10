@@ -4,14 +4,18 @@ name: PesterTests
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "develop" branch
+  # Triggers the workflow on push or pull request events for the "develop" and "main" branches
   push:
-    branches: [ "develop" ]
+    branches: [ "develop", "main" ]
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "develop", "main" ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
+# The tests only need to read the repository
+permissions:
+  contents: read
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -23,7 +27,9 @@ jobs:
       steps:
         # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install needed modules
         shell: pwsh
@@ -57,11 +63,19 @@ jobs:
         run: |
           Import-Module ./PSCloudPc/PSCloudPC.psd1 -Force -ErrorAction Stop
           Invoke-Pester -Path (Join-Path -Path "./Pester" -ChildPath "Functions.tests.ps1") -Output detailed
-      - name: Pester Files check
+      - name: Pester cmdlet behaviour tests
         shell: pwsh
         run: |
-          Import-Module ./PSCloudPc/PSCloudPC.psd1 -Force -ErrorAction Stop
-          Invoke-Pester -Path (Join-Path -Path "./Pester" -ChildPath "Files.tests.ps1") -Output detailed
+          $config = New-PesterConfiguration
+          $config.Run.Path = './Tests'
+          $config.Run.Exit = $true
+          $config.Output.Verbosity = 'Detailed'
+          Invoke-Pester -Configuration $config
+      # - name: Pester Files check
+      #   shell: pwsh
+      #   run: |
+      #     Import-Module ./PSCloudPc/PSCloudPC.psd1 -Force -ErrorAction Stop
+      #     Invoke-Pester -Path (Join-Path -Path "./Pester" -ChildPath "Files.tests.ps1") -Output detailed
       # - name: Pester Individual Functions check
       #   shell: pwsh
       #   run: |

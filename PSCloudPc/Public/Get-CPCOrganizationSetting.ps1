@@ -20,8 +20,13 @@ function Get-CPCOrganizationSetting {
     
     Process {
         
-        $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader -SkipHttpErrorCheck
-        
+        try {
+            $result = Invoke-WebRequest -uri $url -Method GET -Headers $script:authHeader
+        }
+        catch {
+            Throw (Get-GraphErrorMessage $_)
+        }
+
         if ($null -eq $result) {
             Write-Error "No Organization Settings returned"
             break

@@ -1,0 +1,8 @@
+# Code owners are requested for review automatically. The last matching pattern wins.
+
+# Default: both maintainers
+*                                          @StefanDingemanse @Ruthhl3ss
+
+# Authentication: Niels
+/PSCloudPc/Public/Connect-Windows365.ps1   @Ruthhl3ss
+/Tests/Connect-Windows365.tests.ps1        @Ruthhl3ss
