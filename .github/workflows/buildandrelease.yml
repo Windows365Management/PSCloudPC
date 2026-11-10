@@ -43,7 +43,7 @@ jobs:
           Write-Host "Tag version matches ModuleVersion $moduleVersion"
       - name: "Build release changelog"
         id: build_release_changelog
-        uses: mikepenz/release-changelog-builder-action@cb021f9b36a51a7c6f18e4679b6fa2cb77a1260c # v6.3.0
+        uses: mikepenz/release-changelog-builder-action@b0db9d18b53447ef9f940a46c8f31653c4d9f621 # v6.5.0
         with:
             fromTag: ${{ steps.get_previous_version.outputs.PREVIOUSVERSION }}
             toTag: ${{ steps.get_version.outputs.VERSION }}
@@ -90,7 +90,7 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
           name: Release ${{ steps.get_version.outputs.VERSION }}
