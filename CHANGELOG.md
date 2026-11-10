@@ -3,7 +3,7 @@ This file contains all the changes to this Windows 365 PowerShell module. From 1
 
 ## Unreleased
 
-## 1.0.18 - 2026-11-09
+## 1.0.18 - 2026-11-10
 ### Breaking changes
 - Remove-CPCAzureNetworkConnection, Remove-CPCCustomImage, Remove-CPCProvisioningPolicy and Remove-CPCUserSettingsPolicy only delete an object whose name matches exactly (upper and lower case don't matter). Before, part of the name was enough, so the wrong object could be deleted. When no object or more than one object matches, nothing is deleted. These cmdlets now ask for confirmation. **What to do:** pass the full name, and add -Confirm:$false when you run them in a script (#133)
 - Update-CPCUserSettingsPolicy and Set-CPCCrossRegionDisasterRecovery no longer return the policy. **What to do:** if your script uses the output, run Get-CPCUserSettingsPolicy after the change (#156)
